@@ -4,24 +4,17 @@ open import Function using (_on_; const; _∘_; id; _∋_)
 open import Data.Unit using (tt; ⊤)
 open import Data.Product using (_×_; proj₁; proj₂; ∃; ∃₂; ∃-syntax; Σ; Σ-syntax)
   renaming (_,_ to _—→_)
-open import Data.Bool using (T)
-open import Data.List using (List; []; _∷_; [_]; map; length; sum)
-open import Data.String using (String)
+open import Data.Bool using (T; true; false)
+open import Data.List using (List; []; _∷_; [_]; _++_; map; concatMap; length; sum)
 
 open import Data.Nat using (ℕ; _<_; _>_; _+_)
 open import Data.Nat.Properties using (<-trans; <-cmp; +-identityʳ)
 
 import Relation.Binary.PropositionalEquality as Eq
-open import Relation.Binary  using ( IsStrictTotalOrder; Transitive; Trichotomous
-                                   ; tri<; tri≈; tri> )
-import Relation.Binary.Construct.On as On
-open IsStrictTotalOrder using (compare)
-  renaming (trans to sto-trans)
-
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
 open Eq using (_≡_; refl; sym; trans; cong; cong₂)
-  renaming (isEquivalence to ≡-isEquivalence)
 
+open import Utilities.Lists using (_<$>_)
 open import Utilities.Sets
 open import Types
 open import STO-Modules
@@ -29,8 +22,11 @@ open import STO-Modules
 -- Honest set of participants
 module _ where
   open STO⟦Participant⟧
+  
   postulate
     Honest : Σ[ s ∈ Set⟨Participant⟩ ] (∣ s ∣ > 0)
+    
+  Hon = proj₁ Honest
 
 -- Arithmetic expressions
 data Arith : Set where
@@ -49,9 +45,9 @@ data Predicate : Set where
 
   True : Predicate
   
-  _∧_ : Predicate → Predicate → Predicate
+  _/\_ : Predicate → Predicate → Predicate
 
-  ¬_ : Predicate → Predicate
+  ~_ : Predicate → Predicate
 
   _==_ : Arith → Arith → Predicate
 
@@ -70,7 +66,7 @@ data Contract (v : Value) : Set where
                     → (xs : List Identifier)
                     → List Secret → Predicate
                     → Contract v′
-                    → {_ : v′ ≡ v + sum (map lookup xs)}
+                    → {_ : v′ ≡ v + sum (lookup <$> xs)}
                     → Contract v
 
   -- transfer the balance to <Participant>
@@ -78,7 +74,7 @@ data Contract (v : Value) : Set where
 
   -- split the balance
   split : ∀ (xs : List (Σ[ v ∈ Value ] Contract v))
-        → v ≡ sum (map proj₁ xs)
+        → v ≡ sum (proj₁ <$> xs)
         → Contract v
   
   -- wait for participant's authorization
@@ -93,7 +89,7 @@ put_&reveal_⇒_ : ∀ {v}
                → (xs : List Identifier)
                → List Secret
                → {v′ : Value} → Contract v′
-               → {_ : v′ ≡ v + sum (map lookup xs)}
+               → {_ : v′ ≡ v + sum (lookup <$> xs)}
                → Contract v
 (put x &reveal s ⇒ C) {P} = (put x &reveal s if True ⇒ C) {P}
 
@@ -133,10 +129,25 @@ distinct xs = length xs ≡ ∣ fromList xs ∣
   where open STO⟦Identifier⟧
 
 names : ∀ {v} → Contracts v → List Identifier
-names c = {!!}
+names = concatMap names′
+  where
+    names′  : ∀ {v} → Contract v      → List Identifier
+    names′′ : List (Σ Value Contract) → List Identifier
+
+    names′ (put xs &reveal as if _ ⇒ c) = (xs ++ as) ++ names′ c
+    names′ (withdraw _)                 = []
+    names′ (split xs x)                 = names′′ xs
+    names′ (_ ∶ c)                      = names′ c
+    names′ (after _ ∶ c)                = names′ c
+
+    names′′ []              = []
+    names′′ ((_ —→ c) ∷ xs) = names′ c ++ names′′ xs
 
 namesₚ : Precondition → List Identifier
-namesₚ p = {!!}
+namesₚ (_ :? _ ≙ x)  = [ x ]
+namesₚ (_ :! _ ≙ x)  = [ x ]
+namesₚ (_ :secret x) = [ x ]
+namesₚ (p₁ ∣ p₂)     = namesₚ p₁ ++ namesₚ p₂
 
 module _ where
   open STO⟦Identifier⟧
@@ -148,16 +159,36 @@ module _ where
   namesetₚ = fromList ∘ namesₚ
   
 participants : Precondition → Set⟨Participant⟩
-participants p = {!!}
+participants = fromList ∘ participants′
+  where
+    open STO⟦Participant⟧
 
-deposits : Precondition → Set⟨Precondition⟩
-deposits p = {!!}
+    participants′ : Precondition → List Participant
+    participants′ (p :? _ ≙ _)  = [ p ]
+    participants′ (p :! _ ≙ _)  = [ p ]
+    participants′ (p :secret _) = [ p ]
+    participants′ (p₁ ∣ p₂)     = participants′ p₁ ++ participants′ p₂
+
+depositsᵖ : Precondition → Set⟨Deposit⟩
+depositsᵖ = fromList ∘ deposits′
+  where
+    open STO⟦Deposit⟧
+
+    deposits′ : Precondition → List Deposit
+    deposits′ (p₁ ∣ p₂)     = deposits′ p₁ ++ deposits′ p₂
+    deposits′ (a :! v ≙ x)  = [ a ∷ v ≙ x [ true ] ]
+    deposits′ (a :? v ≙ x)  = [ a ∷ v ≙ x [ false ] ]
+    deposits′ (_ :secret _) = []
 
 putNames : ∀ {v} → Contracts v → List Identifier
-putNames c = {!!}
+putNames = concatMap putNames′ 
+  where
+    putNames′ : ∀ {v} → Contract v → List Identifier
+    putNames′ (put xs &reveal _ if _ ⇒ _) = xs
+    putNames′ _                           = []
 
 record Advertisement {v : Value} : Set₁ where
-  constructor ⟨_⟩_⟦_⟧
+  constructor ⟨_⟩_∶-_
 
   field
     G : Precondition
@@ -173,4 +204,9 @@ record Advertisement {v : Value} : Set₁ where
             -- each participant has a persistent deposit in G
           × ∀[ p ∈ participants G ]
              ∃₂ λ x v →
-               (A :! v ≙ x) ∈ deposits G
+               (A ∷ v ≙ x [ true ]) ∈ depositsᵖ G
+
+open Advertisement public
+
+depositsᵃ : ∀ {v} → Advertisement {v} → Set⟨Deposit⟩
+depositsᵃ ad = depositsᵖ (G ad)

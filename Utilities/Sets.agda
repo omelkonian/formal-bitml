@@ -4,12 +4,13 @@
 
 module Utilities.Sets where
 
-open import Level     using (0ℓ)
-open import Function  using (const)
-open import Data.Unit using (⊤)
-open import Data.Bool using (T)
-open import Data.Nat  using (ℕ; _<_)
-open import Data.List using (boolFilter; _++_; length)
+open import Level        using (0ℓ)
+open import Function     using (const)
+open import Data.Unit    using (⊤)
+open import Data.Bool    using (T)
+open import Data.Product using (_×_; ∃; ∃-syntax)
+open import Data.Nat     using (ℕ; _<_)
+open import Data.List    using (boolFilter; _++_; length)
 
 open import Relation.Binary.PropositionalEquality using (_≡_)
 open import Relation.Binary using (IsStrictTotalOrder; Rel)
@@ -28,9 +29,13 @@ module _ {A : Set} {_<_  : Rel A 0ℓ} {A-sto : IsStrictTotalOrder _≡_ _<_} wh
 
   data ∀∈ (xs : Set⟨A⟩) (P : A → Set) : Set where
    mk∀∈ : ∀ (x : A) → (x ∈ xs) → P x → ∀∈ xs P
-
   infix 2 ∀∈
   syntax ∀∈ xs (λ x → P) = ∀[ x ∈ xs ] P
+
+  data ∃∈ (xs : Set⟨A⟩) (P : A → Set) : Set where
+   mk∀∈ : ∃[ x ] ((x ∈ xs) × P x) → ∃∈ xs P
+  infix 2 ∃∈
+  syntax ∃∈ xs (λ x → P) = ∃[ x ∈ xs ] P
 
   ∅ : Set⟨A⟩
   ∅ = empty

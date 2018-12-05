@@ -172,10 +172,26 @@ Set⟨Participant⟩ = ⟨Set⟩' (const ⊤)
   where open STO⟦Participant⟧
 
 -------------------------------------------------------------------
+-- Deposits.
+
+postulate
+  _≺ₑ_ : Rel Deposit 0ℓ
+
+STO⟨Deposit⟩ : IsStrictTotalOrder _≡_ _≺ₑ_
+STO⟨Deposit⟩ = {!!}
+
+module STO⟦Deposit⟧ = Sets STO⟨Deposit⟩
+
+Set⟨Deposit⟩ : Set
+Set⟨Deposit⟩ = ⟨Set⟩' (const ⊤)
+  where open STO⟦Deposit⟧
+
+-------------------------------------------------------------------
 -- Preconditions.
 
 postulate
   _≺ₚ_ : Rel Precondition 0ℓ
+
 STO⟨Precondition⟩ : IsStrictTotalOrder _≡_ _≺ₚ_
 STO⟨Precondition⟩ = {!!}
 

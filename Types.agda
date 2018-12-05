@@ -4,13 +4,13 @@
 
 module Types where
 
-open import Data.Nat    using (ℕ)
 open import Data.Bool   using (Bool)
+open import Data.Nat    using (ℕ)
 open import Data.String using (String)
-open import Level       using (Level)
-open import Data.Product using (Σ-syntax)
 
--- Basic types
+-------------------------------------------------------------------
+-- Basic types.
+
 Value : Set
 Value = ℕ
 
@@ -23,12 +23,28 @@ Secret = Identifier
 Time : Set
 Time = ℕ
 
--- Contract participants
+-------------------------------------------------------------------
+-- Contract participants.
+
 data Participant : Set where
   A : Participant
   B : Participant
 
--- Contract preconditions
+-------------------------------------------------------------------
+-- Deposits.
+
+record Deposit : Set where
+  constructor _∷_≙_[_]
+  field
+    participant : Participant
+    value       : Value
+    name        : Identifier
+    persistent  : Bool
+open Deposit public
+
+-------------------------------------------------------------------
+-- Contract preconditions.
+
 data Precondition : Set where
 
   -- volatile deposit of <Value>$, expected from <Participant> (named <String>)
@@ -38,7 +54,7 @@ data Precondition : Set where
   _:!_≙_ : Participant → Value → Identifier → Precondition
 
   -- committed secret (random nonce) by <Participant>
-  _:secret_≙_ : Participant → Secret → Precondition
+  _:secret_ : Participant → Secret → Precondition
 
   -- composition
   _∣_ : Precondition → Precondition → Precondition
