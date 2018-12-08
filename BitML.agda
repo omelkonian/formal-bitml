@@ -1,5 +1,6 @@
 module BitML where
 
+open import Level using (0ℓ)
 open import Function using (_on_; const; _∘_; id; _∋_)
 open import Data.Unit using (tt; ⊤)
 open import Data.Product using (_×_; proj₁; proj₂; ∃; ∃₂; ∃-syntax; Σ; Σ-syntax)
@@ -14,14 +15,19 @@ import Relation.Binary.PropositionalEquality as Eq
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
 open Eq using (_≡_; refl; sym; trans; cong; cong₂)
 
-open import Utilities.Lists using (_<$>_)
-open import Utilities.Sets
-open import Types
-open import STO-Modules
+open import Category.Functor       using (RawFunctor)
+open import Data.Maybe.Categorical renaming (functor to maybeFunctor)
+open import Data.List.Categorical  renaming (functor to listFunctor)
+open RawFunctor {0ℓ} maybeFunctor renaming (_<$>_ to _<$>ₘ_)
+open RawFunctor {0ℓ} listFunctor  renaming (_<$>_ to _<$>ₗ_)
 
--- Honest set of participants
+open import Types
+
+------------------------------------------------------------------------
+-- Honest set of participants.
+
 module _ where
-  open STO⟦Participant⟧
+  open SETₚ
   
   postulate
     Honest : Σ[ s ∈ Set⟨Participant⟩ ] (∣ s ∣ > 0)
@@ -59,6 +65,9 @@ postulate
   lookup : Identifier → Value
 
 -- a contract is indexed by the monetary value it carries
+-- T0D0: Move to GADT index
+-- T0D0: Relation `Partition`
+-- T0D0: Implicit argument {T (dec ...)} andThen sound
 data Contract (v : Value) : Set where
 
   -- collect deposits and secrets
@@ -66,7 +75,7 @@ data Contract (v : Value) : Set where
                     → (xs : List Identifier)
                     → List Secret → Predicate
                     → Contract v′
-                    → {_ : v′ ≡ v + sum (lookup <$> xs)}
+                    → {_ : v′ ≡ v + sum (lookup <$>ₗ xs)}
                     → Contract v
 
   -- transfer the balance to <Participant>
@@ -74,7 +83,7 @@ data Contract (v : Value) : Set where
 
   -- split the balance
   split : ∀ (xs : List (Σ[ v ∈ Value ] Contract v))
-        → v ≡ sum (proj₁ <$> xs)
+        → v ≡ sum (proj₁ <$>ₗ xs)
         → Contract v
   
   -- wait for participant's authorization
@@ -89,7 +98,7 @@ put_&reveal_⇒_ : ∀ {v}
                → (xs : List Identifier)
                → List Secret
                → {v′ : Value} → Contract v′
-               → {_ : v′ ≡ v + sum (lookup <$> xs)}
+               → {_ : v′ ≡ v + sum (lookup <$>ₗ xs)}
                → Contract v
 (put x &reveal s ⇒ C) {P} = (put x &reveal s if True ⇒ C) {P}
 
@@ -110,7 +119,7 @@ example =
         ( (2 —→ withdraw A)
         ⊕ (3 —→ after 100 ∶ withdraw B)
         ⊕ (0 —→ (put [ "x" ] &reveal [] ⇒ (A ∶ withdraw {10} B))
-          {begin
+          { begin
              10
            ≡⟨ vx ⟩
              lookup "x"
@@ -126,7 +135,7 @@ example =
 
 distinct : List Identifier → Set
 distinct xs = length xs ≡ ∣ fromList xs ∣
-  where open STO⟦Identifier⟧
+  where open SETᵢ
 
 names : ∀ {v} → Contracts v → List Identifier
 names = concatMap names′
@@ -150,7 +159,7 @@ namesₚ (_ :secret x) = [ x ]
 namesₚ (p₁ ∣ p₂)     = namesₚ p₁ ++ namesₚ p₂
 
 module _ where
-  open STO⟦Identifier⟧
+  open SETᵢ
   
   nameset : ∀ {v} → Contracts v → Set⟨Identifier⟩ 
   nameset = fromList ∘ names
@@ -161,7 +170,7 @@ module _ where
 participants : Precondition → Set⟨Participant⟩
 participants = fromList ∘ participants′
   where
-    open STO⟦Participant⟧
+    open SETₚ
 
     participants′ : Precondition → List Participant
     participants′ (p :? _ ≙ _)  = [ p ]
@@ -172,7 +181,7 @@ participants = fromList ∘ participants′
 depositsᵖ : Precondition → Set⟨Deposit⟩
 depositsᵖ = fromList ∘ deposits′
   where
-    open STO⟦Deposit⟧
+    open SETₑ
 
     deposits′ : Precondition → List Deposit
     deposits′ (p₁ ∣ p₂)     = deposits′ p₁ ++ deposits′ p₂
@@ -187,26 +196,35 @@ putNames = concatMap putNames′
     putNames′ (put xs &reveal _ if _ ⇒ _) = xs
     putNames′ _                           = []
 
-record Advertisement {v : Value} : Set₁ where
-  constructor ⟨_⟩_∶-_
+module _ where
 
-  field
-    G : Precondition
-    C : Contracts v
+  open SETₚ using () renaming (_∈_ to _∈ₚ_; ∀∈ to ∀∈ₚ)
+  open SETₑ using () renaming (_∈_ to _∈ₑ_; ∀∈ to ∀∈ₑ)
+  open SETᵢ using () renaming (_∈_ to _∈ᵢ_; ∀∈ to ∀∈ᵢ)
 
-    valid : -- names in G are distinct
-            distinct (namesₚ G)
-            -- each name in C appears in G
-          × ∀[ x ∈ nameset C ]
-             x ∈ namesetₚ G
-            -- the names in put_&_ are distinct
-          × distinct (putNames C)
-            -- each participant has a persistent deposit in G
-          × ∀[ p ∈ participants G ]
-             ∃₂ λ x v →
-               (A ∷ v ≙ x [ true ]) ∈ depositsᵖ G
+  record Advertisement {v : Value} : Set where
+    constructor ⟨_⟩_∶-_
 
-open Advertisement public
+    field
+      G : Precondition
+      C : Contracts v
+
+      valid : -- names in G are distinct
+              distinct (namesₚ G)
+
+              -- each name in C appears in G
+            × ∀∈ᵢ (nameset C) λ x →
+                x ∈ᵢ namesetₚ G
+
+              -- the names in put_&_ are distinct
+            × distinct (putNames C)
+
+              -- each participant has a persistent deposit in G
+            × ∀∈ₚ (participants G) λ p → 
+                ∃₂ λ x v →
+                  (p ∷ v ≙ x [ true ]) ∈ₑ depositsᵖ G
+
+  open Advertisement public
 
 depositsᵃ : ∀ {v} → Advertisement {v} → Set⟨Deposit⟩
 depositsᵃ ad = depositsᵖ (G ad)

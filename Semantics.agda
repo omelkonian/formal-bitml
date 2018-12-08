@@ -8,15 +8,15 @@ open import Data.Nat   using (ℕ; _+_)
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_)
 
-open import Utilities.Sets
 open import Types
-open import STO-Modules
 open import BitML
+
+-- T0D0: Index things with Γ:=list of current contracts
 
 -------------------------------------------------------------------
 -- Actions.
 
-data Action : Set₁ where 
+data Action : Set where 
 
   -- commit secrets to stipulate {G}C
   ♯▷_ : ∀ {v} → Advertisement {v} → Action
@@ -24,7 +24,7 @@ data Action : Set₁ where
   -- spend x to stipulate {G}C
   _▷ˢ_ : ∀ {v} → Identifier → Advertisement {v} → Action
 
-  -- take branch
+  -- take branch (extend to inherently-typed using Γ)
   _▷ᵇ_ : ∀ {v} → Identifier → Contract v → Action
 
   -- join deposits
@@ -42,7 +42,7 @@ data Action : Set₁ where
 -------------------------------------------------------------------
 -- Configurations.
 
-data Configuration : Set₁ where
+data Configuration : Set where
 
   -- empty
   ∅ᶜ : Configuration
@@ -71,12 +71,13 @@ data Configuration : Set₁ where
 infixr 5 _∣∣_
 
 module _ where
-  open STO⟦Deposit⟧
+  open SETₑ
   
+  -- T0D0 check if this is unnecesary after indices
   depositsᶜ : Configuration → Set⟨Deposit⟩
   depositsᶜ (` x)                 = depositsᵃ x
   depositsᶜ (⟨ a , v ⟩deposit= x) = singleton (a ∷ v ≙ x [ true ])
-  depositsᶜ (c₁ ∣∣ c₂)            =  depositsᶜ c₁ ∪ depositsᶜ c₂
+  depositsᶜ (c₁ ∣∣ c₂)            = depositsᶜ c₁ ∪ depositsᶜ c₂
   depositsᶜ _                     = ∅
 
 isInitial : Configuration → Bool
@@ -86,9 +87,13 @@ isInitial _                     = false
 
 Initial : Configuration → Set
 Initial = T ∘ isInitial
-  
+
+open SETₚ using () renaming (_∈_ to _∈ₚ_; ∀∈ to ∀∈ₚ; ∃∈ to ∃∈ₚ)
+open SETₑ using () renaming (_∈_ to _∈ₑ_; ∀∈ to ∀∈ₑ; ∃∈ to ∃∈ₑ)
+open SETᵢ using () renaming (_∈_ to _∈ᵢ_; ∀∈ to ∀∈ᵢ; ∃∈ to ∃∈ᵢ)
+ 
 infix 4 _—→_
-data _—→_ : Configuration → Configuration → Set₁ where
+data _—→_ : Configuration → Configuration → Set where
 
   -- i) Rules for deposits
   [DEP-AuthJoin] :
@@ -154,10 +159,10 @@ data _—→_ : Configuration → Configuration → Set₁ where
       {_ : G ≡ Advertisement.G Ad} {_ : C ≡ Advertisement.C Ad}
       {Γ : Configuration}
 
-    → ∃[ p ∈ participants G ] p ∈ Hon
-    → ∀[ d ∈ depositsᵃ Ad ] d ∈ depositsᶜ Γ
-    → ∀[ d ∈ depositsᵃ Ad ] record d { persistent = true } ∈ depositsᶜ Γ
-      --------------------------------------------
+    → ∃∈ₚ (participants G) (λ p → p ∈ₚ Hon)
+    → ∀∈ₑ (depositsᵃ Ad) (λ d → d ∈ₑ depositsᶜ Γ)
+    → ∀∈ₑ (depositsᵃ Ad) (λ d → record d { persistent = true } ∈ₑ depositsᶜ Γ)
+      ------------------------------------------------------------------------
     → Γ —→ ` Ad ∣∣ Γ
 
   -- [C-AuthCommit]
