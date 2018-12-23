@@ -12,7 +12,7 @@ open import Data.Product  using (∃; ∃-syntax; Σ; Σ-syntax; _×_; _,_)
 open import Data.Sum      using (_⊎_; inj₁; inj₂; isInj₁)
 open import Data.Fin      using (Fin; fromℕ)
   renaming (zero to 0ᶠ; suc to sucᶠ; _≟_ to _≟ᶠ_)
-open import Data.String  hiding (_++_) 
+open import Data.String  hiding (_++_)
   renaming (length to lengthₛ)
 
 open import Relation.Nullary using (Dec; yes; no)
@@ -22,6 +22,7 @@ open import Relation.Binary using (Decidable)
 
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; _≢_; decSetoid; refl; cong)
+open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
 
 open import Category.Functor using (RawFunctor)
 open import Data.List.Categorical renaming (functor to listFunctor)
@@ -40,40 +41,23 @@ open import Types Participant _≟ₚ_ Honest
 open import BitML Participant _≟ₚ_ Honest hiding (_≟ᶜˢ_)
 
 open SETₙ  using ()
-  renaming ( _∈_ to _∈ₙ_; ∀∈ to ∀∈ₙ; _∈?_ to _∈?ₙ_; _∉?_ to _∉?ₙ_
-           ; _⊆_ to _⊆ₙ_; _⊆?_ to _⊆?ₙ_ ; sound-⊆ to sound-⊆ₙ
-           ; _≟ₗ_ to _≟ₙₛ_
-           )
+  renaming ( _∈_ to _∈ₙ_; _∉?_ to _∉?ₙ_; _∈?_ to _∈?ₙ_ ; _⊆_ to _⊆ₙ_ ; _≟ₗ_ to _≟ₙₛ_ )
 open SETₚ  using ()
-  renaming ( _∈_ to _∈ₚ_; ∀∈ to ∀∈ₚ; _∈?_ to _∈?ₚ_; _∉?_ to _∉?ₚ_
-           ; _⊆_ to _⊆ₚ_; _⊆?_ to _⊆?ₚ_ ; sound-⊆ to sound-⊆ₚ
-           ; base-⊆ to base-⊆ₚ; keep-⊆ to keep-⊆ₚ; drop-⊆ to drop-⊆ₚ
-           ; _≟ₗ_ to _≟ₚₛ_
-           ; nodup to nodupₚ
-           )
+  renaming (_∈_ to _∈ₚ_; _∉?_ to _∉?ₚ_; _∈?_ to _∈?ₚ_ ; _⊆_ to _⊆ₚ_ ; _≟ₗ_ to _≟ₚₛ_)
 open SETₑ using ()
-  renaming ( _∈_ to _∈ₑ_; ∀∈ to ∀∈ₑ; _∈?_ to _∈?ₑ_; _∉?_ to _∉?ₑ_
-           ; _⊆_ to _⊆ₑ_; _⊆?_ to _⊆?ₑ_ ; sound-⊆ to sound-⊆ₑ
+  renaming ( _∈_ to _∈ₑ_; _∉?_ to _∉?ₑ_; _∈?_ to _∈?ₑ_
+           ; _⊆_ to _⊆ₑ_; _⊆?_ to _⊆?ₑ_; sound-⊆ to sound-⊆ₑ
            ; _≟ₗ_ to _≟ₑₛ_
            )
 open SETₑᵣ using ()
-  renaming ( _∈_ to _∈ₑᵣ_; ∀∈ to ∀∈ₑᵣ; _∈?_ to _∈?ₑᵣ_; _∉?_ to _∉?ₑᵣ_
-           ; _⊆_ to _⊆ₑᵣ_; _⊆?_ to _⊆?ₑᵣ_ ; sound-⊆ to sound-⊆ₑᵣ
-           ; _≟ₗ_ to _≟ₑᵣₛ_
-           )
+  renaming (_∈_ to _∈ₑᵣ_; _∉?_ to _∉?ₑᵣ_; _∈?_ to _∈?ₑᵣ_ ; _⊆_ to _⊆ₑᵣ_ ; _≟ₗ_ to _≟ₑᵣₛ_)
 open SETₛ  using ()
-  renaming ( _∈_ to _∈ₛ_; ∀∈ to ∀∈ₛ; _∈?_ to _∈?ₛ_; _∉?_ to _∉?ₛ_
-           ; _⊆_ to _⊆ₛ_; _⊆?_ to _⊆?ₛ_ ; sound-⊆ to sound-⊆ₛ
-           ; _≟ₗ_ to _≟ₛₛ_
-           )
+  renaming (_∈_ to _∈ₛ_; _∉?_ to _∉?ₛ_; _∈?_ to _∈?ₛ_ ; _⊆_ to _⊆ₛ_ ; _≟ₗ_ to _≟ₛₛ_)
 open SETᶜ  using ()
-  renaming ( _∈_ to _∈ᶜ_; ∀∈ to ∀∈ₛ; _∈?_ to _∈?ᶜ_; _∉?_ to _∉?ᶜ_
-           ; _⊆_ to _⊆ᶜ_; _⊆?_ to _⊆?ᶜ_ ; sound-⊆ to sound-⊆ᶜ
-           ; _≟ₗ_ to _≟ᶜˢ_
-           )
+  renaming (_∈_ to _∈ᶜ_; _∉?_ to _∉?ᶜ_; _∈?_ to _∈?ᶜ_ ; _⊆_ to _⊆ᶜ_ ; _≟ₗ_ to _≟ᶜˢ_)
 open SETₐ  using ()
-  renaming ( _∈_ to _∈ₐ_; ∀∈ to ∀∈ₐ; _∈?_ to _∈?ₐ_; _∉?_ to _∉?ₐ_
-           ; _⊆_ to _⊆ₐ_; _⊆?_ to _⊆?ₐ_ ; sound-⊆ to sound-⊆ₐ
+  renaming ( _∈_ to _∈ₐ_; _∉?_ to _∉?ₐ_; _∈?_ to _∈?ₐ_
+           ; _⊆_ to _⊆ₐ_; _⊆?_ to _⊆?ₐ_; sound-⊆ to sound-⊆ₐ
            ; _≟ₗ_ to _≟ₐₛ_
            )
 
@@ -95,7 +79,7 @@ data Action (p : Participant) -- the participant that authorises this action
   -- commit secrets to stipulate {G}C
   ♯▷_ : ∀ {v vsᶜ vsᵍ} → (ad : Advertisement v vsᶜ vsᵍ)
       → Action p [] [] [ v , vsᶜ , vsᵍ , ad ]
-  
+
   -- spend x to stipulate {G}C
   _▷ˢ_ : ∀ {v vsᶜ vsᵍ}
        → (ad : Advertisement v vsᶜ vsᵍ)
@@ -218,8 +202,8 @@ data Configuration′ :
   _∣∣_∶-_ : ∀ {adsˡ csˡ dsˡ adsʳ csʳ dsʳ rads rds ads cs ds}
           → Configuration′ adsˡ csˡ dsˡ [] []
           → Configuration′ adsʳ csʳ dsʳ rads rds
-          → .(rads ⊆?ₐ adsˡ
-             × rds  ⊆?ₑ dsˡ
+          → .( rads ⊆ₐ adsˡ
+             × rds ⊆ₑ dsˡ
              × ads ≡ filter (_∉?ₐ rads) adsˡ ++ adsʳ
              × cs ≡ csˡ ++ csʳ
              × ds ≡ filter (_∉?ₑ rds) dsˡ ++ dsʳ)
@@ -235,21 +219,15 @@ infixl 5 _∣∣_
 _∣∣_ : ∀ {adsˡ csˡ dsˡ adsʳ csʳ dsʳ rads rds ads cs ds}
     → Configuration adsˡ csˡ dsˡ
     → Configuration′ adsʳ csʳ dsʳ rads rds
-    → .{p₁ : rads ⊆?ₐ adsˡ}
-    → .{p₂ : rds  ⊆?ₑ dsˡ}
+    → .{p₁ : rads ⊆ₐ adsˡ}
+    → .{p₂ : rds  ⊆ₑ dsˡ}
     → .{p₃ : True (ads ≟ₐₛ filter (_∉?ₐ rads) adsˡ ++ adsʳ)}
     → .{p₄ : True (cs ≟ᶜˢ csˡ ++ csʳ)}
     → .{p₅ : True (ds ≟ₑₛ filter (_∉?ₑ rds) dsˡ ++ dsʳ)}
-    → Configuration ads cs ds 
-        -- (filter (_∉?ₐ rads) adsˡ ++ adsʳ)
-        -- (csˡ ++ csʳ)
-        -- (filter (_∉?ₑ rds) dsˡ ++ dsʳ)
-        -- []
-        -- []
+    → Configuration ads cs ds
 (c₁ ∣∣ c₂) {p₁} {p₂} {p₃} {p₄} {p₅} =
   c₁ ∣∣ c₂
-  -- ∶- p₁ & p₂ & refl & refl & refl
-  ∶- p₁ & p₂ & toWitness p₃ & toWitness p₄ & toWitness p₅
+  ∶- {!!} & {!!} & toWitness p₃ & toWitness p₄ & toWitness p₅
 
 isInitial : ∀ {ads cs ds rads rds} → Configuration′ ads cs ds rads rds → Bool
 isInitial (⟨ _ , _ ⟩ᵈ)    = true
@@ -282,8 +260,8 @@ module ConfigurationExamples where
 
   -- deposits
   _ : Configuration [] [] (A has 4 ∷ [ A has 6 ])
-  _ = (⟨ A , 4 ⟩ᵈ ∣∣ ⟨ A , 6 ⟩ᵈ)
-      {p₅ = fromWitness refl}
+  _ = ⟨ A , 4 ⟩ᵈ ∣∣ ⟨ A , 6 ⟩ᵈ
+      ∶- (λ {x} z → z) & (λ ()) & refl & refl & refl
 
   -- authorized actions
   -- 1. donate
@@ -295,10 +273,10 @@ module ConfigurationExamples where
   -- 3. join
   _ : Configuration′ [] [] [ A has 100 ] [] (A has 33 ∷ A has 67 ∷ [])
   _ = A auth[ 0ᶠ ↔ sucᶠ 0ᶠ ]
-  -- 4. secret 
+  -- 4. secret
   _ : Configuration′ [] [] [] [ 5 , [ 100 ] , 200 ∷ 100 ∷ [] , ex-ad ] []
   _ = A auth[ ♯▷ ex-ad ]
-  -- 5. spend 
+  -- 5. spend
   _ : Configuration′ [] [] [] [ 5 , [ 100 ] , 200 ∷ 100 ∷ [] , ex-ad ] [ A has 200 ]
   _ = A auth[ ex-ad ▷ˢ 0ᶠ ]
   -- 6. take branch
@@ -308,34 +286,34 @@ module ConfigurationExamples where
   Γ₁ : Configuration [ 5 , [ 100 ] , 200 ∷ 100 ∷ [] , ex-ad ]
                      [ 1 , [] , [ withdraw A ] ]
                      []
-  Γ₁ = (` ex-ad ∣∣ ⟨ ex-contracts₁ , 1 ⟩ᶜ)
-       {p₃ = fromWitness refl} {p₄ = fromWitness refl} {p₅ = fromWitness refl}
+  Γ₁ = ` ex-ad ∣∣ ⟨ ex-contracts₁ , 1 ⟩ᶜ
+       ∶- (λ ()) & (λ {x} z → z) & refl & refl & refl
 
   Γ₂ : Configuration [ 5 , [ 100 ] , 200 ∷ 100 ∷ [] , ex-ad ]
                      [ 1 , [] , [ withdraw A ] ]
                      [ A has 40 ]
   Γ₂ = Γ₁ ∣∣ ⟨ A , 40 ⟩ᵈ
-       ∶- tt & tt & refl & refl & refl
+       ∶- (λ ()) & (λ {x} z → z) & refl & refl & refl
 
   Γ₃ : Configuration [ 5 , [ 100 ] , 200 ∷ 100 ∷ [] , ex-ad ]
                      [ 1 , [] , [ withdraw A ] ]
                      (A has 40 ∷ A has 60 ∷ [])
   Γ₃ = Γ₂ ∣∣ ⟨ A , 60 ⟩ᵈ
-       ∶- tt & tt & refl & refl & refl
+       ∶- (λ ()) & (λ {x} ()) & refl & refl & refl
 
   Γ₄ : Configuration [ 5 , [ 100 ] , 200 ∷ 100 ∷ [] , ex-ad ]
                      [ 1 , [] , [ withdraw A ] ]
                      [ A has 100 ]
   Γ₄ = Γ₃ ∣∣ A auth[ _↔_ {A} {40 ∷ 60 ∷ []} 0ᶠ (sucᶠ 0ᶠ) ]
-       ∶- tt & {!!} & refl & refl & {!!}
+       ∶- (λ ()) & (λ {x} z → z) & refl & refl & {!!}
 
 
   Γ₅ : Configuration [ 5 , [ 100 ] , 200 ∷ 100 ∷ [] , ex-ad ]
                      [ 1 , [] , [ withdraw A ] ]
                      []
   Γ₅ = Γ₄ ∣∣ A auth[ ex-ad ▷ˢ sucᶠ 0ᶠ ]
-       ∶- {!!} & {!!} & {!!} & refl & {!!}
-  
+       ∶- (λ {x} z → z) & (λ {x} z → z) & {!!} & refl & {!!}
+
 
   -- secrets
   _ : Configuration [] [] []
@@ -348,7 +326,7 @@ module ConfigurationExamples where
   _ = ⟨ A ∶ "qwerty" ♯ inj₂ impossible ⟩
     where postulate impossible : ⊥
 
-infix 1 _—→_
+infix 0 _—→_
 data _—→_ :
   ∀ {ads cs ds ads′ cs′ ds′}
   → Configuration ads cs ds
@@ -357,30 +335,43 @@ data _—→_ :
 
   -- i) Rules for deposits
   [DEP-AuthJoin] :
-    ∀ {ads cs ds}
-      {A : Participant} {v v′ : Value} {Γ : Configuration ads cs ds}
+    ∀ {A : Participant}
+      {v v′ : Value}
+      {ads cs ds} {Γ : Configuration ads cs ds}
 
       ----------------------------------------------------------------------------------
-    → (( ⟨ A , v ⟩ᵈ
-      ∣∣ ⟨ A , v′ ⟩ᵈ ) {p₁ = {!!}} {p₂ = {!!}} {p₃ = {!!}} {p₄ = {!!}} {p₅ = {!!}} 
-      ∣∣ Γ           ) {p₁ = {!!}} {p₂ = {!!}} {p₃ = {!!}} {p₄ = {!!}} {p₅ = {!!}} 
-        —→
-      ((( ⟨ A , v ⟩ᵈ
-      ∣∣  ⟨ A , v′ ⟩ᵈ ) {p₁ = {!!}} {p₂ = {!!}} {p₃ = {!!}} {p₄ = {!!}} {p₅ = {!!}} 
-      ∣∣  A auth[ 0ᶠ ↔ sucᶠ 0ᶠ ] )
-            {p₁ = {!!}} {p₂ = {!!}} {p₃ = {!!}} {p₄ = {!!}} {p₅ = {!!}}
-      ∣∣ Γ            ) {p₁ = {!!}} {p₂ = {!!}} {p₃ = {!!}} {p₄ = {!!}} {p₅ = {!!}}
-       
+    → _—→_ {ds  = A has v ∷ A has v′ ∷ ds}
+           {ds′ = A has (v + v′) ∷ ds}
+      (  ⟨ A , v ⟩ᵈ
+      ∣∣ ⟨ A , v′ ⟩ᵈ ∶- (λ {x} z → z) & (λ ()) & refl & refl & refl
+      ∣∣ Γ           ∶- (λ {x} z → z) & (λ ()) & refl & refl & refl
+      )
+      -->
+      (  ⟨ A , v ⟩ᵈ
+      ∣∣ ⟨ A , v′ ⟩ᵈ            ∶- (λ {x} z → z) & (λ ()) & refl & refl & refl
+      ∣∣ A auth[ 0ᶠ ↔ sucᶠ 0ᶠ ] ∶- (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
+      ∣∣ Γ                      ∶- (λ {x} z → z) & (λ ()) & refl & refl & {!!}
+      )
 
-  -- [DEP-Join] :
-  --   ∀ {A : Participant} {v v′ : Value} {x y z : Identifier} {Γ Γ′ : Configuration}
 
-  --   → Γ ≡ A [ x , y ▷⟨ A , v + v′ ⟩ ] ∣∣ A [ y , x ▷⟨ A , v + v′ ⟩ ] ∣∣ Γ′
-  --     ---------------------------------------------------------------------
-  --   → ⟨ A , v ⟩deposit= x ∣∣ ⟨ A , v′ ⟩deposit= y ∣∣ Γ
-  --       —→
-  --     ⟨ A , v + v′ ⟩deposit= z ∣∣ Γ′
-    
+  [DEP-Join] :
+    ∀ {A : Participant}
+      {v v′ : Value}
+      {ads cs ds} {Γ : Configuration ads cs ds}
+
+      ---------------------------------------------------------------------
+    → _—→_ {ads  = ads} {cs  = cs} {ds  = A has (v + v′) ∷ ds}
+           {ads′ = ads} {cs′ = cs} {ds′ = A has (v + v′) ∷ ds}
+      (  ⟨ A , v ⟩ᵈ
+      ∣∣ ⟨ A , v′ ⟩ᵈ            ∶- (λ {x} z → z) & (λ ()) & refl & refl & refl
+      ∣∣ A auth[ 0ᶠ ↔ sucᶠ 0ᶠ ] ∶- (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
+      ∣∣ Γ                      ∶- (λ {x} z → z) & (λ ()) & refl & refl & {!!}
+      )
+      -->
+      (  ⟨ A , v + v′ ⟩ᵈ
+      ∣∣ Γ ∶- (λ {x} z → z) & (λ ()) & refl & refl & refl
+      )
+
   -- [DEP-AuthDivide] :
   --   ∀ {A : Participant} {v v′ : Value} {x : Identifier} {Γ Γ′ : Configuration}
 
@@ -388,7 +379,7 @@ data _—→_ :
   --   → ⟨ A , v + v′ ⟩deposit= x ∣∣ Γ
   --       —→
   --     ⟨ A , v + v′ ⟩deposit= x ∣∣ A [ x ▷⟨ A , v ⟩,⟨ A , v ⟩ ] ∣∣ Γ
-    
+
   -- [DEP-DIVIDE] :
   --   ∀ {A : Participant} {v v′ : Value} {x y y′ : Identifier} {Γ Γ′ : Configuration}
 
@@ -398,7 +389,7 @@ data _—→_ :
   --     ⟨ A , v + v′ ⟩deposit= x ∣∣ Γ
   --       —→
   --     ⟨ A , v ⟩deposit= y ∣∣ ⟨ A , v′ ⟩deposit= y′ ∣∣ Γ′
-    
+
   -- [DEP-AuthDonate] :
   --   ∀ {A B : Participant} {v : Value} {x : Identifier} {Γ : Configuration}
 
@@ -418,7 +409,7 @@ data _—→_ :
 
   -- -- [DEP-AuthDestroy]
   -- -- [DEP-Destroy]
-    
+
   -- -- ii) Rules for contract advertisements and stipulation
 
   -- [C-Advertise] :
@@ -445,10 +436,9 @@ data _—→_ :
   -- [C-Withdraw]
   -- [C-AuthControl]
   -- [C-Control]
-   
+
   -- iv) Rules for handling time
 
   -- [Action]
   -- [Delay]
   -- [Timeout]
-  

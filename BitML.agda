@@ -1,4 +1,6 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+------------------------------------------------------------------------
+-- BitML datatypes: Contracts & Advertisements
+------------------------------------------------------------------------
 
 open import Level    using (0ℓ)
 open import Function using (_on_; const; _∘_; id; _∋_)
@@ -26,14 +28,12 @@ open import Relation.Nullary.Decidable using (⌊_⌋; toWitness; fromWitness; T
 open import Relation.Binary  using (Decidable)
 
 import Relation.Binary.PropositionalEquality as Eq
-open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
+-- open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
 open Eq using (_≡_; refl; sym; trans; cong; cong₂) --; inspect)
 
-open import Category.Functor       using (RawFunctor)
-open import Data.Maybe.Categorical renaming (functor to maybeFunctor)
-open import Data.List.Categorical  renaming (functor to listFunctor)
-open RawFunctor {0ℓ} maybeFunctor renaming (_<$>_ to _<$>ₘ_)
-open RawFunctor {0ℓ} listFunctor  renaming (_<$>_ to _<$>ₗ_)
+open import Category.Functor using (RawFunctor)
+open import Data.List.Categorical renaming (functor to listFunctor)
+open RawFunctor {0ℓ} listFunctor using (_<$>_)
 
 module BitML
   (Participant : Set)
@@ -45,32 +45,15 @@ open import Utilities.Lists
 open import Types Participant _≟ₚ_ Honest
 
 open SETₙ  using ()
-  renaming ( _∈_ to _∈ₙ_; ∀∈ to ∀∈ₙ; _∈?_ to _∈?ₙ_; _∉?_ to _∉?ₙ_
-           ; _⊆_ to _⊆ₙ_; _⊆?_ to _⊆?ₙ_ ; sound-⊆ to sound-⊆ₙ
-           ; _≟ₗ_ to _≟ₙₛ_
-           )
+  renaming (_∈_ to _∈ₙ_; _∈?_ to _∈?ₙ_ ; _⊆_ to _⊆ₙ_ ; _≟ₗ_ to _≟ₙₛ_)
 open SETₚ  using ()
-  renaming ( _∈_ to _∈ₚ_; ∀∈ to ∀∈ₚ; _∈?_ to _∈?ₚ_; _∉?_ to _∉?ₚ_
-           ; _⊆_ to _⊆ₚ_; _⊆?_ to _⊆?ₚ_ ; sound-⊆ to sound-⊆ₚ
-           ; base-⊆ to base-⊆ₚ; keep-⊆ to keep-⊆ₚ; drop-⊆ to drop-⊆ₚ
-           ; _≟ₗ_ to _≟ₚₛ_
-           ; nodup to nodupₚ
-           )
+  renaming (_∈_ to _∈ₚ_; _∈?_ to _∈?ₚ_ ; _⊆_ to _⊆ₚ_ ; _≟ₗ_ to _≟ₚₛ_)
 open SETₑ using ()
-  renaming ( _∈_ to _∈ₑ_; ∀∈ to ∀∈ₑ; _∈?_ to _∈?ₑ_; _∉?_ to _∉?ₑ_
-           ; _⊆_ to _⊆ₑ_; _⊆?_ to _⊆?ₑ_ ; sound-⊆ to sound-⊆ₑ
-           ; _≟ₗ_ to _≟ₑₛ_
-           )
+  renaming (_∈_ to _∈ₑ_; _∈?_ to _∈?ₑ_ ; _⊆_ to _⊆ₑ_ ; _≟ₗ_ to _≟ₑₛ_)
 open SETₑᵣ using ()
-  renaming ( _∈_ to _∈ₑᵣ_; ∀∈ to ∀∈ₑᵣ; _∈?_ to _∈?ₑᵣ_; _∉?_ to _∉?ₑᵣ_
-           ; _⊆_ to _⊆ₑᵣ_; _⊆?_ to _⊆?ₑᵣ_ ; sound-⊆ to sound-⊆ₑᵣ
-           ; _≟ₗ_ to _≟ₑᵣₛ_
-           )
+  renaming (_∈_ to _∈ₑᵣ_; _∈?_ to _∈?ₑᵣ_ ; _⊆_ to _⊆ₑᵣ_ ; _≟ₗ_ to _≟ₑᵣₛ_)
 open SETₛ  using ()
-  renaming ( _∈_ to _∈ₛ_; ∀∈ to ∀∈ₛ; _∈?_ to _∈?ₛ_; _∉?_ to _∉?ₛ_
-           ; _⊆_ to _⊆ₛ_; _⊆?_ to _⊆?ₛ_ ; sound-⊆ to sound-⊆ₛ
-           ; _≟ₗ_ to _≟ₛₛ_
-           )
+  renaming (_∈_ to _∈ₛ_; _∈?_ to _∈?ₛ_ ; _⊆_ to _⊆ₛ_ ; _≟ₗ_ to _≟ₛₛ_)
 
 ------------------------------------------------------------------------
 -- Contracts
@@ -177,12 +160,12 @@ put_&reveal_if_⇒_ : ∀ {v v′ vs′ s′ vs′′}
   → Predicate s′
   → Contract v′ vs′
   → .{p₁ : put? v vs v′}
-  → .{p₂ : s′ ⊆?ₛ s}
+  → .{p₂ : s′ ⊆ₛ s}
   → .{p₃ : True (vs′′ ≟ₙₛ vs′ ++ vs)}
   → Contract v vs′′
 (put vs &reveal s if p ⇒ c) {p₁} {p₂} {p₃} =
   put vs &reveal s if p ⇒ c
-  ∶- (sound-put {p = p₁} , sound-⊆ₛ {p = p₂} , toWitness p₃)
+  ∶- (sound-put {p = p₁} , p₂ , toWitness p₃)
 
 -- Lists of contracts.
 Contracts : Value → Values → Set
@@ -254,39 +237,26 @@ module _ where
       G : Precondition vsᵍ
       C : Contracts v vsᶜ
 
-      .valid : -- 1. names in G are distinct
-               -- *** correct by construction ***
-
-               -- 2. each name in C appears in G
+      .valid : -- 1. each name in C appears in G
                vsᶜ ≾ vsᵍ
 
-               -- 3. the names in put_&_ are distinct
-               -- *** correct by construction ***
+               -- 2. each participant has a persistent deposit in G
+             × participantsᵍ G ++ participantsᶜ C
+                 ⊆ₚ
+               (participant <$> persistentDepositsᵖ G)
 
-               -- 3'. secrets in `if ...` appear in `reveal ...`
                -- *** correct by construction ***
-
-               -- 4. each participant has a persistent deposit in G
-             × nodupₚ (participantsᵍ G ++ participantsᶜ C)
-                 ⊆ₚ participant <$>ₗ persistentDepositsᵖ G
+               -- - names in G are distinct
+               -- - secrets in `if ...` appear in `reveal ...`
+               -- - the names in put_&_ are distinct
 
   open Advertisement public
 
--- Implicit-proof constructors.
 infix 2 put_&reveal_if_⇒_∶-_
 infixr 9 _&_
 
 _&_ : ∀ {A B : Set} → A → B → A × B
 _&_ = _,_
-
-⟨_⟩_ : ∀ {v vsᶜ vsᵍ}
-     → (g : Precondition vsᵍ)
-     → (c : Contracts v vsᶜ)
-     → {p₁ : vsᶜ ≾? vsᵍ}
-     → {p₂ : nodupₚ (participantsᵍ g ++ participantsᶜ c)
-               ⊆?ₚ participant <$>ₗ persistentDepositsᵖ g }
-     → Advertisement v vsᶜ vsᵍ
-(⟨ g ⟩ c) {p₁} {p₂} = ⟨ g ⟩ c ∶- (sound-≾ {p = p₁} , sound-⊆ₚ {p = p₂})
 
 depositsᵃ : ∀ {v vsᶜ vsᵍ} → Advertisement v vsᶜ vsᵍ → List DepositRef
 depositsᵃ ad = depositsᵖ (G ad)
@@ -302,11 +272,13 @@ module AdvertisementExample where
 
   ex-contracts₂ : Contracts 5 []
   ex-contracts₂ = (A ∶ withdraw A)
-                ⊕ (put [] &reveal [] if `True ⇒ withdraw {5} A)
+                ⊕ (put [] &reveal [] if `True ⇒ withdraw {5} A
+                   ∶- sound-put & (λ {x} z → z) & refl)
                 ∙
 
   ex-contracts₃ : Contracts 5 [ 100 ]
-  ex-contracts₃ = (put [ 100 ] &reveal [] if `True ⇒ withdraw {105} A) ∙
+  ex-contracts₃ = (put [ 100 ] &reveal [] if `True ⇒ withdraw {105} A
+                   ∶- sound-put & (λ {x} z → z) & refl) ∙
 
   ex-contracts₄ : Contracts 5 []
   ex-contracts₄ = (A ∶ withdraw {5} B)
@@ -316,14 +288,18 @@ module AdvertisementExample where
                                     &reveal []
                                     if `True
                                     ⇒ (A ∶ withdraw {10} B)
-                                    ∶- sound-put & sound-⊆ₛ & refl)
+                                    ∶- sound-put & (λ {x} z → z) & refl)
                              ∙))
                 ∙
 
   ex-ad : Advertisement 5 [ 100 ] (200 ∷ 100 ∷ [])
   ex-ad = ⟨ B :! 200 ∣ A :! 100  ⟩ ex-contracts₃
-        ∶- sound-≾ & sound-⊆ₚ {p = {!!}}
-        -- keep-⊆ₚ {B} {[ A ]} {[ A ]} (keep-⊆ₚ {A} {[]} {[]} base-⊆ₚ)
+          ∶- sound-≾
+          &  λ{ {x} (here px)                  → here px
+              ; {x} (there (here px))          → there (here px)
+              ; {x} (there (there (here px)))  → there (here px)
+              ; {x} (there (there (there ())))
+              }
 
 ------------------------------------------------------------------------
 -- Decidable equalities.
