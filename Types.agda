@@ -51,19 +51,19 @@ data Arith :
   `_ : ℕ → Arith []
 
   `len : (s : Secret) → Arith [ s ]
-    
+
   _`+_ : ∀ {s sₗ sᵣ}
        → Arith sₗ
        → Arith sᵣ
        → .{_ : s ≡ sₗ ++ sᵣ}
-       → Arith s 
+       → Arith s
 
   _`-_ : ∀ {s sₗ sᵣ}
        → Arith sₗ
        → Arith sᵣ
        → .{_ : s ≡ sₗ ++ sᵣ}
-       → Arith s 
-  
+       → Arith s
+
 ------------------------------------------------------------------------
 -- Predicates.
 
@@ -72,11 +72,11 @@ data Predicate :
   → Set where
 
   `True : Predicate []
-  
+
   _`∧_ : ∀ {s sₗ sᵣ}
        → Predicate sₗ
        → Predicate sᵣ
-       → .{_ : s ≡ sₗ ++ sᵣ} 
+       → .{_ : s ≡ sₗ ++ sᵣ}
        → Predicate s
 
   `¬_ : ∀ {s} → Predicate s → Predicate s
@@ -84,13 +84,13 @@ data Predicate :
   _`≡_ : ∀ {s sₗ sᵣ}
        → Arith sₗ
        → Arith sᵣ
-       → .{_ : s ≡ sₗ ++ sᵣ} 
+       → .{_ : s ≡ sₗ ++ sᵣ}
        → Predicate s
 
   _`<_ : ∀ {s sₗ sᵣ}
        → Arith sₗ
        → Arith sᵣ
-       → .{_ : s ≡ sₗ ++ sᵣ} 
+       → .{_ : s ≡ sₗ ++ sᵣ}
        → Predicate s
 
 -------------------------------------------------------------------
@@ -123,10 +123,10 @@ data Precondition :
     Values -- the deposits it requires (persistent or not)
   → Set where
 
-  -- volatile deposit of <Value>$, expected from <Participant> (named <Identifier>)
-  _:?_ : Participant → (v : Value) → Precondition [ v ]
+  -- volatile deposit of <Value>$, expected from <Participant>
+  _:?_ : Participant → (v : Value) → Precondition [ v ] -- T0D0 remove v?
 
-  -- persistent deposit of <Value>$, expected from <Participant> (named <Identifier>)
+  -- persistent deposit of <Value>$, expected from <Participant>
   _:!_ : Participant → (v : Value) → Precondition [ v ]
 
   -- committed secret (random nonce) by <Participant>
@@ -202,7 +202,7 @@ Set⟨Secret⟩ = Set'
   where open SETₛ
 
 -- Sets of arithmetic expressions.
-open SETₛ  using () renaming (_≟ₗ_ to _≟ₛₛ_) 
+open SETₛ  using () renaming (_≟ₗ_ to _≟ₛₛ_)
 
 _≟ₐᵣ_ : ∀ {s} → Decidable {A = Arith s} _≡_
 (` x)  ≟ₐᵣ (` y)      with x ≟ y

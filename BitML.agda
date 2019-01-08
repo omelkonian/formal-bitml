@@ -194,6 +194,14 @@ _⊸_ {vs} v c = v , vs , c
 ------------------------------------------------------------------------
 -- Utilities.
 
+secretsᵖ : ∀ {vs} → Participant → Precondition vs → Secrets
+secretsᵖ _ (_ :? _) = []
+secretsᵖ _ (_ :! _) = []
+secretsᵖ A (B :secret s) with A ≟ₚ B
+... | yes _ = [ s ]
+... | no  _ = []
+secretsᵖ A (l ∣ r) = secretsᵖ A l ++ secretsᵖ A r
+
 participantsᶜ : ∀ {v vs} → Contracts v vs → List Participant
 participantsᶜ = concatMap go
   where
@@ -224,6 +232,11 @@ depositsᵖ (_ :secret _) = []
 persistentDepositsᵖ : ∀ {vs} → Precondition vs → List Deposit
 persistentDepositsᵖ = map deposit ∘ filter ((_≟ᵇ true) ∘ persistent) ∘ depositsᵖ
 
+toStipulate : ∀ {vs} → Precondition vs → List (Participant × Value)
+toStipulate (p :! v) = [ p , v ]
+toStipulate (l ∣ r)  = toStipulate l ++ toStipulate r
+toStipulate _        = []
+
 ------------------------------------------------------------------------
 -- Advertisements.
 
@@ -244,6 +257,8 @@ module _ where
              × participantsᵍ G ++ participantsᶜ C
                  ⊆ₚ
                (participant <$> persistentDepositsᵖ G)
+
+               -- 3. T0D0: v = Σ vsᵍ
 
                -- *** correct by construction ***
                -- - names in G are distinct

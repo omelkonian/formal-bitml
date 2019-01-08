@@ -27,11 +27,6 @@ module Data.Set' {A : Set} (_≟_ : Decidable (_≡_ {A = A})) where
 
   open import Data.List.Membership.DecPropositional _≟_ using (_∈_; _∉_; _∈?_) public
 
-  _∉?_ : Decidable {A = A} _∉_
-  x ∉? xs with x ∈? xs
-  ... | yes x∈xs = no (λ ¬x∈xs → ¬x∈xs x∈xs)
-  ... | no  x∉xs = yes x∉xs
-
   ------------------------------------------------------------------------
   -- Decidable equality.
 
@@ -63,6 +58,10 @@ module Data.Set' {A : Set} (_≟_ : Decidable (_≡_ {A = A})) where
   ... | yes x∈ys = λ{ (here refl)  → x∈ys
                     ; (there y∈xs) → (sound-⊆ {p = xs⊆?ys}) y∈xs }
   ... | no  x∉ys = ⊥-elim xs⊆?ys
+
+  head⊆ : ∀ {x xs} → [ x ] ⊆ x ∷ xs
+  head⊆ {x} {xs} (here refl) = here refl
+  head⊆ {x} {xs} (there ())
 
   ------------------------------------------------------------------------
   -- Sets as lists with no duplicates.
@@ -134,3 +133,23 @@ module Data.Set' {A : Set} (_≟_ : Decidable (_≡_ {A = A})) where
   fromList (x ∷ xs) with x ∈? xs
   ... | yes _ = fromList xs
   ... | no  _ = x ∷ proj₁ (fromList xs) , {!!}
+
+  ------------------------------------------------------------------------
+  -- Notation.
+
+  -- data ∀∈ (xs : Set') (P : A → Set) : Set where
+  --  mk∀∈ : ∀ (x : A) → (x ∈ xs) → P x → ∀∈ xs P
+
+  -- infix 2 ∀∈
+  -- syntax ∀∈ xs (λ x → P) = ∀[ x ∈ xs ] P
+
+  -- data ∃∈ (xs : Set') (P : A → Set) : Set where
+  --  mk∃∈ : ∃[ x ] ((x ∈ xs) × P x) → ∃∈ xs P
+
+  -- infix 2 ∃∈
+  -- syntax ∃∈ xs (λ x → P) = ∃[ x ∈ xs ] P
+
+  _∉?_ : Decidable {A = A} _∉_
+  x ∉? xs with x ∈? xs
+  ... | yes x∈xs = no (λ ¬x∈xs → ¬x∈xs x∈xs)
+  ... | no  x∉xs = yes x∉xs

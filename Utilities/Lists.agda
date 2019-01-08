@@ -55,12 +55,12 @@ _at_⟨_⟩remove_ : ∀ {A : Set} → (vs : List A) → Index vs → A → Inde
 -- Less-than relation for lists (on lengths).
 infix 3 _≾_
 data _≾_ {ℓ} {A : Set ℓ} : List A → List A → Set where
-                                 
+
   base-≾ : ∀ {xs : List A}
-  
+
          → -------
            [] ≾ xs
-  
+
   step-≾ : ∀ {x y : A} {xs ys : List A}
 
          → xs ≾ ys
@@ -72,7 +72,7 @@ _≾?_ : ∀ {ℓ} {A : Set ℓ} → List A → List A → Set
 []     ≾? _      = ⊤
 _ ∷ _  ≾? []     = ⊥
 _ ∷ xs ≾? _ ∷ ys = xs ≾? ys
-  
+
 sound-≾ : ∀ {ℓ} {A : Set ℓ} {xs ys : List A} → {p : xs ≾? ys} → xs ≾ ys
 sound-≾ {_} {_} {[]}     {ys}     {tt} = base-≾
 sound-≾ {_} {_} {x ∷ xs} {[]}     {()}
