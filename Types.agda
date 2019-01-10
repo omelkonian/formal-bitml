@@ -2,12 +2,14 @@
 -- Basic BitML datatypes
 ------------------------------------------------------------------------
 
-open import Data.Nat           using (ℕ; _≟_; _>_)
+open import Data.Nat           using (ℕ; _≟_; _>_; _+_; _∸_; _<?_)
 open import Data.Product       using (Σ; Σ-syntax; proj₁)
 open import Data.List          using (List; []; _∷_; [_]; length; _++_)
 open import Data.String        using (String)
-open import Data.String.Unsafe using () renaming (_≟_ to _≟ₛ′_)
-open import Data.Bool          using (Bool; true; false)
+  renaming (length to lengthˢ)
+open import Data.String.Unsafe using ()
+  renaming (_≟_ to _≟ₛ′_)
+open import Data.Bool          using (Bool; true; false; _∧_; _∨_; not)
   renaming (_≟_ to _≟ᵇ_)
 
 open import Relation.Nullary                      using (Dec; yes; no)
@@ -25,7 +27,6 @@ module Types
 -- Basic types.
 
 Hon = proj₁ Honest
-
 Value : Set
 Value = ℕ
 
@@ -64,6 +65,12 @@ data Arith :
        → .{_ : s ≡ sₗ ++ sᵣ}
        → Arith s
 
+⟦_⟧ᵃ : ∀ {s} → Arith s → ℕ
+⟦ ` x    ⟧ᵃ = x
+⟦ `len s ⟧ᵃ = lengthˢ s
+⟦ l `+ r ⟧ᵃ = ⟦ l ⟧ᵃ + ⟦ r ⟧ᵃ
+⟦ l `- r ⟧ᵃ = ⟦ l ⟧ᵃ ∸ ⟦ r ⟧ᵃ
+
 ------------------------------------------------------------------------
 -- Predicates.
 
@@ -92,6 +99,17 @@ data Predicate :
        → Arith sᵣ
        → .{_ : s ≡ sₗ ++ sᵣ}
        → Predicate s
+
+⟦_⟧ᵇ : ∀ {s} → Predicate s → Bool
+⟦ `True ⟧ᵇ = true
+⟦ l `∧ r ⟧ᵇ = ⟦ l ⟧ᵇ ∧ ⟦ r ⟧ᵇ
+⟦ `¬ p ⟧ᵇ = not ⟦ p ⟧ᵇ
+⟦ l `≡ r ⟧ᵇ with ⟦ l ⟧ᵃ ≟ ⟦ r ⟧ᵃ
+... | yes _ = true
+... | no  _ = false
+⟦ l `< r ⟧ᵇ with ⟦ l ⟧ᵃ <? ⟦ r ⟧ᵃ
+... | yes _ = true
+... | no  _ = false
 
 -------------------------------------------------------------------
 -- Deposits.

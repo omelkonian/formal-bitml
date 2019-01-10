@@ -171,10 +171,6 @@ put_&reveal_if_⇒_ : ∀ {v v′ vs′ s′ vs′′}
 Contracts : Value → Values → Set
 Contracts v vs = List (Contract v vs)
 
-Contracts∃_←v_←vs_ : (v : Value) → (vs : Values) → (cs : Contracts v vs)
-                   → ∃[ v′ ] ∃[ vs′ ] Contracts v′ vs′
-Contracts∃ v ←v vs ←vs cs  = v , vs , cs
-
 infixr 9 _∶_
 
 infixr 5 _⊕_
