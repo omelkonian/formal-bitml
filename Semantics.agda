@@ -128,7 +128,7 @@ data Action (p : Participant) -- the participant that authorises this action
   destroy : ∀ {vs : Values}
         → (i : Index vs)
         -- → .{pr : participant (vs ‼ i) ≡ A}
-        → Action p [] [] (remove vs i) []
+        → Action p [] [] vs (p has_ <$> remove vs i)
 
 
 module ActionExamples where
@@ -453,6 +453,7 @@ removeTopDecorations c             = c
 -- Semantic rules for untimed configurations.
 
 -- T0D0 [GENERALISE] single configurations inside list, instead of head
+-- T0D0 Keep transition labels?
 
 infix -1 _—→_
 data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
@@ -602,20 +603,34 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
     → Configuration ads cs (A has v ∷ ds) ∋
       (  ⟨ A , v ⟩ᵈ
       ∣∣ Γ
-      ∶- {!!} & {!!} & {!!} & {!!} & {!!} & {!!}
+      ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
       )
       —→
       Configuration ads cs ds ∋
-      ( Configuration [] [] [] ∋
       (  ⟨ A , v ⟩ᵈ
-      ∣∣ A auth[ destroy 0ᶠ ]
-      ∶- {!!} & {!!} & {!!} & {!!} & {!!} & {!!}
-      )
+      ∣∣ A auth[ destroy {vs = [ v ]} 0ᶠ ]
+      ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & {!!}
       ∣∣ Γ
-      ∶- {!!} & {!!} & {!!} & {!!} & {!!} & {!!}
+      ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
       )
 
-  -- [DEP-Destroy]
+  [DEP-Destroy] :
+    ∀ {A : Participant}
+      {ads cs ds} {Γ : Configuration ads cs ds}
+      {v : Value}
+
+      ------------------------------------------------------------
+    → Configuration ads cs ds ∋
+      ( Configuration [] [] [] ∋
+      (  ⟨ A , v ⟩ᵈ
+      ∣∣ A auth[ destroy {vs = [ v ]} 0ᶠ ]
+      ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & {!!}
+      )
+      ∣∣ Γ
+      ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
+      )
+      —→
+      Γ
 
   -- ii) Rules for contract advertisements and stipulation
 
