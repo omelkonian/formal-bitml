@@ -1,5 +1,5 @@
 open import Level        using (0ℓ)
-open import Function     using (_on_; const; _∘_; id; _∋_; _$_)
+open import Function     using (_on_; const; _∘_; id; _∋_; _$_; case_of_)
 open import Data.Empty   using (⊥; ⊥-elim)
 open import Data.Unit    using (⊤; tt)
 open import Data.Bool    using (T; Bool; true; false; _∧_)
@@ -9,7 +9,7 @@ open import Data.Product using (∃; ∃-syntax; Σ; Σ-syntax; _×_; _,_; proj�
 open import Data.Sum     using (_⊎_; inj₁; inj₂; isInj₁; isInj₂)
 open import Data.Fin     using (Fin; fromℕ)
   renaming (zero to 0ᶠ; suc to sucᶠ; _≟_ to _≟ᶠ_)
-open import Data.String  hiding (_++_)
+open import Data.String  using ()
   renaming (length to lengthₛ)
 
 open import Data.List using (List; []; _∷_; [_]; _++_; map; length; filter; boolFilter)
@@ -66,6 +66,11 @@ open SETₐ  using ()
            ; _⊆_ to _⊆ₐ_; _⊆?_ to _⊆?ₐ_; sound-⊆ to sound-⊆ₐ; head⊆ to head⊆ₐ
            ; _≟ₗ_ to _≟ₐₛ_
            )
+
+open import Relation.Binary.PropositionalEquality using (setoid)
+import Data.List.Membership.Setoid as SetoidMembership
+open SetoidMembership (setoid (Participant × Secret × (ℕ ⊎ ⊥)))
+  renaming (_∈_ to _∈ˢ_)
 
 -------------------------------------------------------------------
 -- Actions.
@@ -232,7 +237,7 @@ Configuration : AdvertisedContracts → ActiveContracts → Deposits → Set
 Configuration ads cs ds = Configuration′ (ads , []) (cs , []) (ds , [])
 
 -- Implicit-proof operators for configurations.
-infixl 0 _∣∣_∶-_
+infixl 4 _∣∣_∶-_
 infixl 5 _∣∣_
 _∣∣_ : ∀ {adsˡ csˡ dsˡ adsʳ csʳ dsʳ rads rcs rds ads cs ds}
     → Configuration′ ( adsˡ , []  ) ( csˡ , [] ) (dsˡ , [] )
@@ -386,6 +391,7 @@ module ConfigurationExamples where
 -------------------------------------------------------------------
 -- Utilities for constructing configurations.
 
+infixl 4 _∣∣ᶜˢ_
 _∣∣ᶜˢ_ : ∀ {ads cs ds}
       → (cs′ : ActiveContracts)
       → Configuration ads cs ds
@@ -395,6 +401,7 @@ _∣∣ᶜˢ_ : ∀ {ads cs ds}
                           ∣∣ (cs ∣∣ᶜˢ Γ)
                           ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
 
+infixl 4 _∣∣ᵈˢ_
 _∣∣ᵈˢ_ : ∀ {ads cs ds}
       → (ds′ : Deposits)
       → Configuration ads cs ds
@@ -404,28 +411,48 @@ _∣∣ᵈˢ_ : ∀ {ads cs ds}
                ∣∣ (ds ∣∣ᵈˢ Γ)
                ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
 
+
+-- CommittedSecret : Set
+-- CommittedSecret = Participant × Secret × (ℕ ⊎ ⊥)
+
+-- infixl 4 _∣∣ˢˢ²_
+-- _∣∣ˢˢ²_ : ∀ {ads cs ds}
+--        → (ss : List CommittedSecret)
+--        → Configuration ads cs ds
+--        → Configuration ads cs ds
+-- []                  ∣∣ˢˢ² Γ = Γ
+-- ((p , s , n ) ∷ ss) ∣∣ˢˢ² Γ =
+--      (⟨ p ∶ s ♯ n ⟩ {case n of λ{ (inj₁ x) → inj₁ {!!} ; (inj₂ y) → inj₂ (y , {!!})}})
+--   ∣∣ (ss ∣∣ˢˢ² Γ)
+--   ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
+
 ValidSecret : Set
 ValidSecret = Participant × ∃[ s ] ∃[ n ] (lengthₛ s ≡ n)
 
+infixl 4 _∣∣ˢˢ_
 _∣∣ˢˢ_ : ∀ {ads cs ds}
       → (ss : List ValidSecret)
       → Configuration ads cs ds
       → Configuration ads cs ds
 []                      ∣∣ˢˢ Γ = Γ
-((p , s , n , pr) ∷ ss) ∣∣ˢˢ Γ = (p ∶ s ♯ n) {fromWitness pr}
-                              ∣∣ (ss ∣∣ˢˢ Γ)
-                              ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
+((p , s , n , pr) ∷ ss) ∣∣ˢˢ Γ =
+     (p ∶ s ♯ n) {fromWitness pr}
+  ∣∣ (ss ∣∣ˢˢ Γ)
+  ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
 
+infixl 4 _∣∣ᵇ_
 _∣∣ᵇ_ : ∀ {ads cs ds}
       → Configuration ads cs ds
       → ( Σ[ x ∈ Index cs ] (Index ((proj₂ ∘ proj₂) (cs ‼ x)) × List Participant)
         )
       → Configuration ads cs ds
 _∣∣ᵇ_ {_} {cs} Γ (i , j , [])     = Γ
-_∣∣ᵇ_ {_} {cs} Γ (i , j , p ∷ ps) = ( Γ
-                                    ∣∣ p auth[ ((proj₂ ∘ proj₂) (cs ‼ i)) ▷ᵇ j ]
-                                    ∶- (λ ()) & {!!} & (λ ()) & {!!} & {!!} & {!!}
-                                    ) ∣∣ᵇ (i , j , ps)
+_∣∣ᵇ_ {_} {cs} Γ (i , j , p ∷ ps) =
+  (  Γ
+  ∣∣ p auth[ ((proj₂ ∘ proj₂) (cs ‼ i)) ▷ᵇ j ]
+  ∶- (λ ()) & {!!} & (λ ()) & {!!} & {!!} & {!!}
+  )
+  ∣∣ᵇ (i , j , ps)
 
 casesToContracts : ContractCases → ActiveContracts
 casesToContracts = map (λ{ (v , vs , c) → v , vs , [ c ] })
@@ -449,10 +476,21 @@ removeTopDecorations (after _ ∶ c) = removeTopDecorations c
 removeTopDecorations c             = c
 
 
+cfgToList : ∀ {p₁ p₂ p₃}
+          → Configuration′ p₁ p₂ p₃
+          → List (∃[ p₁ ] ∃[ p₂ ] ∃[ p₃ ] Configuration′ p₁ p₂ p₃)
+cfgToList ∅ᶜ               = []
+cfgToList (l ∣∣ r ∶- _)    = cfgToList l ++ cfgToList r
+cfgToList {p₁} {p₂} {p₃} c = [ p₁ , p₂ , p₃ , c ]
+
+open import Data.List.Relation.Permutation.Inductive using (_↭_)
+infix 3 _≈_
+_≈_ : ∀ {ads cs ds} → Configuration ads cs ds → Configuration ads cs ds → Set
+c ≈ c′ = cfgToList c ↭ cfgToList c′
+
 -----------------------------------------------------------------------------------
 -- Semantic rules for untimed configurations.
 
--- T0D0 [GENERALISE] single configurations inside list, instead of head
 -- T0D0 Keep transition labels?
 
 infix -1 _—→_
@@ -467,12 +505,12 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {v v′ : Value}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
+      {Γ′ : Configuration ads cs (A has v ∷ A has v′ ∷ ds)}
+    → Γ′ ≈ (A has v ∷ A has v′ ∷ []) ∣∣ᵈˢ Γ
+
       ----------------------------------------------------------------------------------
-    → Configuration ads cs (A has v ∷ A has v′ ∷ ds) ∋
-      (  ⟨ A , v ⟩ᵈ
-      ∣∣ ⟨ A , v′ ⟩ᵈ ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
-      ∣∣ Γ           ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
-      )
+
+    → Γ′
       —→
       Configuration ads cs (A has (v + v′) ∷ ds) ∋
       (  ⟨ A , v ⟩ᵈ
@@ -484,22 +522,23 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & {!!}
       )
 
-
   [DEP-Join] :
     ∀ {A : Participant}
       {v v′ : Value}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
+      {Γ′ : Configuration ads cs (A has v ∷ A has v′ ∷ ds)}
+    → Γ′ ≈ ⟨ A , v ⟩ᵈ
+        ∣∣ ⟨ A , v′ ⟩ᵈ
+        ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
+        ∣∣ A auth[ 0ᶠ ↔ sucᶠ 0ᶠ ]
+        ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
+        ∣∣ Γ
+        ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & {!!}
+
       --------------------------------------------------------------------------------
-    → Configuration ads cs (A has (v + v′) ∷ ds) ∋
-      (  ⟨ A , v ⟩ᵈ
-      ∣∣ ⟨ A , v′ ⟩ᵈ
-      ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
-      ∣∣ A auth[ 0ᶠ ↔ sucᶠ 0ᶠ ]
-      ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
-      ∣∣ Γ
-      ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & {!!}
-      )
+
+    → Γ′
       —→
       Configuration ads cs (A has (v + v′) ∷ ds) ∋
       (  ⟨ A , v + v′ ⟩ᵈ
@@ -512,18 +551,20 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {v v′ : Value}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
+      {Γ′ : Configuration ads cs (A has (v + v′) ∷ ds)}
+    → Γ′ ≈ ⟨ A , v + v′ ⟩ᵈ
+        ∣∣ Γ
+        ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
+
       ----------------------------------------------------------------
-    → Configuration ads cs (A has (v + v′) ∷ ds) ∋
-      (  ⟨ A , v + v′ ⟩ᵈ
-      ∣∣ Γ
-      ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
-      )
+
+    → Γ′
       —→
-      Configuration [] [] (A has v ∷ A has v′ ∷ []) ∋
+      ( Configuration [] [] (A has v ∷ A has v′ ∷ []) ∋
       (  ⟨ A , v + v′ ⟩ᵈ
       ∣∣ A auth[ _▷_,_ {A} {[ v + v′ ]} 0ᶠ v v′ {fromWitness refl} ]
       ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & {!!}
-      )
+      ))
       ∣∣ Γ
       ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
 
@@ -533,21 +574,23 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {v v′ : Value}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
-      -----------------------------------------------------------------
-    → Configuration ads cs (A has v ∷ A has v′ ∷ ds) ∋
+      {Γ′ : Configuration ads cs (A has v ∷ A has v′ ∷ ds)}
+    → Γ′ ≈
       (  Configuration [] [] (A has v ∷ A has v′ ∷ []) ∋
-      (  ⟨ A , v + v′ ⟩ᵈ
+         ⟨ A , v + v′ ⟩ᵈ
       ∣∣ A auth[ _▷_,_ {A} {[ v + v′ ]} 0ᶠ v v′ {fromWitness refl} ]
       ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & {!!}
       )
       ∣∣ Γ
       ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
-      )
+
+      -----------------------------------------------------------------
+
+    → Γ′
       —→
       Configuration ads cs (A has v ∷ A has v′ ∷ ds) ∋
-      (  ⟨ A , v ⟩ᵈ
-      ∣∣ ⟨ A , v′ ⟩ᵈ ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
-      ∣∣ Γ           ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
+      (    (A has v ∷ A has v′ ∷ [])
+      ∣∣ᵈˢ Γ
       )
 
   [DEP-AuthDonate] :
@@ -555,19 +598,21 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {v : Value}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
+      {Γ′ : Configuration ads cs (A has v ∷ ds)}
+    → Γ′ ≈ ⟨ A , v ⟩ᵈ
+        ∣∣ Γ
+        ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
+
       ---------------------------------------------------------------------
-    → Configuration ads cs (A has v ∷ ds) ∋
-      (  ⟨ A , v ⟩ᵈ
-      ∣∣ Γ
-      ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
-      )
+
+    → Γ′
       —→
       Configuration ads cs (B has v ∷ ds) ∋
-      (  Configuration [] [] [ B has v ] ∋
+      (( Configuration [] [] [ B has v ] ∋
       (  ⟨ A , v ⟩ᵈ
       ∣∣ A auth[ _▷ᵈ_ {A} {[ v ]} 0ᶠ B ]
       ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & {!!}
-      )
+      ))
       ∣∣ Γ
       ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
       )
@@ -577,16 +622,19 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {v : Value}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
-      -----------------------------------------------------------
-    → Configuration ads cs (B has v ∷ ds) ∋
+      {Γ′ : Configuration ads cs (B has v ∷ ds)}
+    → Γ′ ≈
       ( Configuration [] [] [ B has v ] ∋
-      (  ⟨ A , v ⟩ᵈ
+         ⟨ A , v ⟩ᵈ
       ∣∣ A auth[ _▷ᵈ_ {A} {[ v ]} 0ᶠ B ]
       ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & {!!}
       )
       ∣∣ Γ
       ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
-      )
+
+      -----------------------------------------------------------
+
+    → Γ′
       —→
       Configuration ads cs (B has v ∷ ds) ∋
       ( ⟨ B , v ⟩ᵈ
@@ -599,12 +647,14 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {ads cs ds} {Γ : Configuration ads cs ds}
       {v : Value}
 
-      ------------------------------------------------------------
-    → Configuration ads cs (A has v ∷ ds) ∋
-      (  ⟨ A , v ⟩ᵈ
-      ∣∣ Γ
-      ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
-      )
+      {Γ′ : Configuration ads cs (A has v ∷ ds)}
+    → Γ′ ≈ ⟨ A , v ⟩ᵈ
+        ∣∣ Γ
+        ∶- (λ {x} z → z) & (λ {x} z → z) & (λ ()) & refl & refl & refl
+
+     ------------------------------------------------------------
+
+    → Γ′
       —→
       Configuration ads cs ds ∋
       (  ⟨ A , v ⟩ᵈ
@@ -619,18 +669,19 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {ads cs ds} {Γ : Configuration ads cs ds}
       {v : Value}
 
-      ------------------------------------------------------------
-    → Configuration ads cs ds ∋
+      {Γ′ : Configuration ads cs ds}
+    → Γ′ ≈
       ( Configuration [] [] [] ∋
       (  ⟨ A , v ⟩ᵈ
       ∣∣ A auth[ destroy {vs = [ v ]} 0ᶠ ]
       ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & {!!}
-      )
+      ))
       ∣∣ Γ
       ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
-      )
-      —→
-      Γ
+
+      ------------------------------------------------------------
+
+    → Γ′ —→ Γ
 
   -- ii) Rules for contract advertisements and stipulation
 
@@ -641,7 +692,9 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
 
     → ∃[ p ] (p ∈ₚ participantsᵍ (G ad) → p ∈ₚ Hon)
     → (∀ d → d ∈ₑ depositsᵃ ad → deposit d ∈ₑ depositsᶜ Γ)
+
       ------------------------------------------------------------------------
+
     → Γ
       —→
       Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
@@ -656,29 +709,36 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {ads cs ds} {Γ : Configuration ads cs ds}
       {Δ : Configuration [] [] []}
 
-      -- 1. Δ contains commits from A's secrets in G
-      -- 2. only dishonest participants can commit to invalid lengths ⊥
+      {Γ′ : Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds}
+    → Γ′ ≈ ` ad
+        ∣∣ Γ
+        ∶- (λ ()) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
+
+      -- Δ contains only the committed secrets
+    → length (cfgToList Δ) ≡ length (secretsᵖ A (G ad))
+
     → All (λ s →
-        ∃[ n ] ( Any (λ {(p , s′ , n′) → p ≡ A × s ≡ s′ × n ≡ n′})
-                     (committedSecrets Δ)
-               × (A ∈ₚ Hon → (isInj₂ n ≡ nothing)))
-               )
+        ∃[ n ]
+        ( -- 1. Δ contains commits from A's secrets in G
+          (A , s , n) ∈ˢ committedSecrets Δ
+
+          -- 2. only dishonest participants can commit to invalid lengths ⊥
+        × (A ∈ₚ Hon → (isInj₂ n ≡ nothing)))
+        )
         (secretsᵖ A (G ad))
+
       -----------------------------------------------------------------------
-    → Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
-      (  ` ad
-      ∣∣ Γ
-      ∶- (λ ()) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
-      )
+
+    → Γ′
       —→
       Configuration ads cs ds ∋
-      (  Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+      (( Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
       (  ` ad
       ∣∣ Γ
       ∶- (λ ()) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
       ∣∣ Δ
       ∶- (λ ()) & (λ ()) & (λ ()) & {!!} & {!!} & {!!}
-      )
+      ))
       ∣∣ A auth[ ♯▷ ad ]
       ∶- {!!} & (λ ()) & (λ ()) & {!!} & {!!} & {!!}
       )
@@ -690,14 +750,17 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {ads cs dsˡ dsʳ ds} {Γ : Configuration ads cs ds}
       {p : ds ≡ dsˡ ++ [ A has (vsᵍ ‼ iᵍ) ] ++ dsʳ}
 
+      {Γ′ : Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds}
+    → Γ′ ≈ ` ad
+        ∣∣ Γ
+        ∶- (λ ()) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
+
       -- all participants have committed their secrets
     → All (λ p → p ∈ₚ committedParticipants Γ ad) (participantsᵍ (G ad))
+
       -------------------------------------------------------------------
-    → Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
-      (  ` ad
-      ∣∣ Γ
-      ∶- (λ ()) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
-      )
+
+    → Γ′
       —→
       Configuration ads cs (dsˡ ++ dsʳ) ∋
       (  ` ad
@@ -712,6 +775,16 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {ads cs ds} {Γ : Configuration ads cs ds}
       {Δ : Configuration′ ([] , [ v , vsᶜ , vsᵍ , ad ]) ([] , []) ([] , [])}
 
+      {Γ′ : Configuration ads cs ds}
+    → Γ′ ≈
+      ( Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+      (  ` ad
+      ∣∣ Γ
+      ∶- (λ ()) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
+      ))
+      ∣∣ Δ
+      ∶- {!!} & (λ ()) & (λ ()) & {!!} & {!!} & {!!}
+
       -- all participants have committed their secrets
     → All (λ p → p ∈ₚ committedParticipants Δ ad) (participantsᵍ (G ad))
 
@@ -720,15 +793,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
 
       ----------------------------------------------------------------------
 
-    → Configuration ads cs ds ∋
-      (  Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
-      (  ` ad
-      ∣∣ Γ
-      ∶- (λ ()) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
-      )
-      ∣∣ Δ
-      ∶- {!!} & (λ ()) & (λ ()) & {!!} & {!!} & {!!}
-      )
+    → Γ′
       —→
       Configuration ads ((v , vsᶜ , C ad) ∷ cs) ds ∋
       (  ⟨ C ad , v ⟩ᶜ
@@ -745,6 +810,11 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {cs′ : ActiveContracts}
       {cases : ContractCases}
 
+      {Γ′ : Configuration ads ((v , vs , [ c ]) ∷ cs) ds}
+    → Γ′ ≈ ⟨ [ c ] , v ⟩ᶜ
+        ∣∣ Γ
+        ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
+
       -- `split` command
     → (pr : Split cases v)
     → c ≡ split cases ∶- pr
@@ -754,29 +824,24 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
 
       ------------------------------------------------------------
 
-    → Configuration ads ((v , vs , [ c ]) ∷ cs) ds ∋
-      (  ⟨ [ c ] , v ⟩ᶜ
-      ∣∣ Γ
-      ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
-      )
-      —→
-      Configuration ads (cs′ ++ cs) ds ∋
-      (    cs′
-      ∣∣ᶜˢ Γ
-      )
+    → Γ′ —→ cs′ ∣∣ᶜˢ Γ
 
   [C-AuthRev] :
     ∀ {A : Participant} {s : Secret} {n : ℕ} {n′ : ℕ ⊎ ⊥}
+      {ads cs ds} {Γ : Configuration ads cs ds}
+      {Γ′ : Configuration ads cs ds}
 
       -- only valid lengths
     → (p : n′ ≡ inj₁ n)
-    → (len_s : True (lengthₛ s ≟ n))
+    → (len_s : lengthₛ s ≡ n)
+
+    → Γ′ ≈ ⟨ A ∶ s ♯ n′ ⟩ {inj₁ (n , p , fromWitness len_s)}
+        ∣∣ Γ
+        ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
 
       -----------------------------
 
-    → ⟨ A ∶ s ♯ n′ ⟩  {inj₁ (n , p , len_s)}
-      —→
-      (A ∶ s ♯ n)     {len_s}
+    → Γ′ —→ [ A , s , n , len_s ] ∣∣ˢˢ Γ
 
   [C-PutRev] :
     ∀ {ads cs ds} {Γ : Configuration ads cs ds}
@@ -785,6 +850,11 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {s s′ : Secrets} {p : Predicate s′}
       {vs : Values} {ds′ : Deposits}
       {ss : List ValidSecret}
+
+      {Γ′ : Configuration ads ((v , vs″ , [ c ]) ∷ cs) (ds′ ++ ds)}
+    → Γ′ ≈ ⟨ [ c ] , v ⟩ᶜ
+        ∣∣ (ds′ ∣∣ᵈˢ (ss ∣∣ˢˢ Γ))
+        ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
 
       -- `put` command
     → (pr : Put v vs v′
@@ -800,13 +870,10 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
 
       -- predicate is true
     → ⟦ p ⟧ᵇ ≡ true
+
       ------------------------------------------------------------
 
-    → Configuration ads ((v , vs″ , [ c ]) ∷ cs) (ds′ ++ ds) ∋
-      (  ⟨ [ c ] , v ⟩ᶜ
-      ∣∣ (ds′ ∣∣ᵈˢ (ss ∣∣ˢˢ Γ))
-      ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
-      )
+    → Γ′
       —→
       Configuration ads ((v′ , vs′ , [ c′ ]) ∷ cs) ds ∋
       (  ⟨ [ c′ ] , v′ ⟩ᶜ
@@ -819,16 +886,17 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {A : Participant}
       {v} {c : Contract v []}
 
+      {Γ′ : Configuration ads ((v , [] , [ c ]) ∷ cs) ds}
+    → Γ′ ≈ ⟨ [ c ] , v ⟩ᶜ
+        ∣∣ Γ
+        ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
+
       -- `withdraw` command
     → c ≡ withdraw A
 
       -------------------------------------------------------
 
-    → Configuration ads ((v , [] , [ c ]) ∷ cs) ds ∋
-      (  ⟨ [ c ] , v ⟩ᶜ
-      ∣∣ Γ
-      ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
-      )
+    → Γ′
       —→
       Configuration ads cs (A has v ∷ ds) ∋
       (  ⟨ A , v ⟩ᵈ
@@ -841,23 +909,24 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {A : Participant}
       {v vs} {contract : Contracts v vs} {i : Index contract}
 
+      {Γ′ : Configuration ads ((v , vs , contract) ∷ cs) ds}
+    → Γ′ ≈ ⟨ contract , v ⟩ᶜ
+        ∣∣ Γ
+        ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
+
       -- `auth` decoration
     → A ∈ₚ authDecorations (contract ‼ i)
 
       ------------------------------------------------------------------
 
-    → Configuration ads ((v , vs , contract) ∷ cs) ds ∋
-      (  ⟨ contract , v ⟩ᶜ
-      ∣∣ Γ
-      ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
-      )
+    → Γ′
       —→
       Configuration ads ((v , vs , contract) ∷ cs) ds ∋
-      (  Configuration [] [ (v , vs , contract) ] [] ∋
+      (( Configuration [] [ (v , vs , contract) ] [] ∋
       (  ⟨ contract , v ⟩ᶜ
       ∣∣ A auth[ contract ▷ᵇ i  ]
       ∶- (λ {x} z → z) & (λ {x} z → z) & (λ {x} z → z) & refl & refl & refl
-      )
+      ))
       ∣∣ Γ
       ∶- (λ {x} z → z) & (λ {x} ()) & (λ {x} z → z) & refl & refl & refl
       )
@@ -865,31 +934,31 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
 
   [C-Control] :
     ∀ {ads cs ds} {Γ : Configuration ads cs ds}
-      {ads′ cs′ ds′} {Γ′ : Configuration ads′ cs′ ds′}
+      {ads′ cs′ ds′} {Γ″ : Configuration ads′ cs′ ds′}
       {A : Participant}
       {v vs} {contract : Contracts v vs} {i : Index contract}
 
-      -- resulting state if we pick branch `i`
-    → Configuration ads ((v , vs , [ contract ‼ i ]) ∷ cs) ds ∋
-       (  ⟨ [ contract ‼ i ] , v ⟩ᶜ
-       ∣∣ Γ
-       ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
-       )
-      —→
-      Γ′
-
-      ------------------------------------------------------------------
-
-    → Configuration ads ((v , vs , contract) ∷ cs) ds ∋
+      {Γ′ : Configuration ads ((v , vs , contract) ∷ cs) ds}
+    → Γ′ ≈
       (  Configuration [] [ v , vs , contract ] [] ∋
       (   ⟨ contract , v ⟩ᶜ
       ∣∣ᵇ (0ᶠ , i , authDecorations (contract ‼ i))
-      )
+      ))
+      ∣∣ Γ
+      ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
+
+      -- resulting state if we pick branch `i`
+    → Configuration ads ((v , vs , [ contract ‼ i ]) ∷ cs) ds ∋
+      (  ⟨ [ contract ‼ i ] , v ⟩ᶜ
       ∣∣ Γ
       ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
       )
       —→
-      Γ′
+      Γ″
+
+      ------------------------------------------------------------------
+
+    → Γ′ —→ Γ″
 
 
 -----------------------------------------------------------------------------------
@@ -906,6 +975,11 @@ record TimedConfiguration (ads : AdvertisedContracts)
     time : Time
 
 open TimedConfiguration
+
+infix 3 _≈ₜ_
+_≈ₜ_ : ∀ {ads cs ds} → TimedConfiguration ads cs ds → TimedConfiguration ads cs ds → Set
+c ≈ₜ c′ = (time c ≡ time c′)
+        × (cfgToList (cfg c) ↭ cfgToList (cfg c′))
 
 infix -1 _—→ₜ_
 data _—→ₜ_ : ∀ {ads cs ds ads′ cs′ ds′}
@@ -932,28 +1006,28 @@ data _—→ₜ_ : ∀ {ads cs ds ads′ cs′ ds′}
 
   [Timeout] :
     ∀ {ads cs ds} {Γ : Configuration ads cs ds}
-      {ads′ cs′ ds′} {Γ′ : Configuration ads′ cs′ ds′}
+      {ads′ cs′ ds′} {Γ″ : Configuration ads′ cs′ ds′}
       {v vs} {contract : Contracts v vs} {i : Index contract}
       {t : Time}
+
+      {Γ′ : TimedConfiguration ads ((v , vs , contract) ∷ cs) ds}
+    → Γ′ ≈ₜ ( ⟨ contract , v ⟩ᶜ
+         ∣∣ Γ
+         ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
+         ) at t
 
       -- all time constraints are satisfied
     → All (_≤ t) (timeDecorations (contract ‼ i))
 
       -- resulting state if we pick branch `i`
     → Configuration ads ((v , vs , [ contract ‼ i ]) ∷ cs) ds ∋
-       (  ⟨ [ contract ‼ i ] , v ⟩ᶜ
-       ∣∣ Γ
-       ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
-       )
+      (  ⟨ [ contract ‼ i ] , v ⟩ᶜ
+      ∣∣ Γ
+      ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
+      )
       —→
-      Γ′
+      Γ″
 
       ----------------------------------------
 
-    → TimedConfiguration ads ((v , vs , contract) ∷ cs) ds ∋
-      (  ⟨ contract , v ⟩ᶜ
-      ∣∣ Γ
-      ∶- (λ {x} z → z) & (λ ()) & (λ {x} z → z) & refl & refl & refl
-      ) at t
-      —→ₜ
-      Γ′ at t
+    → Γ′ —→ₜ Γ″ at t
