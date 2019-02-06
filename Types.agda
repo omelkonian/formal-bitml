@@ -13,7 +13,7 @@ open import Data.Bool          using (Bool; true; false; _∧_; _∨_; not)
   renaming (_≟_ to _≟ᵇ_)
 
 open import Relation.Nullary                      using (Dec; yes; no)
-open import Relation.Nullary.Decidable            using (True)
+open import Relation.Nullary.Decidable            using (True; fromWitness)
 open import Relation.Binary                       using (Decidable)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
@@ -27,6 +27,7 @@ module Types
 -- Basic types.
 
 Hon = proj₁ Honest
+
 Value : Set
 Value = ℕ
 
@@ -157,10 +158,18 @@ data Precondition :
     → .{_ : True (vs ≟ₙₛ vsₗ ++ vsᵣ)}
     → Precondition vs
 
+_∣_∶-_ : ∀ {vs vsₗ vsᵣ}
+       → Precondition vsₗ
+       → Precondition vsᵣ
+       → vs ≡ vsₗ ++ vsᵣ
+       → Precondition vs
+l ∣ r ∶- pr = (l ∣ r) {fromWitness pr}
+
 infix  5 _:?_
 infix  5 _:!_
 infix  5 _:secret_
 infixl 3 _∣_
+infixl 2 _∣_∶-_
 
 -------------------------------------------------------------------
 -- Decidable equality, set modules.

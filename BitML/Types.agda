@@ -35,7 +35,7 @@ open import Category.Functor using (RawFunctor)
 open import Data.List.Categorical renaming (functor to listFunctor)
 open RawFunctor {0ℓ} listFunctor using (_<$>_)
 
-module BitML
+module BitML.Types
   (Participant : Set)
   (_≟ₚ_ : Decidable {A = Participant} _≡_)
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
@@ -43,17 +43,6 @@ module BitML
 
 open import Utilities.Lists
 open import Types Participant _≟ₚ_ Honest
-
-open SETₙ  using ()
-  renaming (_∈_ to _∈ₙ_; _∈?_ to _∈?ₙ_ ; _⊆_ to _⊆ₙ_ ; _≟ₗ_ to _≟ₙₛ_)
-open SETₚ  using ()
-  renaming (_∈_ to _∈ₚ_; _∈?_ to _∈?ₚ_ ; _⊆_ to _⊆ₚ_ ; _≟ₗ_ to _≟ₚₛ_)
-open SETₑ using ()
-  renaming (_∈_ to _∈ₑ_; _∈?_ to _∈?ₑ_ ; _⊆_ to _⊆ₑ_ ; _≟ₗ_ to _≟ₑₛ_)
-open SETₑᵣ using ()
-  renaming (_∈_ to _∈ₑᵣ_; _∈?_ to _∈?ₑᵣ_ ; _⊆_ to _⊆ₑᵣ_ ; _≟ₗ_ to _≟ₑᵣₛ_)
-open SETₛ  using ()
-  renaming (_∈_ to _∈ₛ_; _∈?_ to _∈?ₛ_ ; _⊆_ to _⊆ₛ_ ; _≟ₗ_ to _≟ₛₛ_)
 
 ------------------------------------------------------------------------
 -- Contracts
@@ -132,7 +121,7 @@ data Contract where
                       → Predicate s′
                       → Contract v′ vs′
                       → .( Put v vs v′ -- v′ ≡ v + sum (lookup <$>ₗ vs))
-                         × s′ ⊆ₛ s
+                         × s′ SETₛ.⊆ s
                          × vs′′ ≡ vs′ ++ vs)
                       → Contract v vs′′
 
@@ -160,8 +149,8 @@ put_&reveal_if_⇒_ : ∀ {v v′ vs′ s′ vs′′}
   → Predicate s′
   → Contract v′ vs′
   → .{p₁ : put? v vs v′}
-  → .{p₂ : s′ ⊆ₛ s}
-  → .{p₃ : True (vs′′ ≟ₙₛ vs′ ++ vs)}
+  → .{p₂ : s′ SETₛ.⊆ s}
+  → .{p₃ : True (vs′′ SETₙ.≟ₗ vs′ ++ vs)}
   → Contract v vs′′
 (put vs &reveal s if p ⇒ c) {p₁} {p₂} {p₃} =
   put vs &reveal s if p ⇒ c
@@ -193,7 +182,7 @@ _⊸_ {vs} v c = v , vs , c
 secretsᵖ : ∀ {vs} → Participant → Precondition vs → Secrets
 secretsᵖ _ (_ :? _) = []
 secretsᵖ _ (_ :! _) = []
-secretsᵖ A (B :secret s) with A ≟ₚ B
+secretsᵖ A (B :secret s) with A SETₚ.≣ B
 ... | yes _ = [ s ]
 ... | no  _ = []
 secretsᵖ A (l ∣ r) = secretsᵖ A l ++ secretsᵖ A r
@@ -251,7 +240,7 @@ module _ where
 
                -- 2. each participant has a persistent deposit in G
              × participantsᵍ G ++ participantsᶜ C
-                 ⊆ₚ
+                 SETₚ.⊆
                (participant <$> persistentDepositsᵖ G)
 
                -- 3. T0D0: v = Σ vsᵍ
@@ -271,180 +260,3 @@ _&_ = _,_
 
 depositsᵃ : ∀ {v vsᶜ vsᵍ} → Advertisement v vsᶜ vsᵍ → List DepositRef
 depositsᵃ ad = depositsᵖ (G ad)
-
-------------------------------------------------------------------------
--- Example.
-
-module AdvertisementExample where
-  postulate A B : Participant
-
-  ex-contracts₁ : Contracts 1 []
-  ex-contracts₁ = withdraw A ∙
-
-  ex-contracts₂ : Contracts 5 []
-  ex-contracts₂ = (A ∶ withdraw A)
-                ⊕ (put [] &reveal [] if `True ⇒ withdraw {5} A
-                   ∶- sound-put & (λ {x} z → z) & refl)
-                ∙
-
-  ex-contracts₃ : Contracts 5 [ 100 ]
-  ex-contracts₃ = (put [ 100 ] &reveal [] if `True ⇒ withdraw {105} A
-                   ∶- sound-put & (λ {x} z → z) & refl) ∙
-
-  ex-contracts₄ : Contracts 5 []
-  ex-contracts₄ = (A ∶ withdraw {5} B)
-                ⊕ (B ∶ split ( (2 ⊸ withdraw {2} A)
-                             ⊕ (3 ⊸ after 100 ∶ withdraw {3} B)
-                             ⊕ (0 ⊸ put [ 10 ]
-                                    &reveal []
-                                    if `True
-                                    ⇒ (A ∶ withdraw {10} B)
-                                    ∶- sound-put & (λ {x} z → z) & refl)
-                             ∙))
-                ∙
-
-  ex-ad : Advertisement 5 [ 100 ] (200 ∷ 100 ∷ [])
-  ex-ad = ⟨ B :! 200 ∣ A :! 100  ⟩ ex-contracts₃
-          ∶- sound-≾
-          &  λ{ {x} (here px)                  → here px
-              ; {x} (there (here px))          → there (here px)
-              ; {x} (there (there (here px)))  → there (here px)
-              ; {x} (there (there (there ())))
-              }
-
-------------------------------------------------------------------------
--- Decidable equalities.
-
-import Data.Set' as SET
-
--- Contracts.
-_≟ᶜˢ_ : ∀ {v vs} → Decidable {A = Contracts v vs} _≡_
-_∃≟ᶜˢ_ : Decidable {A = ∃[ v ] ∃[ vs ] Contracts v vs} _≡_
-
--- NB: mutual recursion needed  here to satisfy the termination checker
-_≟ᶜ_ : ∀ {v vs} → Decidable {A = Contract v vs} _≡_
-_∃s≟ᶜ_ : Decidable {A = List (∃[ v ] ∃[ vs ] Contract v vs)} _≡_
-
-[]                  ∃s≟ᶜ []                      = yes refl
-[]                  ∃s≟ᶜ (_ ∷ _)                 = no λ ()
-(_ ∷ _)             ∃s≟ᶜ []                      = no λ ()
-((v , vs , c) ∷ cs) ∃s≟ᶜ ((v′ , vs′ , c′) ∷ cs′) with v ≟ v′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with vs ≟ₙₛ vs′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with c ≟ᶜ c′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with cs ∃s≟ᶜ cs′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-
-put_&reveal_if_⇒_∶-_ {_} {v} {vss} {s′ = sᵖ} vs s p c _ ≟ᶜ
- put_&reveal_if_⇒_∶-_ {_} {v′} {vss′} {s′ = sᵖ′} vs′ s′ p′ c′ _
-               with vs ≟ₙₛ vs′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with s ≟ₛₛ s′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with sᵖ ≟ₛₛ sᵖ′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with p ≟ₚᵣₑ p′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with v ≟ v′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with vss ≟ₙₛ vss′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with c ≟ᶜ c′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-(put vs &reveal s if x ⇒ c ∶- x₁) ≟ᶜ withdraw _     = no λ ()
-(put vs &reveal s if x ⇒ c ∶- x₁) ≟ᶜ (split _ ∶- _) = no λ ()
-(put vs &reveal s if x ⇒ c ∶- x₁) ≟ᶜ (_ ∶ _)        = no λ ()
-(put vs &reveal s if x ⇒ c ∶- x₁) ≟ᶜ (after _ ∶ _)  = no λ ()
-
-withdraw x ≟ᶜ withdraw x′ with x ≟ₚ x′
-... | no ¬p = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-withdraw x ≟ᶜ (put _ &reveal _ if _ ⇒ _ ∶- _)       = no λ ()
-withdraw x ≟ᶜ (split _ ∶- _)                        = no λ ()
-withdraw x ≟ᶜ (_ ∶ _)                               = no λ ()
-withdraw x ≟ᶜ (after _ ∶ _)                         = no λ ()
-
-(split cs ∶- _) ≟ᶜ (split cs′ ∶- _) with cs ∃s≟ᶜ cs′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-(split cs ∶- x) ≟ᶜ (put _ &reveal _ if _ ⇒ _ ∶- _)  = no λ ()
-(split cs ∶- x) ≟ᶜ withdraw _                       = no λ ()
-(split cs ∶- x) ≟ᶜ (_ ∶ _)                          = no λ ()
-(split cs ∶- x) ≟ᶜ (after _ ∶ _)                    = no λ ()
-
-(p ∶ c) ≟ᶜ (p′ ∶ c′) with p ≟ₚ p′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with c ≟ᶜ c′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-(_ ∶ _) ≟ᶜ (put _ &reveal _  if _ ⇒ _ ∶- _)         = no λ ()
-(_ ∶ _) ≟ᶜ withdraw _                               = no λ ()
-(_ ∶ _) ≟ᶜ (split _ ∶- _)                           = no λ ()
-(_ ∶ _) ≟ᶜ (after _ ∶ _)                            = no λ ()
-
-(after t ∶ c) ≟ᶜ (after t′ ∶ c′) with t ≟ t′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with c ≟ᶜ c′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-(after t ∶ c) ≟ᶜ (put _ &reveal _ if _ ⇒ _ ∶- _)    = no λ ()
-(after _ ∶ _) ≟ᶜ withdraw _                         = no λ ()
-(after _ ∶ _) ≟ᶜ (split _ ∶- _)                     = no λ ()
-(after _ ∶ _) ≟ᶜ (_ ∶ _)                            = no λ ()
-
-_∃≟ᶜ_ : Decidable {A = ∃[ v ] ∃[ vs ] Contract v vs} _≡_
-c ∃≟ᶜ c′ with [ c ] ∃s≟ᶜ [ c′ ]
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-
-[] ≟ᶜˢ [] = yes refl
-[] ≟ᶜˢ (_ ∷ _) = no λ ()
-(_ ∷ _) ≟ᶜˢ [] = no λ ()
-(x ∷ xs) ≟ᶜˢ (y ∷ ys) with x ≟ᶜ y
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with xs ≟ᶜˢ ys
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-
-(v , vs , cs) ∃≟ᶜˢ (v′ , vs′ , cs′) with v ≟ v′
-... | no ¬p = no λ{refl → ¬p refl}
-... | yes refl with vs ≟ₙₛ vs′
-... | no ¬p = no λ{refl → ¬p refl}
-... | yes refl with cs ≟ᶜˢ cs′
-... | no ¬p = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-
-module SETᶜ = SET _∃≟ᶜˢ_
-
-Set⟨Contracts⟩ : Set
-Set⟨Contracts⟩ = Set'
-  where open SETᶜ
-
--- Advertisements.
-_≟ₐ_ : ∀ {v vsᶜ vsᵍ} → Decidable {A = Advertisement v vsᶜ vsᵍ} _≡_
-(⟨ G₁ ⟩ C₁ ∶- _) ≟ₐ (⟨ G₂ ⟩ C₂ ∶- _) with G₁ ≟ₚᵣ G₂
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with C₁ ≟ᶜˢ C₂
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-
-_∃≟ₐ_ : Decidable {A = ∃[ v ] ∃[ vsᶜ ] ∃[ vsᵍ ] Advertisement v vsᶜ vsᵍ} _≡_
-(v , vsᶜ , vsᵍ , ad) ∃≟ₐ (v′ , vsᶜ′ , vsᵍ′ , ad′) with v ≟ v′
-... | no ¬p = no λ{refl → ¬p refl}
-... | yes refl with vsᶜ ≟ₙₛ vsᶜ′
-... | no ¬p = no λ{refl → ¬p refl}
-... | yes refl with vsᵍ ≟ₙₛ vsᵍ′
-... | no ¬p = no λ{refl → ¬p refl}
-... | yes refl with ad ≟ₐ ad′
-... | no ¬p = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-
-module SETₐ = SET _∃≟ₐ_
-
-Set⟨Advertisement⟩ : Set
-Set⟨Advertisement⟩ = Set'
-  where open SETₐ

@@ -9,8 +9,10 @@ open import Data.Empty    using (⊥; ⊥-elim)
 open import Data.Unit     using (⊤; tt)
 open import Data.Bool     using (Bool; true; false; T)
 open import Data.Nat      using (ℕ)
+open import Data.Fin      using (Fin)
+  renaming (zero to 0ᶠ; suc to sucᶠ)
 open import Data.List     using (List; []; _∷_; [_]; filter; _++_; length)
-open import Data.List.Any using (Any; any; here; there)
+open import Data.List.Any using (Any; any; here; there; index)
 open import Data.Product  using (_×_; ∃-syntax; proj₁; proj₂; _,_; Σ)
 
 open import Data.List.Membership.Propositional.Properties using (∈-filter⁻)
@@ -21,7 +23,9 @@ open import Relation.Nullary.Decidable            using (True; fromWitness; ⌊_
 open import Relation.Unary                        using (Pred)
   renaming (Decidable to UnaryDec)
 open import Relation.Binary                       using (Decidable)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym)
+
+open import Utilities.Lists
 
 module Data.Set' {A : Set} (_≟_ : Decidable (_≡_ {A = A})) where
 
@@ -29,6 +33,8 @@ module Data.Set' {A : Set} (_≟_ : Decidable (_≡_ {A = A})) where
 
   ------------------------------------------------------------------------
   -- Decidable equality.
+  _≣_ : Decidable (_≡_ {A = A})
+  _≣_ = _≟_
 
   infix 4 _≟ₗ_
   _≟ₗ_ : Decidable {A = List A} _≡_
@@ -126,7 +132,7 @@ module Data.Set' {A : Set} (_≟_ : Decidable (_≡_ {A = A})) where
   x@(xs , pxs) ∪ y@(ys , pys) = xs ++ proj₁ z , {!!}
     where
       z : Set'
-      z = x ─ y
+      z = y ─ x
 
   fromList : List A → Set'
   fromList [] = [] , tt
@@ -149,7 +155,106 @@ module Data.Set' {A : Set} (_≟_ : Decidable (_≡_ {A = A})) where
   -- infix 2 ∃∈
   -- syntax ∃∈ xs (λ x → P) = ∃[ x ∈ xs ] P
 
+  ------------------------------------------------------------------------
+  -- Deletion/Non-membership.
+
+  _\\_ : List A → List A → List A
+  xs \\ [] = xs
+  xs \\ (x ∷ ys) with x ∈? xs
+  ... | no _     = xs \\ ys
+  ... | yes x∈xs = (remove xs (index x∈xs)) \\ ys
+
+  \\-same : ∀ {xs} → [] ≡ xs \\ xs
+  \\-same {[]} = refl
+  \\-same {x ∷ ys} with x ∈? (x ∷ ys)
+  ... | no ¬p           = ⊥-elim (¬p (here refl))
+  ... | yes (here refl) = \\-same {ys}
+  ... | yes (there p)   = {!!}
+
+  \\-left : ∀ {xs} → [] ≡ [] \\ xs
+  \\-left {[]}     = refl
+  \\-left {x ∷ ys} with x ∈? []
+  ... | no _ = \\-left {ys}
+  ... | yes ()
+
+  \\-head : ∀ {x xs} → [] ≡ [ x ] \\ (x ∷ xs)
+  \\-head {x} {xs} with x ∈? [ x ]
+  ... | no ¬p = ⊥-elim (¬p (here refl))
+  ... | yes p with index p
+  ... | 0ᶠ    = \\-left {xs}
+  ... | sucᶠ ()
+
+  \\-‼ : ∀ {xs : List A} {i : Index xs}
+       → [] ≡ [ xs ‼ i ] \\ xs
+  \\-‼ {[]} {()}
+  \\-‼ {x ∷ xs} {0ᶠ} with x ∈? [ x ]
+  ... | no ¬p = ⊥-elim (¬p (here refl))
+  ... | yes (here relf) = \\-left {xs}
+  ... | yes (there ())
+  \\-‼ {x ∷ xs} {sucᶠ i} with x ∈? [ xs ‼ i ]
+  ... | no ¬p = \\-‼ {xs} {i}
+  ... | yes (here refl) = \\-left {xs}
+  ... | yes (there ())
+
+  ⊆→\\ : ∀ {xs ys}
+       → xs ⊆ ys
+       → [] ≡ xs \\ ys
+  ⊆→\\ xs⊆ys = {!!}
+
   _∉?_ : Decidable {A = A} _∉_
   x ∉? xs with x ∈? xs
   ... | yes x∈xs = no (λ ¬x∈xs → ¬x∈xs x∈xs)
   ... | no  x∉xs = yes x∉xs
+
+  open import Relation.Unary       using (∁)
+  open import Data.List.All        using (All)
+    renaming ([] to All-[]; _∷_ to _All-∷_)
+  open import Data.List.Properties using (filter-none)
+
+  filter-∉? : ∀ {xs} → filter (_∉? xs) xs ≡ []
+  filter-∉? {xs} = filter-none (_∉? xs) {xs = xs} h
+    where
+      h : ∀ {xs : List A} → All (∁ (_∉ xs)) xs
+      h {[]}     = All-[]
+      h {x ∷ xs} = {!!} All-∷ {!!}
+
+  ------------------------------------------------------------------------
+  -- Permutation relation.
+
+  open import Data.List.Relation.Permutation.Inductive using (_↭_)
+  open import Data.List.Any using (index)
+
+  _↭?_ : List A → List A → Set
+  []       ↭? []       = ⊤
+  []       ↭? (_ ∷ _)  = ⊥
+  (x ∷ xs) ↭? ys with x ∈? ys
+  ... | no  _    = ⊥
+  ... | yes x∈ys = xs ↭? remove ys (index x∈ys)
+
+  ↭-remove : ∀ {y : A} {ys : List A} {y∈ys : y ∈ ys}
+           → y ∷ remove ys (index y∈ys) ↭ ys
+  ↭-remove {y} {.(y ∷ _)} {here refl} = _↭_.refl
+  ↭-remove {y} {(x ∷ y ∷ _)} {there (here refl)} = _↭_.swap y x _↭_.refl
+  ↭-remove {y} {(x₁ ∷ x₂ ∷ ys)} {there (there y∈ys)} =
+    _↭_.trans h₁ h₂
+    where
+      ys′ : List A
+      ys′ = remove ys (index y∈ys)
+
+      h₁ : y ∷ x₁ ∷ x₂ ∷ ys′ ↭ x₁ ∷ x₂ ∷ y ∷ ys′
+      h₁ = _↭_.trans (_↭_.swap y x₁ _↭_.refl) (_↭_.prep x₁ (_↭_.swap y x₂ _↭_.refl))
+
+      h₂ : x₁ ∷ x₂ ∷ y ∷ ys′ ↭ x₁ ∷ x₂ ∷ ys
+      h₂ = _↭_.prep x₁ (_↭_.prep x₂ ↭-remove)
+
+  ↭-helper : ∀ {x : A} {xs ys : List A} {x∈ys : x ∈ ys}
+           → xs ↭ remove ys (index x∈ys)
+           → x ∷ xs ↭ ys
+  ↭-helper {x} {xs} {ys} {x∈ys} h = _↭_.trans (_↭_.prep x h) ↭-remove
+
+  sound-↭ : ∀ {xs ys} → {p : xs ↭? ys} → xs ↭ ys
+  sound-↭ {[]} {[]}    {xs↭?ys} = _↭_.refl
+  sound-↭ {[]} {_ ∷ _} {()}
+  sound-↭ {x ∷ xs} {ys} {xs↭?ys} with x ∈? ys
+  sound-↭ {x ∷ xs} {ys} {()} | no ¬x∈ys
+  ... | yes x∈ys = ↭-helper (sound-↭ {p = xs↭?ys})

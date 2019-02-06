@@ -6,19 +6,13 @@ module Utilities.Lists where
 
 open import Data.Empty    using (⊥; ⊥-elim)
 open import Data.Unit     using (⊤; tt)
-open import Data.List using (List; []; [_]; _∷_; map; sum; length)
+open import Data.List using (List; []; [_]; _∷_; _++_; map; sum; length)
 open import Data.Nat  using (ℕ; _<?_)
 open import Data.Fin           using (Fin)
   renaming (zero to fzero; suc to fsuc)
 
-open import Relation.Nullary.Decidable using (True)
-
-------------------------------------------------------------------------
--- Sums.
-
-Σ-sum-syntax : ∀ {A : Set} → (A → ℕ) → List A → ℕ
-Σ-sum-syntax f xs = sum (map f xs)
-syntax Σ-sum-syntax f xs = Σ[ f ∈ xs ]
+open import Relation.Nullary.Decidable            using (True)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
 
 ------------------------------------------------------------------------
 -- Indexed operations.
@@ -83,3 +77,11 @@ _ = tt
 
 _ : ∀ {v} → True (length [ v ] <? length (1 ∷ [ v ]))
 _ = tt
+
+------------------------------------------------------------------------
+-- List properties.
+
+++-idʳ : ∀ {A : Set} {xs : List A}
+       → xs ≡ xs ++ []
+++-idʳ {_} {[]}     = refl
+++-idʳ {_} {x ∷ xs} = cong (x ∷_) ++-idʳ
