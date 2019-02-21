@@ -2,7 +2,6 @@
 -- Utilities for constructing configurations.
 ------------------------------------------------------------------------
 
-{-# OPTIONS --allow-unsolved-metas #-}
 open import Level        using (0ℓ)
 open import Function     using (_∘_)
 open import Data.Empty   using (⊥; ⊥-elim)
@@ -246,22 +245,6 @@ cfgToList ∅ᶜ               = []
 cfgToList (l ∣∣ r ∶- _)    = cfgToList l ++ cfgToList r
 cfgToList {p₁} {p₂} {p₃} c = [ p₁ , p₂ , p₃ , c ]
 
-is∅ : Configuration [] [] [] → Set
-is∅ ∅ᶜ = ⊤
-is∅ c  = ⊥
-
-remove∅ : ∀ {p₁ p₂ p₃}
-        → Configuration′ p₁ p₂ p₃
-        → Configuration′ p₁ p₂ p₃
-remove∅ ∅ᶜ = ∅ᶜ
-remove∅ {ads , rads} {cs , rcs} {ds , rds}
-  (_∣∣_∶-_ {adsˡ} {radsˡ} {.[]} {.[]} {.ads} {.rads}
-           {csˡ} {rcsˡ} {.[]} {.[]} {.cs} {.rcs}
-           {dsˡ} {rdsˡ} {.[]} {.[]} {.ds} {.rds}
-           l ∅ᶜ _)
-  = {!l!}
-remove∅ c = c
-
 infix -2 _≈_
 _≈_ : ∀ {ads cs ds} → Configuration ads cs ds → Configuration ads cs ds → Set
-c ≈ c′ = (cfgToList ∘ remove∅) c ↭ (cfgToList ∘ remove∅) c′
+c ≈ c′ = cfgToList c ↭ cfgToList c′
