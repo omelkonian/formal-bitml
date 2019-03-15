@@ -233,7 +233,7 @@ tc-semantics :
 tc-semantics =
   start
     c₀
-  —→⟨ [C-Advertise]
+  —→⟨ [C-Advertise] {Γ = c₀}
       -- 1. at least one honest participant
       (A , (λ x → here refl))
       -- 2. all deposits in G actually exist
@@ -241,13 +241,9 @@ tc-semantics =
         ; .((B has 0) ⟨ true ⟩) (there (here refl)) → there (here refl)
         ; d (there (there ()))
         })
-      -- ≈
-      SETᶜᶠ.sound-↭
-    ⟩
+    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₁
   —→⟨ [C-AuthCommit] {A = A} {bs = [ inj₁ tt ]} {Γ = c₀} {Δ = [ ⟨A♯⟩ ]}
-      -- ≈
-      SETᶜᶠ.sound-↭
       -- satisfy rads (none in this case)
       (λ ())
       -- secret commitments are proper
@@ -256,13 +252,9 @@ tc-semantics =
       , -- 2. honest participants have not committed to ⊥
         (λ{ (here refl) → refl ; (there ())}) All-∷ All-[]
       )
-      -- ≈′
-      SETᶜᶠ.sound-↭
-    ⟩
+    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₂
   —→⟨ [C-AuthCommit] {A = B} {bs = []} {Γ = c₂′} {Δ = []}
-      -- ≈
-      SETᶜᶠ.sound-↭
       -- satisfy rads
       (λ {x} z → z)
       -- secret commitments are proper
@@ -271,13 +263,9 @@ tc-semantics =
       , -- 2. honest participants have not committed to ⊥
         All-[]
       )
-      -- ≈′
-      SETᶜᶠ.sound-↭
-    ⟩
+    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₃
   —→⟨ [C-AuthInit] {A = A} {iᵍ = 0ᶠ} {dsˡ = []} {dsʳ = [ B has 0 ]} {Γ = c₃′} {p = refl}
-      -- ≈
-      SETᶜᶠ.sound-↭
       -- satisfy rads
       (λ { (here refl) → here refl
          ; (there (here refl)) → here refl
@@ -285,13 +273,9 @@ tc-semantics =
          })
       -- all participants have committed their secrets
       ((here refl) All-∷ ((here refl) All-∷ ((there (here refl)) All-∷ All-[])))
-      -- ≈′
-      SETᶜᶠ.sound-↭
-    ⟩
+    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₄
   —→⟨ [C-AuthInit] {A = B} {iᵍ = 1ᶠ} {dsˡ = []} {dsʳ = []} {Γ = c₄′} {p = refl}
-      -- ≈
-      SETᶜᶠ.sound-↭
       -- satisfy rads (none in this case)
       (λ { (here refl) → here refl
          ; (there (here refl)) → here refl
@@ -300,13 +284,9 @@ tc-semantics =
          })
       -- all participants have committed their secrets
       ((here refl) All-∷ ((here refl) All-∷ ((there (here refl)) All-∷ All-[])))
-      -- ≈′
-      SETᶜᶠ.sound-↭
-    ⟩
+    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₅
   —→⟨ [C-Init] {Γ = ⟨A♯⟩} {Δ = c₅′}
-      -- ≈
-      SETᶜᶠ.sound-↭
       -- satisfy rads (none in this case)
       (λ { (here refl) → here refl
          ; (there (here refl)) → here refl
@@ -318,29 +298,16 @@ tc-semantics =
       ((here refl) All-∷ ((here refl) All-∷ ((there (here refl)) All-∷ All-[])))
       -- all participants have spent the required (persistent) deposits for stipulation
       refl
-      -- ≈′
-      SETᶜᶠ.sound-↭
-    ⟩
+    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₆
   —→⟨ [C-AuthRev] {A = A} {s = a} {n = 9} {p = refl} {Γ = ⟨ tC , 1 ⟩ᶜ}
       -- valid length given
       refl
-      -- ≈
-      SETᶜᶠ.sound-↭
-      -- ≈′
-      SETᶜᶠ.sound-↭
-    ⟩
+    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₇
-  —→⟨ [C-Control] {Γ = A♯} {i = 0ᶠ}
-      -- ≈
-      SETᶜᶠ.sound-↭
-      -- ≈
-      SETᶜᶠ.sound-↭
-    ⟩
+  —→⟨ [C-Control] {Γ = A♯} {i = 0ᶠ} ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₈
   —→⟨ [C-PutRev] {Γ = ∅ᶜ} {s = [ a ]} {ds′ = []} {ss = [ A , a , 9 , refl ]}
-      -- ≈
-      SETᶜᶠ.sound-↭
       -- `put` command
       (base-put , ((λ ()) , refl))
       refl
@@ -350,10 +317,8 @@ tc-semantics =
       refl
       -- predicate evaluates to `true`
       refl
-      -- ≈′
-      SETᶜᶠ.sound-↭
-    ⟩
+    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₉
-  —→⟨ [C-Withdraw] SETᶜᶠ.sound-↭ refl ⟩
+  —→⟨ [C-Withdraw] {Γ = A♯} refl ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₁₀
   ∎∎

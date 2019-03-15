@@ -47,10 +47,9 @@ open import Semantics.Actions.Types          Participant _≟ₚ_ Honest
 open import Semantics.Configurations.Types   Participant _≟ₚ_ Honest
 open import Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
 
------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- Semantic rules for untimed configurations.
 
--- T0D0 reorder outputs as well
 -- T0D0 generalize all Γ to Configuration′
 -- T0D0 Keep transition labels?
 
@@ -68,24 +67,24 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {v v′ : Value}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
-      {Γ′ : Configuration ads cs (A has v ∷ A has v′ ∷ ds)}
-      {Γ″ : Configuration ads cs (A has (v + v′) ∷ ds)}
+      -----------------------------------------------------------
 
-    → Γ′ ≈ (A has v ∷ A has v′ ∷ []) ∣∣ᵈˢ Γ
-
-    → Γ″ ≈ ⟨ A , v ⟩ᵈ
-        ∣∣ ⟨ A , v′ ⟩ᵈ
-        ∶- refl & refl & refl & refl & refl & refl
-        ∣∣ A auth[ Action A [] [] (v ∷ v′ ∷ []) [ A has (v + v′) ] ∋
-                   (0ᶠ ↔ sucᶠ 0ᶠ) {pr₂ = fromWitness refl}
-                 ]∶- refl & refl & refl
-        ∶- refl & refl & refl & refl & refl & refl
-        ∣∣ Γ
-        ∶- refl & refl & refl & refl & {!!} & {!!}
-
-      ----------------------------------------------------------------------------------
-
-    → Γ′ —→ Γ″
+    → Configuration ads cs (A has v ∷ A has v′ ∷ ds) ∋
+      (   (A has v ∷ A has v′ ∷ [])
+      ∣∣ᵈˢ Γ
+      )
+      —→
+      Configuration ads cs (A has (v + v′) ∷ ds) ∋
+      (  ⟨ A , v ⟩ᵈ
+      ∣∣ ⟨ A , v′ ⟩ᵈ
+      ∶- refl & refl & refl & refl & refl & refl
+      ∣∣ A auth[ Action A [] [] (v ∷ v′ ∷ []) [ A has (v + v′) ] ∋
+                 (0ᶠ ↔ sucᶠ 0ᶠ) {pr₂ = fromWitness refl}
+               ]∶- refl & refl & refl
+      ∶- refl & refl & refl & refl & refl & refl
+      ∣∣ Γ
+      ∶- refl & refl & refl & refl & {!!} & {!!}
+      )
 
 
   [DEP-Join] :
@@ -93,22 +92,20 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {v v′ : Value}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
-      {Γ′ : Configuration ads cs (A has v ∷ A has v′ ∷ ds)}
-    → Γ′ ≈ ⟨ A , v ⟩ᵈ
-        ∣∣ ⟨ A , v′ ⟩ᵈ
-        ∶- refl & refl & refl & refl & refl & refl
-        ∣∣ A auth[ Action A [] [] (v ∷ v′ ∷ []) [ A has (v + v′) ] ∋
-                   (0ᶠ ↔ sucᶠ 0ᶠ) {pr₂ = fromWitness refl}
-                 ]∶- refl & refl & refl
-        ∶- refl & refl & refl & refl & refl & refl
-        ∣∣ Γ
-        ∶- refl & refl & refl & refl & {!!} & {!!}
+      ------------------------------------------------------------
 
-      --------------------------------------------------------------------------------
-
-    → Γ′
-      —→
-         ⟨ A , v + v′ ⟩ᵈ
+    → Configuration ads cs (A has v ∷ A has v′ ∷ ds) ∋
+      (  ⟨ A , v ⟩ᵈ
+      ∣∣ ⟨ A , v′ ⟩ᵈ
+      ∶- refl & refl & refl & refl & refl & refl
+      ∣∣ A auth[ Action A [] [] (v ∷ v′ ∷ []) [ A has (v + v′) ] ∋
+                 (0ᶠ ↔ sucᶠ 0ᶠ) {pr₂ = fromWitness refl}
+               ]∶- refl & refl & refl
+      ∶- refl & refl & refl & refl & refl & refl
+      ∣∣ Γ
+      ∶- refl & refl & refl & refl & {!!} & {!!}
+      )
+      —→ ⟨ A , v + v′ ⟩ᵈ
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
 
@@ -118,14 +115,13 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {v v′ : Value}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
-      {Γ′ : Configuration ads cs (A has (v + v′) ∷ ds)}
-    → Γ′ ≈ ⟨ A , v + v′ ⟩ᵈ
-        ∣∣ Γ
-        ∶- refl & refl & refl & refl & refl & refl
+      --------------------------------------------------------------------------
 
-      ----------------------------------------------------------------
-
-    → Γ′
+    → Configuration ads cs (A has (v + v′) ∷ ds) ∋
+      (  ⟨ A , v + v′ ⟩ᵈ
+      ∣∣ Γ
+      ∶- refl & refl & refl & refl & refl & refl
+      )
       —→
       Configuration ads cs (A has v ∷ A has v′ ∷ ds) ∋
       (Configuration [] [] (A has v ∷ A has v′ ∷ []) ∋
@@ -144,9 +140,10 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {v v′ : Value}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
-      {Γ′ : Configuration ads cs (A has v ∷ A has v′ ∷ ds)}
-    → Γ′ ≈
-      (Configuration [] [] (A has v ∷ A has v′ ∷ []) ∋
+      -------------------------------------------------------------------------
+
+    → Configuration ads cs (A has v ∷ A has v′ ∷ ds) ∋
+      ((Configuration [] [] (A has v ∷ A has v′ ∷ []) ∋
          ⟨ A , v + v′ ⟩ᵈ
       ∣∣ A auth[ Action A [] [] [ v + v′ ] (A has v ∷ A has v′ ∷ []) ∋
                  (0ᶠ ▷ v , v′) {pr₁ = fromWitness refl} {pr₂ = fromWitness refl}
@@ -155,10 +152,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       )
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
-
-      -----------------------------------------------------------------
-
-    → Γ′
+      )
       —→
       Configuration ads cs (A has v ∷ A has v′ ∷ ds) ∋
         (A has v ∷ A has v′ ∷ []) ∣∣ᵈˢ Γ
@@ -169,14 +163,13 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {v : Value}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
-      {Γ′ : Configuration ads cs (A has v ∷ ds)}
-    → Γ′ ≈ ⟨ A , v ⟩ᵈ
-        ∣∣ Γ
-        ∶- refl & refl & refl & refl & refl & refl
+      ----------------------------------------------
 
-      ---------------------------------------------------------------------
-
-    → Γ′
+    → Configuration ads cs (A has v ∷ ds) ∋
+      (  ⟨ A , v ⟩ᵈ
+      ∣∣ Γ
+      ∶- refl & refl & refl & refl & refl & refl
+      )
       —→
       Configuration ads cs (B has v ∷ ds) ∋
       (Configuration [] [] [ B has v ] ∋
@@ -195,9 +188,10 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {v : Value}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
-      {Γ′ : Configuration ads cs (B has v ∷ ds)}
-    → Γ′ ≈
-      ( Configuration [] [] [ B has v ] ∋
+      ---------------------------------------------------------------
+
+    → Configuration ads cs (B has v ∷ ds) ∋
+      (( Configuration [] [] [ B has v ] ∋
          ⟨ A , v ⟩ᵈ
       ∣∣ A auth[ Action A [] [] [ v ] [ B has v ] ∋
                  (0ᶠ ▷ᵈ B) {pr = fromWitness refl}
@@ -206,10 +200,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       )
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & SETₑ.\\-left {[ B has v ]}
-
-      -----------------------------------------------------------
-
-    → Γ′
+      )
       —→
       Configuration ads cs (B has v ∷ ds) ∋
       ( ⟨ B , v ⟩ᵈ
@@ -224,14 +215,13 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {ads cs ds} {Γ : Configuration ads cs ds}
       {v : Value}
 
-      {Γ′ : Configuration ads cs (A has v ∷ ds)}
-    → Γ′ ≈ ⟨ A , v ⟩ᵈ
-        ∣∣ Γ
-        ∶- refl & refl & refl & refl & refl & SETₑ.\\-left {[ A has v ]}
+     ----------------------------------------------------------------
 
-     ------------------------------------------------------------
-
-    → Γ′
+    → Configuration ads cs (A has v ∷ ds) ∋
+      (  ⟨ A , v ⟩ᵈ
+      ∣∣ Γ
+      ∶- refl & refl & refl & refl & refl & SETₑ.\\-left {[ A has v ]}
+      )
       —→
       Configuration ads cs ds ∋
       (Configuration [] [] [] ∋
@@ -250,9 +240,10 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {ads cs ds} {Γ : Configuration ads cs ds}
       {v : Value}
 
-      {Γ′ : Configuration ads cs ds}
-    → Γ′ ≈
-      (Configuration [] [] [] ∋
+      -----------------------------------------
+
+    → Configuration ads cs ds ∋
+      ((Configuration [] [] [] ∋
       (  ⟨ A , v ⟩ᵈ
       ∣∣ A auth[ Action A [] [] [ v ] [] ∋
                  destroy 0ᶠ
@@ -261,11 +252,9 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ))
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
-
-      ------------------------------------------------------------
-
-    → Γ′ —→ Γ
-
+      )
+      —→
+      Γ
 
   ------------------------------------------------------------
   -- ii) Rules for contract advertisements and stipulation
@@ -274,18 +263,17 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
     ∀ {v vsᶜ vsᵍ} {ad : Advertisement v vsᶜ vsᵍ}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
-      {Γ′ : Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds}
-
     → ∃[ p ] (p SETₚ.∈ participantsᵍ (G ad) → p SETₚ.∈ Hon)
     → (∀ d → d SETₑ.∈ depositsᵃ ad → deposit d SETₑ.∈ depositsᶜ Γ)
 
-    → Γ′ ≈ ` ad
-        ∣∣ Γ
-        ∶- refl & SETₐ.\\-left {[ v , vsᶜ , vsᵍ , ad ]} & refl & refl & refl & refl
-
       ------------------------------------------------------------------------
 
-    → Γ —→ Γ′
+    → Γ
+      —→ Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+      (  ` ad
+      ∣∣ Γ
+      ∶- refl & SETₐ.\\-left {[ v , vsᶜ , vsᵍ , ad ]} & refl & refl & refl & refl
+      )
 
 
   [C-AuthCommit] :
@@ -294,13 +282,6 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {ads rads cs ds}
       {Γ : Configuration′ (ads , rads) (cs , []) (ds , [])}
       {Δ : List (Configuration [] [] [])}
-
-      {Γ′ : Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds}
-      {Γ″ : Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds}
-
-    → Γ′ ≈ ` ad
-        ∣∣ Γ
-        ∶- refl & {!!} & refl & refl & refl & refl
 
       -- rads are all satisfied
     → rads SETₐ.⊆ [ v , vsᶜ , vsᵍ , ad ]
@@ -319,23 +300,29 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
            All (λ{ (p , _ , n) → (p SETₚ.∈ Hon → (isInj₂ n ≡ nothing))}) secrets
          )
 
-    → Γ″ ≈ (Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
-        (  ` ad
-        ∣∣ Γ
-        ∶- refl & {!!} & refl & refl & refl & refl
-        ∣∅ Δ
-        ))
-        ∣∣ A auth[ ♯▷ ad ]∶- refl & refl & refl
-        ∶- sym (++-identityʳ ((v , vsᶜ , vsᵍ , ad) ∷ ads))
-         & SETₐ.\\-head {v , vsᶜ , vsᵍ , ad} {ads}
-         & sym (++-identityʳ cs)
-         & SETᶜ.\\-left {cs}
-         & {!!}
-         & {!!}
-
       -----------------------------------------------------------------------
 
-    → Γ′ —→ Γ″
+    → Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+      (  ` ad
+      ∣∣ Γ
+      ∶- refl & {!!} & refl & refl & refl & refl
+      )
+      —→
+      Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+      ((Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+      (  ` ad
+      ∣∣ Γ
+      ∶- refl & {!!} & refl & refl & refl & refl
+      ∣∅ Δ
+      ))
+      ∣∣ A auth[ ♯▷ ad ]∶- refl & refl & refl
+      ∶- sym (++-identityʳ ((v , vsᶜ , vsᵍ , ad) ∷ ads))
+       & SETₐ.\\-head {v , vsᶜ , vsᵍ , ad} {ads}
+       & sym (++-identityʳ cs)
+       & SETᶜ.\\-left {cs}
+       & {!!}
+       & {!!}
+      )
 
 
   [C-AuthInit] :
@@ -346,38 +333,36 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {Γ : Configuration′ (ads , rads) (cs , []) (ds , [])}
       {p : ds ≡ dsˡ ++ [ A has (vsᵍ ‼ iᵍ) ] ++ dsʳ}
 
-      {Γ′ : Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds}
-      {Γ″ : Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs (dsˡ ++ dsʳ)}
-
-    → Γ′ ≈ ` ad
-        ∣∣ Γ
-        ∶- refl & {!!} & refl & refl & refl & refl
-
       -- rads are all satisfied
     → rads SETₐ.⊆ [ v , vsᶜ , vsᵍ , ad ]
 
       -- all participants have committed their secrets
     → All (λ p → p SETₚ.∈ committedParticipants Γ ad) (participantsᵍ (G ad))
 
-    → Γ″ ≈
-        (Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
-           ` ad
-        ∣∣ Γ
-        ∶- refl & {!!} & refl & refl & refl & refl
-        )
-        ∣∣ A auth[ Action A [ v , vsᶜ , vsᵍ , ad ] [] [ vsᵍ ‼ iᵍ ] [] ∋
-                   (ad ▷ˢ iᵍ) {pr = fromWitness refl}
-                 ]∶- refl & refl & refl
-        ∶- sym (++-identityʳ ((v , vsᶜ , vsᵍ , ad) ∷ ads))
-         & SETₐ.\\-head {v , vsᶜ , vsᵍ , ad} {ads}
-         & sym (++-identityʳ cs)
-         & SETᶜ.\\-left {cs}
-         & {!!}
-         & {!!}
-
       -------------------------------------------------------------------
 
-    → Γ′ —→ Γ″
+    → Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+      (  ` ad
+      ∣∣ Γ
+      ∶- refl & {!!} & refl & refl & refl & refl
+      )
+      —→
+      Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs (dsˡ ++ dsʳ) ∋
+      ((Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+         ` ad
+      ∣∣ Γ
+      ∶- refl & {!!} & refl & refl & refl & refl
+      )
+      ∣∣ A auth[ Action A [ v , vsᶜ , vsᵍ , ad ] [] [ vsᵍ ‼ iᵍ ] [] ∋
+                 (ad ▷ˢ iᵍ) {pr = fromWitness refl}
+               ]∶- refl & refl & refl
+      ∶- sym (++-identityʳ ((v , vsᶜ , vsᵍ , ad) ∷ ads))
+       & SETₐ.\\-head {v , vsᶜ , vsᵍ , ad} {ads}
+       & sym (++-identityʳ cs)
+       & SETᶜ.\\-left {cs}
+       & {!!}
+       & {!!}
+      )
 
 
   [C-Init] :
@@ -385,11 +370,19 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {ads cs ds} {Γ : Configuration ads cs ds}
       {rads} {Δ : Configuration′ ([] , rads) ([] , []) ([] , [])}
 
-      {Γ′ : Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds}
-      {Γ″ : Configuration ads ((v , vsᶜ , C ad) ∷ cs) ds}
+      -- rads are all satisfied
+    → rads SETₐ.⊆ [ v , vsᶜ , vsᵍ , ad ]
 
-    → Γ′ ≈
-      (Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+      -- all participants have committed their secrets
+    → All (λ p → p SETₚ.∈ committedParticipants Δ ad) (participantsᵍ (G ad))
+
+      -- all participants have spent the required (persistent) deposits for stipulation
+    → toStipulate (G ad) ≡ spentForStipulation Δ ad
+
+      ----------------------------------------------------------------------
+
+    → Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+      ((Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
          ` ad
       ∣∣ Γ
       ∶- refl & SETₐ.\\-left {[ v , vsᶜ , vsᵍ , ad ]} & refl & refl & refl & refl
@@ -401,23 +394,14 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
        & SETᶜ.\\-left {cs}
        & sym (++-identityʳ ds)
        & SETₑ.\\-left {ds}
+      )
+      —→
+      Configuration ads ((v , vsᶜ , C ad) ∷ cs) ds ∋
+      (  ⟨ C ad , v ⟩ᶜ
+      ∣∣ Γ
+      ∶- refl & refl & refl & SETᶜ.\\-left {[ v , vsᶜ , C ad ]} & refl & refl
+      )
 
-      -- rads are all satisfied
-    → rads SETₐ.⊆ [ v , vsᶜ , vsᵍ , ad ]
-
-      -- all participants have committed their secrets
-    → All (λ p → p SETₚ.∈ committedParticipants Δ ad) (participantsᵍ (G ad))
-
-      -- all participants have spent the required (persistent) deposits for stipulation
-    → toStipulate (G ad) ≡ spentForStipulation Δ ad
-
-    → Γ″ ≈ ⟨ C ad , v ⟩ᶜ
-        ∣∣ Γ
-        ∶- refl & refl & refl & SETᶜ.\\-left {[ v , vsᶜ , C ad ]} & refl & refl
-
-      ----------------------------------------------------------------------
-
-    → Γ′ —→ Γ″
 
 
   ---------------------------------------------------
@@ -426,47 +410,42 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
   [C-Split] :
     ∀ {ads cs ds} {Γ : Configuration ads cs ds}
       {v vs} {c : Contract v vs}
-
-      {cs′ : ActiveContracts}
       {cases : ContractCases}
-
-      {Γ′ : Configuration ads ((v , vs , [ c ]) ∷ cs) ds}
-    → Γ′ ≈ ⟨ [ c ] , v ⟩ᶜ
-        ∣∣ Γ
-        ∶- refl & refl & refl & refl & refl & refl
 
       -- `split` command
     → (pr : Split cases v)
     → c ≡ split cases ∶- pr
 
-      -- inner contracts
-    → cs′ ≡ casesToContracts cases
-
       ------------------------------------------------------------
 
-    → Γ′ —→ cs′ ∣∣ᶜˢ Γ
-
+    → Configuration ads ((v , vs , [ c ]) ∷ cs) ds ∋
+      (  ⟨ [ c ] , v ⟩ᶜ
+      ∣∣ Γ
+      ∶- refl & refl & refl & refl & refl & refl
+      )
+      —→  casesToContracts cases
+      ∣∣ᶜˢ Γ
 
   [C-AuthRev] :
     ∀ {A : Participant} {s : Secret} {n : ℕ} {n′ : ℕ ⊎ ⊥}
       {p : n′ ≡ inj₁ n}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
-      {Γ′ Γ″ : Configuration ads cs ds}
-
       -- only valid lengths
     → (len_s : lengthₛ s ≡ n)
 
-    → Γ′ ≈ (⟨ A ∶ s ♯ n′ ⟩
-             {case p of λ{ refl → length→isValidSecret len_s}})
-        ∣∣ Γ
-        ∶- refl & refl & refl & refl & refl & refl
-
-    → Γ″ ≈ [ A , s , n , len_s ] ∣∣ˢˢ Γ
-
       -------------------------------------------------------------
 
-    → Γ′ —→ Γ″
+    → Configuration ads cs ds ∋
+      (  (⟨ A ∶ s ♯ n′ ⟩ {case p of λ{ refl → length→isValidSecret len_s}})
+      ∣∣ Γ
+      ∶- refl & refl & refl & refl & refl & refl
+      )
+      —→
+      Configuration ads cs ds ∋
+      (   [ A , s , n , len_s ]
+      ∣∣ˢˢ Γ
+      )
 
 
   [C-PutRev] :
@@ -476,13 +455,6 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {s s′ : Secrets} {p : Predicate s′}
       {vs : Values} {ds′ : Deposits}
       {ss : List ValidSecret}
-
-      {Γ′ : Configuration ads ((v , vs″ , [ c ]) ∷ cs) (ds′ ++ ds)}
-      {Γ″ : Configuration ads ((v′ , vs′ , [ c′ ]) ∷ cs) ds}
-
-    → Γ′ ≈ ⟨ [ c ] , v ⟩ᶜ
-        ∣∣ (ds′ ∣∣ᵈˢ (ss ∣∣ˢˢ Γ))
-        ∶- refl & refl & refl & refl & refl & refl
 
       -- `put` command
     → (pr : Put v vs v′
@@ -499,35 +471,42 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       -- predicate is true
     → ⟦ p ⟧ᵇ ≡ true
 
-    → Γ″ ≈ ⟨ [ c′ ] , v′ ⟩ᶜ
-        ∣∣ (ss ∣∣ˢˢ Γ)
-        ∶- refl & refl & refl & refl & refl & refl
-
       ------------------------------------------------------------
 
-    → Γ′ —→ Γ″
+    → Configuration ads ((v , vs″ , [ c ]) ∷ cs) (ds′ ++ ds) ∋
+      (  ⟨ [ c ] , v ⟩ᶜ
+      ∣∣ (ds′ ∣∣ᵈˢ (ss ∣∣ˢˢ Γ))
+      ∶- refl & refl & refl & refl & refl & refl
+      )
+      —→
+      Configuration ads ((v′ , vs′ , [ c′ ]) ∷ cs) ds ∋
+      (  ⟨ [ c′ ] , v′ ⟩ᶜ
+      ∣∣ (ss ∣∣ˢˢ Γ)
+      ∶- refl & refl & refl & refl & refl & refl
+      )
 
   [C-Withdraw] :
     ∀ {ads cs ds} {Γ : Configuration ads cs ds}
       {A : Participant}
       {v} {c : Contract v []}
 
-      {Γ′ : Configuration ads ((v , [] , [ c ]) ∷ cs) ds}
-    → Γ′ ≈ ⟨ [ c ] , v ⟩ᶜ
-        ∣∣ Γ
-        ∶- refl & refl & refl & refl & refl & refl
-
       -- `withdraw` command
     → c ≡ withdraw A
 
       -------------------------------------------------------
 
-    → Γ′
-      —→
-      Configuration ads cs (A has v ∷ ds) ∋
-         ⟨ A , v ⟩ᵈ
+    → Configuration ads ((v , [] , [ c ]) ∷ cs) ds ∋
+      (  ⟨ [ c ] , v ⟩ᶜ
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
+      )
+      —→
+      Configuration ads cs (A has v ∷ ds) ∋
+      (  ⟨ A , v ⟩ᵈ
+      ∣∣ Γ
+      ∶- refl & refl & refl & refl & refl & refl
+      )
+
 
 
   [C-AuthControl] :
@@ -535,17 +514,16 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {A : Participant}
       {v vs} {contract : Contracts v vs} {i : Index contract}
 
-      {Γ′ : Configuration ads ((v , vs , contract) ∷ cs) ds}
-    → Γ′ ≈ ⟨ contract , v ⟩ᶜ
-        ∣∣ Γ
-        ∶- refl & refl & refl & refl & refl & refl
-
       -- `auth` decoration
     → A SETₚ.∈ authDecorations (contract ‼ i)
 
       ------------------------------------------------------------------
 
-    → Γ′
+    → Configuration ads ((v , vs , contract) ∷ cs) ds ∋
+      (  ⟨ contract , v ⟩ᶜ
+      ∣∣ Γ
+      ∶- refl & refl & refl & refl & refl & refl
+      )
       —→
       Configuration ads ((v , vs , contract) ∷ cs) ds ∋
       (Configuration [] [ (v , vs , contract) ] [] ∋
@@ -561,25 +539,39 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
     ∀ {ads cs ds} {Γ : Configuration ads cs ds}
       {v vs} {contract : Contracts v vs} {i : Index contract}
 
-      {Γ′ : Configuration ads ((v , vs , contract) ∷ cs) ds}
-      {Γ″ : Configuration ads ((v , vs , [ contract ‼ i ]) ∷ cs) ds}
+      ------------------------------------------------------------------
 
-    → Γ′ ≈
-      (Configuration [] [ v , vs , contract ] [] ∋
+    → Configuration ads ((v , vs , contract) ∷ cs) ds ∋
+      ((Configuration [] [ v , vs , contract ] [] ∋
           ⟨ contract , v ⟩ᶜ
       ∣∣ᵇ (0ᶠ , i , authDecorations (contract ‼ i))
       )
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
+      )
+      —→
+      Configuration ads ((v , vs , [ contract ‼ i ]) ∷ cs) ds ∋
+      (  ⟨ [ contract ‼ i ] , v ⟩ᶜ
+      ∣∣ Γ
+      ∶- refl & refl & refl & refl & refl & refl
+      )
 
-    → Γ″ ≈ ⟨ [ contract ‼ i ] , v ⟩ᶜ
-        ∣∣ Γ
-        ∶- refl & refl & refl & refl & refl & refl
 
-      ------------------------------------------------------------------
+infix -1 _—→′_
+data _—→′_ : ∀ {ads cs ds ads′ cs′ ds′}
+          → Configuration ads cs ds
+          → Configuration ads′ cs′ ds′
+          → Set where
 
-    → Γ′ —→ Γ″
+  [REORDER] : ∀ {ads cs ds ads′ cs′ ds′}
+                {Γ Γ′ : Configuration ads cs ds}
+                {Δ Δ′ : Configuration ads′ cs′ ds′}
 
+    → Γ′ ≈ Γ  -- reorder input
+    → Γ —→ Δ  -- propagate to bottom layer
+    → Δ  ≈ Δ′ -- reorder output
+      -------------
+    → Γ′ —→′ Δ′
 
 -----------------------------------------------------------------------------------
 -- Semantic rules for timed configurations.
@@ -651,13 +643,28 @@ data _—→ₜ_ : ∀ {ads cs ds ads′ cs′ ds′}
 
     → Γ′ —→ₜ Γ″ at t
 
+infix -1 _—→ₜ′_
+data _—→ₜ′_ : ∀ {ads cs ds ads′ cs′ ds′}
+          → TimedConfiguration ads cs ds
+          → TimedConfiguration ads′ cs′ ds′
+          → Set where
+
+  [REORDERₜ] : ∀ {ads cs ds ads′ cs′ ds′}
+                 {Γ Γ′ : TimedConfiguration ads cs ds}
+                 {Δ Δ′ : TimedConfiguration ads′ cs′ ds′}
+
+    → Γ′ ≈ₜ Γ  -- reorder input
+    → Γ —→ₜ Δ  -- propagate to bottom layer
+    → Δ ≈ₜ Δ′ -- reorder output
+      -------------
+    → Γ′ —→ₜ′ Δ′
 
 -----------------------------------------------------------------------------------
 -- Reflexive transitive closure for —→.
 
 infix  -1 _—↠_
 infix  -2 start_
-infixr -1 _—→⟨_⟩_
+infixr -1 _—→⟨_⟩_⊢_
 infix  0 _∎∎
 
 data _—↠_ : ∀ {ads cs ds ads′ cs′ ds′}
@@ -671,14 +678,16 @@ data _—↠_ : ∀ {ads cs ds ads′ cs′ ds′}
       ------
     → M —↠ M
 
-  _—→⟨_⟩_ : ∀ {ads cs ds ads′ cs′ ds′ ads″ cs″ ds″}
-              (L : Configuration ads cs ds)
-              {M : Configuration ads′ cs′ ds′}
-              {N : Configuration ads″ cs″ ds″}
+  _—→⟨_⟩_⊢_ : ∀ {ads cs ds ads′ cs′ ds′ ads″ cs″ ds″}
+                (L    : Configuration ads cs ds)
+                {L′   : Configuration ads cs ds}
+                {M M′ : Configuration ads′ cs′ ds′}
+                {N    : Configuration ads″ cs″ ds″}
 
-    → L —→ M
+    → L′ —→ M′
+    → (L ≈ L′) × (M ≈ M′)
     → M —↠ N
-      ------
+      ------------
     → L —↠ N
 
 start_ : ∀ {ads cs ds ads′ cs′ ds′}
@@ -696,7 +705,7 @@ start M—↠N = M—↠N
 
 infix  -1 _—↠ₜ_
 infix  -2 startₜ_
-infixr -1 _—→ₜ⟨_⟩_
+infixr -1 _—→ₜ⟨_⟩_⊢_
 infix  0 _∎∎ₜ
 
 data _—↠ₜ_ : ∀ {ads cs ds ads′ cs′ ds′}
@@ -710,12 +719,14 @@ data _—↠ₜ_ : ∀ {ads cs ds ads′ cs′ ds′}
       -------
     → M —↠ₜ M
 
-  _—→ₜ⟨_⟩_ : ∀ {ads cs ds ads′ cs′ ds′ ads″ cs″ ds″}
-               (L : TimedConfiguration ads cs ds)
-               {M : TimedConfiguration ads′ cs′ ds′}
-               {N : TimedConfiguration ads″ cs″ ds″}
+  _—→ₜ⟨_⟩_⊢_ : ∀ {ads cs ds ads′ cs′ ds′ ads″ cs″ ds″}
+                 (L    : TimedConfiguration ads cs ds)
+                 {L′   : TimedConfiguration ads cs ds}
+                 {M M′ : TimedConfiguration ads′ cs′ ds′}
+                 {N    : TimedConfiguration ads″ cs″ ds″}
 
-    → L —→ₜ M
+    → L′ —→ₜ M′
+    → (L ≈ₜ L′) × (M ≈ₜ M′)
     → M —↠ₜ N
       -------
     → L —↠ₜ N

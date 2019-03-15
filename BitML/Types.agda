@@ -128,7 +128,7 @@ data Contract where
   -- transfer the balance to <Participant>
   withdraw : ∀ {v} → Participant → Contract v []
 
-  -- split the balance
+  -- split the balance (T0D0 vs should be updated?)
   split_∶-_ : ∀ {v vs} (cs : ContractCases)
         → .(Split cs v) -- v ≡ sum (proj₁ <$>ₗ cs)
         → Contract v vs
