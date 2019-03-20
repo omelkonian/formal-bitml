@@ -44,6 +44,9 @@ open import Semantics.Configurations.Types Participant _≟ₚ_ Honest
 
 -------------------------------------------------------------------
 
+casesToContracts : ∀ {vs : Values} → ContractCases vs → ActiveContracts
+casesToContracts {vs} = map (λ{ (v , c) → v , vs , [ c ] })
+
 infix  7 _auth[_]
 infixl 5 _∣∣_
 
@@ -114,27 +117,27 @@ committedSecrets ⟨ x ∶ s ♯ n ⟩ =  [  x , s , n ]
 committedSecrets (l ∣∣ r ∶- _) = committedSecrets l ++ committedSecrets r
 committedSecrets _ = []
 
-committedParticipants : ∀ {v vsᶜ vsᵍ} {ads cs ds rads rcs rds}
+committedParticipants : ∀ {v vsᶜ vsᵛ vsᵖ} {ads cs ds rads rcs rds}
                       → Configuration′ (ads , rads) (cs , rcs) (ds , rds)
-                      → Advertisement v vsᶜ vsᵍ
+                      → Advertisement v vsᶜ vsᵛ vsᵖ
                       → List Participant
-committedParticipants {v} {vsᶜ} {vsᵍ}
-                      (p auth[ (♯▷_ {v′} {vsᶜ′} {vsᵍ′} ad′) ]∶- _) ad
-  with (v , vsᶜ , vsᵍ , ad) ∃≟ₐ (v′ , vsᶜ′ , vsᵍ′ , ad′)
+committedParticipants {v} {vsᶜ} {vsᵛ} {vsᵖ}
+                      (p auth[ (♯▷_ {v′} {vsᶜ′} {vsᵛ′} {vsᵖ′} ad′) ]∶- _) ad
+  with (v , vsᶜ , vsᵛ , vsᵖ , ad) ∃≟ₐ (v′ , vsᶜ′ , vsᵛ′ , vsᵖ′ , ad′)
 ... | yes _ = [ p ]
 ... | no  _ = []
 committedParticipants (l ∣∣ r ∶- _) ad = committedParticipants l ad
                                       ++ committedParticipants r ad
 committedParticipants _ _ = []
 
-spentForStipulation : ∀ {v vsᶜ vsᵍ} {ads cs ds rads rcs rds}
+spentForStipulation : ∀ {v vsᶜ vsᵛ vsᵖ} {ads cs ds rads rcs rds}
                     → Configuration′ (ads , rads) (cs , rcs) (ds , rds)
-                    → Advertisement v vsᶜ vsᵍ
+                    → Advertisement v vsᶜ vsᵛ vsᵖ
                     → List (Participant × Value)
-spentForStipulation {v} {vsᶜ} {vsᵍ}
-                    (p auth[ (_▷ˢ_ {v′} {vsᶜ′} {vsᵍ′} ad′ iᵍ) ]∶- _) ad
-  with (v , vsᶜ , vsᵍ , ad) ∃≟ₐ (v′ , vsᶜ′ , vsᵍ′ , ad′)
-... | yes _ = [ p , (vsᵍ′ ‼ iᵍ) ]
+spentForStipulation {v} {vsᶜ} {vsᵛ} {vsᵖ}
+                    (p auth[ (_▷ˢ_ {v′} {vsᶜ′} {vsᵛ′} {vsᵖ′} ad′ iᵖ) ]∶- _) ad
+  with (v , vsᶜ , vsᵛ , vsᵖ , ad) ∃≟ₐ (v′ , vsᶜ′ , vsᵛ′ , vsᵖ′ , ad′)
+... | yes _ = [ p , (vsᵖ′ ‼ iᵖ) ]
 ... | no  _ = []
 spentForStipulation (l ∣∣ r ∶- _) ad = spentForStipulation l ad
                                     ++ spentForStipulation r ad
@@ -219,9 +222,6 @@ fromSecrets [] = []
 fromSecrets ((p , s , inj₂ ()) ∷ ss)
 fromSecrets ((p , s , inj₁ (n , n≡)) ∷ ss) =
   (⟨ p ∶ s ♯ inj₁ n ⟩ {length→isValidSecret n≡}) ∷ fromSecrets ss
-
-casesToContracts : ContractCases → ActiveContracts
-casesToContracts = map (λ{ (v , vs , c) → v , vs , [ c ] })
 
 authDecorations : ∀ {v vs} → Contract v vs → List Participant
 authDecorations (x       ∶ c) = x ∷ authDecorations c

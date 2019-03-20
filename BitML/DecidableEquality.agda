@@ -51,6 +51,7 @@ _∃≟ᶜˢ_ : Decidable {A = ∃[ v ] ∃[ vs ] Contracts v vs} _≡_
 
 -- NB: mutual recursion needed  here to satisfy the termination checker
 _≟ᶜ_ : ∀ {v vs} → Decidable {A = Contract v vs} _≡_
+_∃s≟ᶜ′_ : ∀ {vs} → Decidable {A = List (∃[ v ] Contract v vs)} _≡_
 _∃s≟ᶜ_ : Decidable {A = List (∃[ v ] ∃[ vs ] Contract v vs)} _≡_
 
 []                  ∃s≟ᶜ []                      = yes refl
@@ -63,6 +64,17 @@ _∃s≟ᶜ_ : Decidable {A = List (∃[ v ] ∃[ vs ] Contract v vs)} _≡_
 ... | yes refl with c ≟ᶜ c′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl with cs ∃s≟ᶜ cs′
+... | no ¬p    = no λ{refl → ¬p refl}
+... | yes refl = yes refl
+
+[]             ∃s≟ᶜ′ []                = yes refl
+[]             ∃s≟ᶜ′ (_ ∷ _)           = no λ ()
+(_ ∷ _)        ∃s≟ᶜ′ []                = no λ ()
+((v , c) ∷ cs) ∃s≟ᶜ′ ((v′ , c′) ∷ cs′) with v ≟ v′
+... | no ¬p    = no λ{refl → ¬p refl}
+... | yes refl with c ≟ᶜ c′
+... | no ¬p    = no λ{refl → ¬p refl}
+... | yes refl with cs ∃s≟ᶜ′ cs′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
 
@@ -96,7 +108,7 @@ withdraw x ≟ᶜ (split _ ∶- _)                        = no λ ()
 withdraw x ≟ᶜ (_ ∶ _)                               = no λ ()
 withdraw x ≟ᶜ (after _ ∶ _)                         = no λ ()
 
-(split cs ∶- _) ≟ᶜ (split cs′ ∶- _) with cs ∃s≟ᶜ cs′
+(split cs ∶- _) ≟ᶜ (split cs′ ∶- _) with cs ∃s≟ᶜ′ cs′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
 (split cs ∶- x) ≟ᶜ (put _ &reveal _ if _ ⇒ _ ∶- _)  = no λ ()
@@ -153,19 +165,21 @@ Set⟨Contracts⟩ = Set'
   where open SETᶜ
 
 -- Advertisements.
-_≟ₐ_ : ∀ {v vsᶜ vsᵍ} → Decidable {A = Advertisement v vsᶜ vsᵍ} _≡_
+_≟ₐ_ : ∀ {v vsᶜ vsᵛ vsᵖ} → Decidable {A = Advertisement v vsᶜ vsᵛ vsᵖ} _≡_
 (⟨ G₁ ⟩ C₁ ∶- _) ≟ₐ (⟨ G₂ ⟩ C₂ ∶- _) with G₁ ≟ₚᵣ G₂
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl with C₁ ≟ᶜˢ C₂
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
 
-_∃≟ₐ_ : Decidable {A = ∃[ v ] ∃[ vsᶜ ] ∃[ vsᵍ ] Advertisement v vsᶜ vsᵍ} _≡_
-(v , vsᶜ , vsᵍ , ad) ∃≟ₐ (v′ , vsᶜ′ , vsᵍ′ , ad′) with v ≟ v′
+_∃≟ₐ_ : Decidable {A = ∃[ v ] ∃[ vsᶜ ] ∃[ vsᵛ ] ∃[ vsᵖ ] Advertisement v vsᶜ vsᵛ vsᵖ} _≡_
+(v , vsᶜ , vsᵛ , vsᵖ , ad) ∃≟ₐ (v′ , vsᶜ′ , vsᵛ′ , vsᵖ′ , ad′) with v ≟ v′
 ... | no ¬p = no λ{refl → ¬p refl}
 ... | yes refl with vsᶜ SETₙ.≟ₗ vsᶜ′
 ... | no ¬p = no λ{refl → ¬p refl}
-... | yes refl with vsᵍ SETₙ.≟ₗ vsᵍ′
+... | yes refl with vsᵛ SETₙ.≟ₗ vsᵛ′
+... | no ¬p = no λ{refl → ¬p refl}
+... | yes refl with vsᵖ SETₙ.≟ₗ vsᵖ′
 ... | no ¬p = no λ{refl → ¬p refl}
 ... | yes refl with ad ≟ₐ ad′
 ... | no ¬p = no λ{refl → ¬p refl}

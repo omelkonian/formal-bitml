@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 
 open import Data.Nat           using (ℕ; _≟_; _>_; _+_; _∸_; _<?_)
-open import Data.Product       using (Σ; Σ-syntax; proj₁)
+open import Data.Product       using (Σ; Σ-syntax; proj₁; _×_; _,_)
 open import Data.List          using (List; []; _∷_; [_]; length; _++_)
 open import Data.String        using (String)
   renaming (length to lengthˢ)
@@ -13,7 +13,7 @@ open import Data.Bool          using (Bool; true; false; _∧_; _∨_; not)
   renaming (_≟_ to _≟ᵇ_)
 
 open import Relation.Nullary                      using (Dec; yes; no)
-open import Relation.Nullary.Decidable            using (True; fromWitness)
+open import Relation.Nullary.Decidable            using (True; fromWitness; toWitness)
 open import Relation.Binary                       using (Decidable)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
@@ -138,32 +138,34 @@ open import Data.Set' {A = Value} _≟_ using () renaming (_≟ₗ_ to _≟ₙ�
 -------------------------------------------------------------------
 -- Contract preconditions.
 
-data Precondition :
-    Values -- the deposits it requires (persistent or not)
-  → Set where
+data Precondition : Values -- volatile deposits
+                  → Values -- persistent deposits
+                  → Set where
 
-  -- volatile deposit of <Value>$, expected from <Participant>
-  _:?_ : Participant → (v : Value) → Precondition [ v ] -- T0D0 remove v?
+  -- volatile deposit
+  _:?_ : Participant → (v : Value) → Precondition [ v ] []
 
-  -- persistent deposit of <Value>$, expected from <Participant>
-  _:!_ : Participant → (v : Value) → Precondition [ v ]
+  -- persistent deposit
+  _:!_ : Participant → (v : Value) → Precondition [] [ v ]
 
   -- committed secret (random nonce) by <Participant>
-  _:secret_ : Participant → Secret → Precondition []
+  _:secret_ : Participant → Secret → Precondition [] []
 
   -- composition
-  _∣_ : ∀ {vs vsₗ vsᵣ}
-    → Precondition vsₗ
-    → Precondition vsᵣ
-    → .{_ : True (vs ≟ₙₛ vsₗ ++ vsᵣ)}
-    → Precondition vs
+  _∣_∶-_ : ∀ {vsᵛ vsᵖ vsᵛₗ vsᵖₗ vsᵛᵣ vsᵖᵣ}
+         → Precondition vsᵛₗ vsᵖₗ
+         → Precondition vsᵛᵣ vsᵖᵣ
+         → .( (vsᵛ ≡ vsᵛₗ ++ vsᵛᵣ)
+            × (vsᵖ ≡ vsᵖₗ ++ vsᵖᵣ))
+         → Precondition vsᵛ vsᵖ
 
-_∣_∶-_ : ∀ {vs vsₗ vsᵣ}
-       → Precondition vsₗ
-       → Precondition vsᵣ
-       → vs ≡ vsₗ ++ vsᵣ
-       → Precondition vs
-l ∣ r ∶- pr = (l ∣ r) {fromWitness pr}
+_∣_ : ∀ {vsᵛ vsᵖ vsᵛₗ vsᵖₗ vsᵛᵣ vsᵖᵣ}
+    → Precondition vsᵛₗ vsᵖₗ
+    → Precondition vsᵛᵣ vsᵖᵣ
+    → {_ : True (vsᵛ ≟ₙₛ vsᵛₗ ++ vsᵛᵣ)}
+    → {_ : True (vsᵖ ≟ₙₛ vsᵖₗ ++ vsᵖᵣ)}
+    → Precondition vsᵛ vsᵖ
+(l ∣ r) {p₁} {p₂} = l ∣ r ∶- toWitness p₁ , toWitness p₂
 
 infix  5 _:?_
 infix  5 _:!_
@@ -329,40 +331,43 @@ _≟ₚᵣₑ_ : ∀ {s} → Decidable {A = Predicate s} _≡_
 (_ `< _) ≟ₚᵣₑ (_ `≡ _) = no λ ()
 
 -- Sets of preconditions.
-_≟ₚᵣ_ : ∀ {vs} → Decidable {A = Precondition vs} _≡_
+_≟ₚᵣ_ : ∀ {vsᵛ vsᵖ} → Decidable {A = Precondition vsᵛ vsᵖ} _≡_
 (x :? v)      ≟ₚᵣ (x′ :? v′)      with x ≟ₚ x′
 ... | no x≢x′                     = no λ{refl → x≢x′ refl}
 ... | yes refl                    with v ≟ v′
 ... | no v≢v′                     = no λ{refl → v≢v′ refl}
 ... | yes refl                    = yes refl
-(_ :? _)      ≟ₚᵣ (_ :! _)        = no λ ()
-(_ :? _)      ≟ₚᵣ (_ ∣ _)         = no λ ()
+(_ :? _)      ≟ₚᵣ (_ ∣ _ ∶- _)    = no λ ()
 
 (x :! v)      ≟ₚᵣ (x′ :! v′)      with x ≟ₚ x′
 ... | no x≢x′                     = no λ{refl → x≢x′ refl}
 ... | yes refl                    with v ≟ v′
 ... | no v≢v′                     = no λ{refl → v≢v′ refl}
 ... | yes refl                    = yes refl
-(_ :! _)      ≟ₚᵣ (_ :? _)        = no λ ()
-(_ :! _)      ≟ₚᵣ (_ ∣ _)         = no λ ()
+(_ :! _)      ≟ₚᵣ (_ ∣ _ ∶- _)         = no λ ()
 
 (x :secret s) ≟ₚᵣ (x′ :secret s′) with x ≟ₚ x′
 ... | no x≢x′                     = no λ{refl → x≢x′ refl}
 ... | yes refl                    with s ≟ₛ s′
 ... | no s≢s′                     = no λ{refl → s≢s′ refl}
 ... | yes refl                    = yes refl
-(_ :secret _) ≟ₚᵣ (_ ∣ _)         = no λ ()
+(_ :secret _) ≟ₚᵣ (_ ∣ _ ∶- _)         = no λ ()
 
-(_∣_ {_} {vsˡ}  {vsʳ}  p₁  p₂) ≟ₚᵣ (_∣_ {_} {vsˡ′} {vsʳ′} p₁′ p₂′)
-                                  with vsˡ ≟ₙₛ vsˡ′
+(_∣_∶-_ {_} {_} {vsᵛˡ} {vsᵛʳ} {vsᵖˡ} {vsᵖʳ} p₁ p₂ _) ≟ₚᵣ
+  (_∣_∶-_ {_} {_} {vsᵛˡ′} {vsᵛʳ′} {vsᵖˡ′} {vsᵖʳ′} p₁′ p₂′ _)
+                                  with vsᵛˡ ≟ₙₛ vsᵛˡ′
 ... | no ¬p                       = no λ{refl → ¬p refl}
-... | yes refl                    with vsʳ ≟ₙₛ vsʳ′
+... | yes refl                    with vsᵛʳ ≟ₙₛ vsᵛʳ′
+... | no ¬p                       = no λ{refl → ¬p refl}
+... | yes refl                    with vsᵖˡ ≟ₙₛ vsᵖˡ′
+... | no ¬p                       = no λ{refl → ¬p refl}
+... | yes refl                    with vsᵖʳ ≟ₙₛ vsᵖʳ′
 ... | no ¬p                       = no λ{refl → ¬p refl}
 ... | yes refl                    with p₁ ≟ₚᵣ p₁′
 ... | no ¬p                       = no λ{refl → ¬p refl}
 ... | yes refl                    with p₂ ≟ₚᵣ p₂′
 ... | no ¬p                       = no λ{refl → ¬p refl}
 ... | yes refl                    = yes refl
-(_ ∣ _)       ≟ₚᵣ (_ :? _)        = no λ ()
-(_ ∣ _)       ≟ₚᵣ (_ :! _)        = no λ ()
-(_ ∣ _)       ≟ₚᵣ (_ :secret _)   = no λ ()
+(_ ∣ _ ∶- _)  ≟ₚᵣ (_ :? _)        = no λ ()
+(_ ∣ _ ∶- _)  ≟ₚᵣ (_ :! _)        = no λ ()
+(_ ∣ _ ∶- _)  ≟ₚᵣ (_ :secret _)   = no λ ()

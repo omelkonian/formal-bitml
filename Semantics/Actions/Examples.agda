@@ -40,11 +40,11 @@ _ : Action A [] [] (33 ∷ 67 ∷ []) [ A has 100 ]
 _ = 0ᶠ ↔ sucᶠ 0ᶠ
 
 -- secret
-_ : Action A [ 5 , [ 100 ] , 200 ∷ 100 ∷ [] , ex-ad ] [] [] []
+_ : Action A [ 5 , [ 100 ] , [ 100 ] , 2 ∷ 3 ∷ [] , ex-ad ] [] [] []
 _ = ♯▷ ex-ad
 
 -- spend
-_ : Action A [ 5 , [ 100 ] , 200 ∷ 100 ∷ [] , ex-ad ] [] [ 100 ] []
+_ : Action A [ 5 , [ 100 ] , [ 100 ] , 2 ∷ 3 ∷ [] , ex-ad ] [] [ 3 ] []
 _ = ex-ad ▷ˢ sucᶠ 0ᶠ
 
 -- take branch

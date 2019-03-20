@@ -43,15 +43,15 @@ open import Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
 ex-cs : ∃[ v ] ∃[ vs ] Contracts v vs
 ex-cs = 1 , [] , [ withdraw A ]
 
-∃ex-ad : ∃[ v ] ∃[ vsᶜ ] ∃[ vsᵍ ] Advertisement v vsᶜ vsᵍ
-∃ex-ad = 5 , [ 100 ] , 200 ∷ 100 ∷ [] , ex-ad
+∃ex-ad : ∃[ v ] ∃[ vsᶜ ] ∃[ vsᵛ ] ∃[ vsᵖ ] Advertisement v vsᶜ vsᵛ vsᵖ
+∃ex-ad = 5 , [ 100 ] , [ 100 ] , 2 ∷ 3 ∷ [] , ex-ad
 
 -- empty
 _ : Configuration [] [] []
 _ = ∅ᶜ
 
 -- advertisements
-_ : Configuration [ 5 , [ 100 ] , 200 ∷ 100 ∷ [] , ex-ad ] [] []
+_ : Configuration [ 5 , [ 100 ] , [ 100 ] , 2 ∷ 3 ∷ [] , ex-ad ] [] []
 _ = ` ex-ad
 
 -- active contracts
@@ -87,8 +87,8 @@ _ : Configuration′ ([] , [ ∃ex-ad ]) ([] , []) ([] , [])
 _ = A auth[ ♯▷ ex-ad ]
 
 -- 5. spend
-_ : Configuration′ ([] , [ ∃ex-ad ]) ([] , []) ([] , [ A has 200 ])
-_ = A auth[ Action A [ ∃ex-ad ] [] [ 200 ] [] ∋
+_ : Configuration′ ([] , [ ∃ex-ad ]) ([] , []) ([] , [ A has 2 ])
+_ = A auth[ Action A [ ∃ex-ad ] [] [ 2 ] [] ∋
             ex-ad ▷ˢ 0ᶠ
           ]
 
@@ -98,35 +98,36 @@ _ = A auth[ ex-contracts₃ ▷ᵇ 0ᶠ ]
 
 -- 7. combination
 Γ₁ : Configuration [ ∃ex-ad ]
-                   [ 1 , [] , [ withdraw A ] ]
+                   [ ex-cs ]
                    []
 Γ₁ = ` ex-ad ∣∣ ⟨ ex-contracts₁ , 1 ⟩ᶜ
 
 Γ₂ : Configuration [ ∃ex-ad ]
-                   [ 1 , [] , [ withdraw A ] ]
-                   [ A has 40 ]
-Γ₂ = Γ₁ ∣∣ ⟨ A , 40 ⟩ᵈ
+                   [ ex-cs ]
+                   [ A has 1 ]
+Γ₂ = Γ₁ ∣∣ ⟨ A , 1 ⟩ᵈ
 
 Γ₃ : Configuration [ ∃ex-ad ]
-                   [ 1 , [] , [ withdraw A ] ]
-                   (A has 40 ∷ A has 60 ∷ [])
-Γ₃ = Γ₂ ∣∣ ⟨ A , 60 ⟩ᵈ
+                   [ ex-cs ]
+                   (A has 1 ∷ A has 2 ∷ [])
+Γ₃ = Γ₂ ∣∣ ⟨ A , 2 ⟩ᵈ
 
 Γ₄ : Configuration [ ∃ex-ad ]
-                   [ 1 , [] , [ withdraw A ] ]
-                   [ A has 100 ]
+                   [ ex-cs ]
+                   [ A has 3 ]
 Γ₄ = Γ₃
-  ∣∣ A auth[ Action A [] [] (40 ∷ 60 ∷ []) [ A has 100 ] ∋
+  ∣∣ A auth[ Action A [] [] (1 ∷ 2 ∷ []) [ A has 3 ] ∋
              0ᶠ ↔ sucᶠ 0ᶠ
            ]∶- refl & refl & refl
 
 Γ₅ : Configuration [ ∃ex-ad ]
-                   [ 1 , [] , [ withdraw A ] ]
+                   [ ex-cs ]
                    []
 Γ₅ = Γ₄
-  ∣∣ A auth[ Action A [ ∃ex-ad ] [] [ 100 ] [] ∋
+  ∣∣ A auth[ Action A [ ∃ex-ad ] [] [ 3 ] [] ∋
              ex-ad ▷ˢ sucᶠ 0ᶠ
            ]∶- refl & refl & refl
+
 
 -- secrets
 _ : Configuration [] [] []

@@ -32,7 +32,7 @@ open import BitML.Types Participant _≟ₚ_ Honest
 --------------------------------------------------------------------------------
 
 AdvertisedContracts : Set
-AdvertisedContracts = List (∃[ v ] ∃[ vsᶜ ] ∃[ vsᵍ ] Advertisement v vsᶜ vsᵍ)
+AdvertisedContracts = List (∃[ v ] ∃[ vsᶜ ] ∃[ vsᵛ ] ∃[ vsᵖ ] Advertisement v vsᶜ vsᵛ vsᵖ)
 
 ActiveContracts : Set
 ActiveContracts = List (∃[ v ] ∃[ vs ] Contracts v vs)
@@ -45,16 +45,16 @@ data Action (p : Participant) -- the participant that authorises this action
   → Set where
 
   -- commit secrets to stipulate {G}C
-  ♯▷_ : ∀ {v vsᶜ vsᵍ} → (ad : Advertisement v vsᶜ vsᵍ)
-      → Action p [ v , vsᶜ , vsᵍ , ad ] [] [] []
+  ♯▷_ : ∀ {v vsᶜ vsᵛ vsᵖ} → (ad : Advertisement v vsᶜ vsᵛ vsᵖ)
+      → Action p [ v , vsᶜ , vsᵛ , vsᵖ , ad ] [] [] []
 
   -- spend x to stipulate {G}C
-  _▷ˢ_ : ∀ {v vsᶜ vsᵍ}
-       → (ad : Advertisement v vsᶜ vsᵍ)
-       → (i : Index vsᵍ)
+  _▷ˢ_ : ∀ {v vsᶜ vsᵛ vsᵖ}
+       → (ad : Advertisement v vsᶜ vsᵛ vsᵖ)
+       → (i : Index vsᵖ)
        → {vs : Values}
-       → .{pr : True (vs SETₙ.≟ₗ [ vsᵍ ‼ i ])}
-       → Action p [ v , vsᶜ , vsᵍ , ad ] [] vs []
+       → .{pr : True (vs SETₙ.≟ₗ [ vsᵖ ‼ i ])}
+       → Action p [ v , vsᶜ , vsᵛ , vsᵖ , ad ] [] vs []
 
   -- take branch
   _▷ᵇ_ : ∀ {v vs}

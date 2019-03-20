@@ -50,7 +50,7 @@ module Data.Set' {A : Set} (_≟_ : Decidable (_≡_ {A = A})) where
   ------------------------------------------------------------------------
   -- Subset relation.
 
-  open import Data.List.Relation.Subset.Propositional {A = A} using (_⊆_) public
+  open import Data.List.Relation.Binary.Subset.Propositional {A = A} using (_⊆_) public
 
   _⊆?_ : List A → List A → Set
   []       ⊆? _  = ⊤

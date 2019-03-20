@@ -18,7 +18,7 @@ open import Data.Fin     using (Fin; fromℕ)
 open import Data.String  using ()
   renaming (length to lengthₛ)
 
-open import Data.List using ( List; []; _∷_; [_]; _++_; map
+open import Data.List using ( List; []; _∷_; [_]; _++_; map; sum
                             ; length; filter; boolFilter; zip )
 open import Data.List.All using (All)
 open import Data.List.Properties using (++-identityʳ)
@@ -260,31 +260,31 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
   -- ii) Rules for contract advertisements and stipulation
 
   [C-Advertise] :
-    ∀ {v vsᶜ vsᵍ} {ad : Advertisement v vsᶜ vsᵍ}
+    ∀ {v vsᶜ vsᵛ vsᵖ} {ad : Advertisement v vsᶜ vsᵛ vsᵖ}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
     → ∃[ p ] (p SETₚ.∈ participantsᵍ (G ad) → p SETₚ.∈ Hon)
-    → (∀ d → d SETₑ.∈ depositsᵃ ad → deposit d SETₑ.∈ depositsᶜ Γ)
+    → (∀ d → d SETₑᵣ.∈ depositsᵃ ad → deposit d SETₑ.∈ depositsᶜ Γ)
 
       ------------------------------------------------------------------------
 
     → Γ
-      —→ Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+      —→ Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs ds ∋
       (  ` ad
       ∣∣ Γ
-      ∶- refl & SETₐ.\\-left {[ v , vsᶜ , vsᵍ , ad ]} & refl & refl & refl & refl
+      ∶- refl & SETₐ.\\-left {[ v , vsᶜ , vsᵛ , vsᵖ , ad ]} & refl & refl & refl & refl
       )
 
 
   [C-AuthCommit] :
     ∀ {A : Participant} {bs : List (⊤ ⊎ ⊥)}
-      {v vsᶜ vsᵍ} {ad : Advertisement v vsᶜ vsᵍ}
+      {v vsᶜ vsᵛ vsᵖ} {ad : Advertisement v vsᶜ vsᵛ vsᵖ}
       {ads rads cs ds}
       {Γ : Configuration′ (ads , rads) (cs , []) (ds , [])}
       {Δ : List (Configuration [] [] [])}
 
       -- rads are all satisfied
-    → rads SETₐ.⊆ [ v , vsᶜ , vsᵍ , ad ]
+    → rads SETₐ.⊆ [ v , vsᶜ , vsᵛ , vsᵖ , ad ]
 
       -- commitment of secrets is proper
     → let
@@ -302,22 +302,22 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
 
       -----------------------------------------------------------------------
 
-    → Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+    → Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs ds ∋
       (  ` ad
       ∣∣ Γ
       ∶- refl & {!!} & refl & refl & refl & refl
       )
       —→
-      Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
-      ((Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+      Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs ds ∋
+      ((Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs ds ∋
       (  ` ad
       ∣∣ Γ
       ∶- refl & {!!} & refl & refl & refl & refl
       ∣∅ Δ
       ))
       ∣∣ A auth[ ♯▷ ad ]∶- refl & refl & refl
-      ∶- sym (++-identityʳ ((v , vsᶜ , vsᵍ , ad) ∷ ads))
-       & SETₐ.\\-head {v , vsᶜ , vsᵍ , ad} {ads}
+      ∶- sym (++-identityʳ ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads))
+       & SETₐ.\\-head {v , vsᶜ , vsᵛ , vsᵖ , ad} {ads}
        & sym (++-identityʳ cs)
        & SETᶜ.\\-left {cs}
        & {!!}
@@ -327,37 +327,37 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
 
   [C-AuthInit] :
     ∀ {A : Participant}
-      {v vsᶜ vsᵍ} {ad : Advertisement v vsᶜ vsᵍ}
-      {iᵍ : Index vsᵍ}
+      {v vsᶜ vsᵛ vsᵖ} {ad : Advertisement v vsᶜ vsᵛ vsᵖ}
+      {iᵖ : Index vsᵖ}
       {ads rads cs dsˡ dsʳ ds}
       {Γ : Configuration′ (ads , rads) (cs , []) (ds , [])}
-      {p : ds ≡ dsˡ ++ [ A has (vsᵍ ‼ iᵍ) ] ++ dsʳ}
+      {p : ds ≡ dsˡ ++ [ A has (vsᵖ ‼ iᵖ) ] ++ dsʳ}
 
       -- rads are all satisfied
-    → rads SETₐ.⊆ [ v , vsᶜ , vsᵍ , ad ]
+    → rads SETₐ.⊆ [ v , vsᶜ , vsᵛ , vsᵖ , ad ]
 
       -- all participants have committed their secrets
     → All (λ p → p SETₚ.∈ committedParticipants Γ ad) (participantsᵍ (G ad))
 
       -------------------------------------------------------------------
 
-    → Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+    → Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs ds ∋
       (  ` ad
       ∣∣ Γ
       ∶- refl & {!!} & refl & refl & refl & refl
       )
       —→
-      Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs (dsˡ ++ dsʳ) ∋
-      ((Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+      Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs (dsˡ ++ dsʳ) ∋
+      ((Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs ds ∋
          ` ad
       ∣∣ Γ
       ∶- refl & {!!} & refl & refl & refl & refl
       )
-      ∣∣ A auth[ Action A [ v , vsᶜ , vsᵍ , ad ] [] [ vsᵍ ‼ iᵍ ] [] ∋
-                 (ad ▷ˢ iᵍ) {pr = fromWitness refl}
+      ∣∣ A auth[ Action A [ v , vsᶜ , vsᵛ , vsᵖ , ad ] [] [ vsᵖ ‼ iᵖ ] [] ∋
+                 (ad ▷ˢ iᵖ) {pr = fromWitness refl}
                ]∶- refl & refl & refl
-      ∶- sym (++-identityʳ ((v , vsᶜ , vsᵍ , ad) ∷ ads))
-       & SETₐ.\\-head {v , vsᶜ , vsᵍ , ad} {ads}
+      ∶- sym (++-identityʳ ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads))
+       & SETₐ.\\-head {v , vsᶜ , vsᵛ , vsᵖ , ad} {ads}
        & sym (++-identityʳ cs)
        & SETᶜ.\\-left {cs}
        & {!!}
@@ -366,12 +366,12 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
 
 
   [C-Init] :
-    ∀ {v vsᶜ vsᵍ} {ad : Advertisement v vsᶜ vsᵍ}
+    ∀ {v vsᶜ vsᵛ vsᵖ} {ad : Advertisement v vsᶜ vsᵛ vsᵖ}
       {ads cs ds} {Γ : Configuration ads cs ds}
       {rads} {Δ : Configuration′ ([] , rads) ([] , []) ([] , [])}
 
       -- rads are all satisfied
-    → rads SETₐ.⊆ [ v , vsᶜ , vsᵍ , ad ]
+    → rads SETₐ.⊆ [ v , vsᶜ , vsᵛ , vsᵖ , ad ]
 
       -- all participants have committed their secrets
     → All (λ p → p SETₚ.∈ committedParticipants Δ ad) (participantsᵍ (G ad))
@@ -381,14 +381,14 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
 
       ----------------------------------------------------------------------
 
-    → Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
-      ((Configuration ((v , vsᶜ , vsᵍ , ad) ∷ ads) cs ds ∋
+    → Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs ds ∋
+      ((Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs ds ∋
          ` ad
       ∣∣ Γ
-      ∶- refl & SETₐ.\\-left {[ v , vsᶜ , vsᵍ , ad ]} & refl & refl & refl & refl
+      ∶- refl & SETₐ.\\-left {[ v , vsᶜ , vsᵛ , vsᵖ , ad ]} & refl & refl & refl & refl
       )
       ∣∣ Δ
-      ∶- sym (++-identityʳ ((v , vsᶜ , vsᵍ , ad) ∷ ads))
+      ∶- sym (++-identityʳ ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads))
        & {!!}
        & sym (++-identityʳ cs)
        & SETᶜ.\\-left {cs}
@@ -410,10 +410,10 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
   [C-Split] :
     ∀ {ads cs ds} {Γ : Configuration ads cs ds}
       {v vs} {c : Contract v vs}
-      {cases : ContractCases}
+      {cases : ContractCases vs}
 
       -- `split` command
-    → (pr : Split cases v)
+    → (pr : v ≡ sum (map proj₁ cases))
     → c ≡ split cases ∶- pr
 
       ------------------------------------------------------------
@@ -457,9 +457,9 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       {ss : List ValidSecret}
 
       -- `put` command
-    → (pr : Put v vs v′
-          × s′ SETₛ.⊆ s
-          × vs″ ≡ vs′ ++ vs)
+    → (pr : Put vs vs′ vs″
+          × v′ ≡ v + sum vs
+          × s′ SETₛ.⊆ s)
     → c ≡ (put vs &reveal s if p ⇒ c′ ∶- pr)
 
       -- revealed secrets
@@ -604,6 +604,7 @@ data _—→ₜ_ : ∀ {ads cs ds ads′ cs′ ds′}
     ∀ {ads cs ds} {Γ : Configuration ads cs ds}
       {ads′ cs′ ds′} {Γ′ : Configuration ads′ cs′ ds′}
       {t : Time}
+
 
     → Γ —→ Γ′
       ----------------------------------------

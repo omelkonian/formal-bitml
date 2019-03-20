@@ -59,26 +59,26 @@ a = "CHANGE_ME"
 t : Time
 t = 42
 
-tc : Advertisement 1 [] (1 ∷ 0 ∷ [])
+tc : Advertisement 1 [] [] (1 ∷ 0 ∷ [])
 tc = ⟨ A :! 1
-     ∣ A :secret a ∶- refl
-     ∣ B :! 0      ∶- refl
-     ⟩
-       (put [] &reveal [ a ] if `True ⇒ withdraw A
-         ∶- base-put & (λ ()) & refl)
+     ∣ A :secret a ∶- refl & refl
+     ∣ B :! 0      ∶- refl & refl
+     ⟩ (put [] &reveal [ a ] if `True ⇒ withdraw A
+        ∶- sound-put {p = tt} & refl & (λ ()))
      ⊕ (after t ∶ withdraw B)
      ∙
-     ∶- base-≾
-     &  λ{ (here px)                                → here px
-        ; (there (here px))                         → here px
-        ; (there (there (here px)))                 → there (here px)
-        ; (there (there (there (here px))))         → here px
-        ; (there (there (there (there (here px))))) → there (here px)
-        ; (there (there (there (there (there ())))))
-        }
+     ∶- sound-≾
+      & (λ{ (here px)                                 → here px
+          ; (there (here px))                         → here px
+          ; (there (there (here px)))                 → there (here px)
+          ; (there (there (there (here px))))         → here px
+          ; (there (there (there (there (here px))))) → there (here px)
+          ; (there (there (there (there (there ())))))
+          })
+      & refl
 
-tc∃ : ∃[ v ] ∃[ vsᶜ ] ∃[ vsᵍ ] Advertisement v vsᶜ vsᵍ
-tc∃ = 1 , [] , 1 ∷ 0 ∷ [] , tc
+tc∃ : ∃[ v ] ∃[ vsᶜ ] ∃[ vsᵛ ] ∃[ vsᵖ ] Advertisement v vsᶜ vsᵛ vsᵖ
+tc∃ = 1 , [] , [] , (1 ∷ 0 ∷ []) , tc
 
 tC : Contracts 1 []
 tC = C tc
@@ -265,7 +265,7 @@ tc-semantics =
       )
     ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₃
-  —→⟨ [C-AuthInit] {A = A} {iᵍ = 0ᶠ} {dsˡ = []} {dsʳ = [ B has 0 ]} {Γ = c₃′} {p = refl}
+  —→⟨ [C-AuthInit] {A = A} {iᵖ = 0ᶠ} {dsˡ = []} {dsʳ = [ B has 0 ]} {Γ = c₃′} {p = refl}
       -- satisfy rads
       (λ { (here refl) → here refl
          ; (there (here refl)) → here refl
@@ -275,7 +275,7 @@ tc-semantics =
       ((here refl) All-∷ ((here refl) All-∷ ((there (here refl)) All-∷ All-[])))
     ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₄
-  —→⟨ [C-AuthInit] {A = B} {iᵍ = 1ᶠ} {dsˡ = []} {dsʳ = []} {Γ = c₄′} {p = refl}
+  —→⟨ [C-AuthInit] {A = B} {iᵖ = 1ᶠ} {dsˡ = []} {dsʳ = []} {Γ = c₄′} {p = refl}
       -- satisfy rads (none in this case)
       (λ { (here refl) → here refl
          ; (there (here refl)) → here refl
@@ -309,7 +309,7 @@ tc-semantics =
     c₈
   —→⟨ [C-PutRev] {Γ = ∅ᶜ} {s = [ a ]} {ds′ = []} {ss = [ A , a , 9 , refl ]}
       -- `put` command
-      (base-put , ((λ ()) , refl))
+      (sound-put , refl , (λ ()))
       refl
       -- revealed secrets
       refl

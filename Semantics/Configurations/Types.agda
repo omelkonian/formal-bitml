@@ -57,9 +57,9 @@ data Configuration′ :
   ∅ᶜ : Configuration′ ([] , []) ([] , []) ([] , [])
 
   -- contract advertisement
-  `_ : ∀ {v vsᶜ vsᵍ}
-     → (ad : Advertisement v vsᶜ vsᵍ)
-     → Configuration′ ([ v , vsᶜ , vsᵍ , ad ] , []) ([] , []) ([] , [])
+  `_ : ∀ {v vsᶜ vsᵛ vsᵖ}
+     → (ad : Advertisement v vsᶜ vsᵛ vsᵖ)
+     → Configuration′ ([ v , vsᶜ , vsᵛ , vsᵖ , ad ] , []) ([] , []) ([] , [])
 
   -- active contract
   ⟨_,_⟩ᶜ : ∀ {v vs}

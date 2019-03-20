@@ -23,8 +23,8 @@ Based on:
 
 - BitML: Contracts and Advertisements
   * `Types.agda`: Types of contracts and advertisements (+ helper functions)
-    * `DecidableEquality.agda`: decidable equality for contracts/advertisements
-    * `Examples.agda`: Examples of contracts/advertisements
+  * `DecidableEquality.agda`: decidable equality for contracts/advertisements
+  * `Examples.agda`: Examples of contracts/advertisements
 
 - Semantics
   + Actions: Inherently-typed actions that participants can authorize

@@ -106,10 +106,43 @@ partition-[]ˡ : ∀ {ℓ} {A : Set ℓ} (xs : List A) → Partition xs ([] , xs
 partition-[]ˡ []       = Partition-[]
 partition-[]ˡ (x ∷ xs) = Partition-R (partition-[]ˡ xs)
 
+-- Prefix relation. (T0D0: upgrade stdlib and get from Data.List.Relation.Binary.Prefix)
+
+record Prefix {A : Set} (xs ys : List A) : Set where
+  constructor is-prefix-of
+  field
+    {k}   : List A
+    proof : xs ++ k ≡ ys
+
+open import Relation.Nullary using (yes; no; ¬_)
+open import Relation.Binary  using (Decidable)
+
+Prefix? : ∀ {A : Set} → Decidable {A = A} _≡_ → Decidable (Prefix {A})
+Prefix? _≟_ []       ys       = yes (is-prefix-of refl)
+Prefix? _≟_ (x ∷ xs) []       = no (λ { (is-prefix-of ()) })
+Prefix? _≟_ (x ∷ xs) (y ∷ ys)
+  with x ≟ y
+... | no ¬p                   = no λ{ (is-prefix-of refl) → ¬p refl }
+... | yes refl
+  with Prefix? _≟_ xs ys
+... | no ¬p                   = no λ { (is-prefix-of refl) → ¬p (is-prefix-of refl) }
+... | yes (is-prefix-of refl) = yes (is-prefix-of (cong (x ∷_) refl))
+
 ------------------------------------------------------------------------
 -- List properties.
 
+-- Concatenation
 ++-idʳ : ∀ {A : Set} {xs : List A}
        → xs ≡ xs ++ []
 ++-idʳ {_} {[]}     = refl
 ++-idʳ {_} {x ∷ xs} = cong (x ∷_) ++-idʳ
+
+
+-- Sublist relation
+import Data.List.Relation.Binary.Sublist.Heterogeneous as Sublist
+open import Data.List.Relation.Binary.Sublist.Propositional using (_⊆_)
+
+complement-⊆ : ∀ {A : Set} {xs ys : List A} → xs ⊆ ys → List A
+complement-⊆ Sublist.[] = []
+complement-⊆ (_ Sublist.∷  p) = complement-⊆ p
+complement-⊆ (y Sublist.∷ʳ p) = y ∷ complement-⊆ p
