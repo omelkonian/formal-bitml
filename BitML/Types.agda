@@ -58,17 +58,17 @@ open import Data.List.Relation.Binary.Sublist.Propositional using (_⊆_)
 Put : Values → Values → Values → Set
 Put vs vs′ vs″ = Σ[ p ∈ vs ⊆ vs″ ] (vs′ ≡ complement-⊆ p)
 
-import Data.List.Relation.Binary.Sublist.DecPropositional.Properties {A = Value} _≟_ as SB
+import Data.List.Relation.Binary.Sublist.DecPropositional {A = Value} _≟_ as SB
 
 put? : Values → Values → Values → Set
-put? vs vs′ vs″ with SB.sublist? vs vs″
+put? vs vs′ vs″ with vs SB.⊆? vs″
 ... | no _      = ⊥
 ... | yes p     with vs′ SETₙ.≟ₗ complement-⊆ p
 ... | no _      = ⊥
 ... | yes refl  = ⊤
 
 sound-put : ∀ {vs vs′ vs″} → {p : put? vs vs′ vs″} → Put vs vs′ vs″
-sound-put {vs} {vs′} {vs″} {p} with SB.sublist? vs vs″
+sound-put {vs} {vs′} {vs″} {p} with vs SB.⊆? vs″
 ... | no _       = ⊥-elim p
 ... | yes vs⊆vs″ with vs′ SETₙ.≟ₗ complement-⊆ vs⊆vs″
 ... | no _       = ⊥-elim p
@@ -122,6 +122,9 @@ put_&reveal_if_⇒_ : ∀ {v v′ vs′ s′ vs″}
 -- Lists of contracts.
 Contracts : Value → Values → Set
 Contracts v vs = List (Contract v vs)
+
+∃Contracts : Set
+∃Contracts = ∃[ v ] ∃[ vs ] Contracts v vs
 
 infixr 9 _∶_
 
@@ -217,6 +220,9 @@ module _ where
                -- - the names in put_&_ are distinct
 
   open Advertisement public
+
+∃Advertisement : Set
+∃Advertisement = ∃[ v ] ∃[ vsᶜ ] ∃[ vsᵛ ] ∃[ vsᵖ ] Advertisement v vsᶜ vsᵛ vsᵖ
 
 infix 2 put_&reveal_if_⇒_∶-_
 infixr 9 _&_

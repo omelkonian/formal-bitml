@@ -4,11 +4,11 @@ open import Level        using (0ℓ)
 open import Function     using (_∋_; _∘_)
 open import Data.Empty   using (⊥; ⊥-elim)
 open import Data.Unit    using (⊤; tt)
+open import Data.Maybe   using (just)
 open import Data.Bool    using (T; Bool; true; false; _∧_)
 open import Data.Nat     using (ℕ; _≤_; _>_; z≤n; s≤s)
 open import Data.Nat.Properties using (≤-refl)
 open import Data.Product using (∃; ∃-syntax; Σ; Σ-syntax; _×_; _,_; proj₁; proj₂)
-open import Data.Sum     using (_⊎_; inj₁; inj₂; isInj₁; isInj₂)
 open import Data.Fin     using (Fin)
   renaming (zero to 0ᶠ; suc to sucᶠ)
 
@@ -93,13 +93,13 @@ c₂∃ : ∃[ v ] ∃[ vsᶜ ] Contracts v vsᶜ
 c₂∃ = 1 , [] , [ withdraw A ]
 
 ⟨A♯⟩ : Configuration [] [] []
-⟨A♯⟩ = ⟨ A ∶ a ♯ inj₁ 9 ⟩ {tt}
+⟨A♯⟩ = ⟨ A ∶ a ♯ just 9 ⟩
 
 A♯ : Configuration [] [] []
-A♯ = (A ∶ a ♯ 9) {tt}
+A♯ = A ∶ a ♯ 9
 
-A♯9 : Participant × Secret × (ℕ ⊎ ⊥)
-A♯9 = A , a , inj₁ 9
+A♯9 : Participant × Secret × Maybe ℕ
+A♯9 = A , a , just 9
 
 Aauth♯ : Configuration′ ([] , [ tc∃ ]) ([] , []) ([] , [])
 Aauth♯ = A auth[ ♯▷ tc ]∶- refl & refl & refl
@@ -229,7 +229,19 @@ c₁₀ = ⟨ A , 1 ⟩ᵈ
    ∶- refl & refl & refl & refl & refl & refl
 
 tc-semantics :
-  c₀ —↠ c₁₀
+  c₀
+  —↠[ advertise[ ? ]
+    ∷ auth-commit[ ? , ? , ? ]
+    ∷ auth-commit[ ? , ? , ? ]
+    ∷ auth-init[ ? , ? , ? ]
+    ∷ auth-init[ ? , ? , ? ]
+    ∷ init[ ? ]
+    ∷ auth-rev[ ? , ? ]
+    ∷ empty
+    ∷ put[ ? , ? ]
+    ∷ withdraw[ ? , ? ]
+    [] ]
+  c₁₀
 tc-semantics =
   start
     c₀
@@ -243,7 +255,7 @@ tc-semantics =
         })
     ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₁
-  —→⟨ [C-AuthCommit] {A = A} {bs = [ inj₁ tt ]} {Γ = c₀} {Δ = [ ⟨A♯⟩ ]}
+  —→⟨ [C-AuthCommit] {A = A} {bs = [ just tt ]} {Γ = c₀} {Δ = [ ⟨A♯⟩ ]}
       -- satisfy rads (none in this case)
       (λ ())
       -- secret commitments are proper

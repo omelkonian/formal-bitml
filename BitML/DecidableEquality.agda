@@ -159,10 +159,8 @@ c ∃≟ᶜ c′ with [ c ] ∃s≟ᶜ [ c′ ]
 ... | yes refl = yes refl
 
 module SETᶜ = SET _∃≟ᶜˢ_
-
 Set⟨Contracts⟩ : Set
-Set⟨Contracts⟩ = Set'
-  where open SETᶜ
+Set⟨Contracts⟩ = Set' where open SETᶜ
 
 -- Advertisements.
 _≟ₐ_ : ∀ {v vsᶜ vsᵛ vsᵖ} → Decidable {A = Advertisement v vsᶜ vsᵛ vsᵖ} _≡_
@@ -172,7 +170,7 @@ _≟ₐ_ : ∀ {v vsᶜ vsᵛ vsᵖ} → Decidable {A = Advertisement v vsᶜ vs
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
 
-_∃≟ₐ_ : Decidable {A = ∃[ v ] ∃[ vsᶜ ] ∃[ vsᵛ ] ∃[ vsᵖ ] Advertisement v vsᶜ vsᵛ vsᵖ} _≡_
+_∃≟ₐ_ : Decidable {A = ∃Advertisement} _≡_
 (v , vsᶜ , vsᵛ , vsᵖ , ad) ∃≟ₐ (v′ , vsᶜ′ , vsᵛ′ , vsᵖ′ , ad′) with v ≟ v′
 ... | no ¬p = no λ{refl → ¬p refl}
 ... | yes refl with vsᶜ SETₙ.≟ₗ vsᶜ′
@@ -186,7 +184,5 @@ _∃≟ₐ_ : Decidable {A = ∃[ v ] ∃[ vsᶜ ] ∃[ vsᵛ ] ∃[ vsᵖ ] Adv
 ... | yes refl = yes refl
 
 module SETₐ = SET _∃≟ₐ_
-
 Set⟨Advertisement⟩ : Set
-Set⟨Advertisement⟩ = Set'
-  where open SETₐ
+Set⟨Advertisement⟩ = Set' where open SETₐ

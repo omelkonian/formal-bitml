@@ -32,10 +32,10 @@ open import BitML.Types Participant _≟ₚ_ Honest
 --------------------------------------------------------------------------------
 
 AdvertisedContracts : Set
-AdvertisedContracts = List (∃[ v ] ∃[ vsᶜ ] ∃[ vsᵛ ] ∃[ vsᵖ ] Advertisement v vsᶜ vsᵛ vsᵖ)
+AdvertisedContracts = List ∃Advertisement
 
 ActiveContracts : Set
-ActiveContracts = List (∃[ v ] ∃[ vs ] Contracts v vs)
+ActiveContracts = List ∃Contracts
 
 data Action (p : Participant) -- the participant that authorises this action
   : AdvertisedContracts -- the contract advertisments it requires
@@ -95,3 +95,6 @@ data Action (p : Participant) -- the participant that authorises this action
         → {ds : Deposits}
         → .{pr : True (ds SETₑ.≟ₗ (p has_ <$> remove vs i))}
         → Action p [] [] vs ds
+
+∃Action : Set
+∃Action = ∃[ p ] ∃[ ads ] ∃[ cs ] ∃[ vs ] ∃[ ds ] Action p ads cs vs ds

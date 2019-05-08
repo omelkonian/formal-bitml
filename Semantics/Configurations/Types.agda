@@ -5,9 +5,9 @@
 open import Level        using (0ℓ)
 open import Data.Empty   using (⊥)
 open import Data.Unit    using (⊤; tt)
+open import Data.Maybe   using (Maybe; just; nothing)
 open import Data.Nat     using (ℕ; suc; _+_; _≤_; _>_; _≟_)
 open import Data.Product using (∃; ∃-syntax; Σ; Σ-syntax; _×_; _,_)
-open import Data.Sum     using (_⊎_; inj₁; inj₂)
 open import Data.List    using (List; []; _∷_; [_]; _++_; length)
 open import Data.String  using ()
   renaming (length to lengthₛ)
@@ -40,9 +40,9 @@ open import Semantics.Actions.DecidableEquality Participant _≟ₚ_ Honest
 infix  6 _auth[_]∶-_
 infixl 4 _∣∣_∶-_
 
-isValidSecret : Secret → ℕ ⊎ ⊥ → Set
-isValidSecret _ (inj₂ _) = ⊤
-isValidSecret s (inj₁ n) with lengthₛ s ≟ n
+isValidSecret : Secret → Maybe ℕ → Set
+isValidSecret _ nothing = ⊤
+isValidSecret s (just n) with lengthₛ s ≟ n
 ... | yes _ = ⊤
 ... | no  _ = ⊥
 
@@ -86,7 +86,7 @@ data Configuration′ :
   -- committed secret
   ⟨_∶_♯_⟩ : Participant
           → (s : Secret)
-          → (n : ℕ ⊎ ⊥)
+          → (n : Maybe ℕ)
           → .{pr : isValidSecret s n}
           → Configuration′ ([] , []) ([] , []) ([] , [])
 
@@ -115,3 +115,21 @@ data Configuration′ :
 -- "Closed" configurations; they stand on their own.
 Configuration : AdvertisedContracts → ActiveContracts → Deposits → Set
 Configuration ads cs ds = Configuration′ (ads , []) (cs , []) (ds , [])
+
+∃Configuration : Set
+∃Configuration = ∃[ ads ] ∃[ cs ] ∃[ ds ] Configuration ads cs ds
+
+record TimedConfiguration (ads : AdvertisedContracts)
+                          (cs  : ActiveContracts)
+                          (ds  : Deposits)
+                          : Set where
+
+  constructor _at_
+  field
+    cfg  : Configuration ads cs ds
+    time : Time
+
+open TimedConfiguration public
+
+∃TimedConfiguration : Set
+∃TimedConfiguration = ∃[ ads ] ∃[ cs ] ∃[ ds ] TimedConfiguration ads cs ds

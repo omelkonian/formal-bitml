@@ -36,32 +36,32 @@ open import Semantics.Actions.Types Participant _≟ₚ_ Honest
 ------------------------------------------------------------------------
 
 -- Actions.
-_≟ᵃ_ : ∀ {p ads cs vs ds} → Decidable {A = Action p ads cs vs ds} _≡_
+_≟ᵃᶜ_ : ∀ {p ads cs vs ds} → Decidable {A = Action p ads cs vs ds} _≡_
 
-(♯▷ ad) ≟ᵃ (♯▷ .ad)   = yes refl
-(♯▷ ad) ≟ᵃ (.ad ▷ˢ i) = no λ ()
+(♯▷ ad) ≟ᵃᶜ (♯▷ .ad)   = yes refl
+(♯▷ ad) ≟ᵃᶜ (.ad ▷ˢ i) = no λ ()
 
-(ad ▷ˢ i) ≟ᵃ (♯▷ .ad) = no λ ()
-(ad ▷ˢ i) ≟ᵃ (.ad ▷ˢ i′) with i ≟ᶠ i′
+(ad ▷ˢ i) ≟ᵃᶜ (♯▷ .ad) = no λ ()
+(ad ▷ˢ i) ≟ᵃᶜ (.ad ▷ˢ i′) with i ≟ᶠ i′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
 
-(c ▷ᵇ i) ≟ᵃ (.c ▷ᵇ i′) with i ≟ᶠ i′
+(c ▷ᵇ i) ≟ᵃᶜ (.c ▷ᵇ i′) with i ≟ᶠ i′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
 
-(x ↔ y) ≟ᵃ (x′ ↔ y′)
+(x ↔ y) ≟ᵃᶜ (x′ ↔ y′)
   with x ≟ᶠ x′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl
   with y ≟ᶠ y′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
-(x ↔ y) ≟ᵃ (i ▷ v₁ , v₂) = no λ ()
-(x ↔ y) ≟ᵃ (i ▷ᵈ p′)     = no λ ()
-(x ↔ y) ≟ᵃ destroy i     = no λ ()
+(x ↔ y) ≟ᵃᶜ (i ▷ v₁ , v₂) = no λ ()
+(x ↔ y) ≟ᵃᶜ (i ▷ᵈ p′)     = no λ ()
+(x ↔ y) ≟ᵃᶜ destroy i     = no λ ()
 
-(i ▷ v₁ , v₂) ≟ᵃ (i′ ▷ v₁′ , v₂′)
+(i ▷ v₁ , v₂) ≟ᵃᶜ (i′ ▷ v₁′ , v₂′)
   with i ≟ᶠ i′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl
@@ -71,25 +71,50 @@ _≟ᵃ_ : ∀ {p ads cs vs ds} → Decidable {A = Action p ads cs vs ds} _≡_
   with v₂ SETₙ.≣ v₂′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
-(i ▷ v₁ , v₂) ≟ᵃ (x ↔ y)    = no λ ()
-(i ▷ v₁ , v₂) ≟ᵃ (i₁ ▷ᵈ p′) = no λ ()
-(i ▷ v₁ , v₂) ≟ᵃ destroy i₁ = no λ ()
+(i ▷ v₁ , v₂) ≟ᵃᶜ (x ↔ y)    = no λ ()
+(i ▷ v₁ , v₂) ≟ᵃᶜ (i₁ ▷ᵈ p′) = no λ ()
+(i ▷ v₁ , v₂) ≟ᵃᶜ destroy i₁ = no λ ()
 
-(i ▷ᵈ a) ≟ᵃ (i′ ▷ᵈ b)
+(i ▷ᵈ a) ≟ᵃᶜ (i′ ▷ᵈ b)
   with i ≟ᶠ i′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl
   with a SETₚ.≣ b
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
-(i ▷ᵈ p′) ≟ᵃ (x ↔ y)        = no λ ()
-(i ▷ᵈ p′) ≟ᵃ (i₁ ▷ v₁ , v₂) = no λ ()
-(i ▷ᵈ p′) ≟ᵃ destroy i₁     = no λ ()
+(i ▷ᵈ p′) ≟ᵃᶜ (x ↔ y)        = no λ ()
+(i ▷ᵈ p′) ≟ᵃᶜ (i₁ ▷ v₁ , v₂) = no λ ()
+(i ▷ᵈ p′) ≟ᵃᶜ destroy i₁     = no λ ()
 
-destroy i ≟ᵃ destroy i′
+destroy i ≟ᵃᶜ destroy i′
   with i ≟ᶠ i′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
-destroy i ≟ᵃ (x ↔ y)        = no λ ()
-destroy i ≟ᵃ (i₁ ▷ v₁ , v₂) = no λ ()
-destroy i ≟ᵃ (i₁ ▷ᵈ p′)     = no λ ()
+destroy i ≟ᵃᶜ (x ↔ y)        = no λ ()
+destroy i ≟ᵃᶜ (i₁ ▷ v₁ , v₂) = no λ ()
+destroy i ≟ᵃᶜ (i₁ ▷ᵈ p′)     = no λ ()
+
+_∃≟ᵃᶜ_ : Decidable {A = ∃Action} _≡_
+(p , ads , cs , vs , ds , a) ∃≟ᵃᶜ (p′ , ads′ , cs′ , vs′ , ds′ , a′)
+  with p ≟ₚ p′
+... | no ¬p = no λ{ refl → ¬p refl}
+... | yes refl
+  with ads SETₐ.≟ₗ ads′
+... | no ¬p = no λ{ refl → ¬p refl}
+... | yes refl
+  with cs SETᶜ.≟ₗ cs′
+... | no ¬p = no λ{ refl → ¬p refl}
+... | yes refl
+  with vs SETₙ.≟ₗ vs′
+... | no ¬p = no λ{ refl → ¬p refl}
+... | yes refl
+  with ds SETₑ.≟ₗ ds′
+... | no ¬p = no λ{ refl → ¬p refl}
+... | yes refl
+  with a ≟ᵃᶜ a′
+... | no ¬p = no λ{ refl → ¬p refl}
+... | yes refl = yes refl
+
+module SETᵃᶜ = SET _∃≟ᵃᶜ_
+Set⟨Action⟩ : Set
+Set⟨Action⟩ = Set' where open SETᵃᶜ

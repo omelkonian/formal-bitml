@@ -1,7 +1,6 @@
 ------------------------------------------------------------------------
 -- Small-step semantics for the BitML calculus.
 ------------------------------------------------------------------------
-
 {-# OPTIONS --allow-unsolved-metas #-}
 
 open import Level        using (0ℓ)
@@ -9,11 +8,10 @@ open import Function     using (_on_; const; _∘_; id; _∋_; _$_; case_of_)
 open import Data.Empty   using (⊥; ⊥-elim)
 open import Data.Unit    using (⊤; tt)
 open import Data.Bool    using (T; Bool; true; false; _∧_)
-open import Data.Maybe   using (Maybe; just; nothing; maybe′)
+open import Data.Maybe   using (Maybe; just; nothing; maybe′; Is-just)
 open import Data.Nat     using (ℕ; suc; _+_; _≤_; _>_; _≟_)
 open import Data.Product using (∃; ∃-syntax; Σ; Σ-syntax; _×_; _,_; proj₁; proj₂)
-open import Data.Sum     using (_⊎_; inj₁; inj₂; isInj₁; isInj₂)
-open import Data.Fin     using (Fin; fromℕ)
+open import Data.Fin     using (Fin; fromℕ; toℕ)
   renaming (zero to 0ᶠ; suc to sucᶠ; _≟_ to _≟ᶠ_)
 open import Data.String  using ()
   renaming (length to lengthₛ)
@@ -46,6 +44,7 @@ open import BitML.DecidableEquality          Participant _≟ₚ_ Honest
 open import Semantics.Actions.Types          Participant _≟ₚ_ Honest
 open import Semantics.Configurations.Types   Participant _≟ₚ_ Honest
 open import Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
+open import Semantics.Labels.Types           Participant _≟ₚ_ Honest
 
 --------------------------------------------------------------------------------
 -- Semantic rules for untimed configurations.
@@ -53,11 +52,12 @@ open import Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
 -- T0D0 generalize all Γ to Configuration′
 -- T0D0 Keep transition labels?
 
-infix -1 _—→_
-data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
-          → Configuration ads cs ds
-          → Configuration ads′ cs′ ds′
-          → Set where
+infix -1 _—→[_]_
+data _—→[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
+             → Configuration ads cs ds
+             → Label
+             → Configuration ads′ cs′ ds′
+             → Set where
 
   ------------------------------
   -- i) Rules for deposits
@@ -73,7 +73,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       (   (A has v ∷ A has v′ ∷ [])
       ∣∣ᵈˢ Γ
       )
-      —→
+      —→[ auth-join[ A , 0 ↔ 1 ] ]
       Configuration ads cs (A has (v + v′) ∷ ds) ∋
       (  ⟨ A , v ⟩ᵈ
       ∣∣ ⟨ A , v′ ⟩ᵈ
@@ -105,7 +105,8 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & refl & refl & refl & {!!} & {!!}
       )
-      —→ ⟨ A , v + v′ ⟩ᵈ
+      —→[ join[ 0 ↔ 1 ] ]
+        ⟨ A , v + v′ ⟩ᵈ
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
 
@@ -122,7 +123,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
       )
-      —→
+      —→[ auth-divide[ A , 0 ▷ v , v′ ] ]
       Configuration ads cs (A has v ∷ A has v′ ∷ ds) ∋
       (Configuration [] [] (A has v ∷ A has v′ ∷ []) ∋
          ⟨ A , v + v′ ⟩ᵈ
@@ -153,7 +154,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
       )
-      —→
+      —→[ divide[ 0 ▷ v , v′ ] ]
       Configuration ads cs (A has v ∷ A has v′ ∷ ds) ∋
         (A has v ∷ A has v′ ∷ []) ∣∣ᵈˢ Γ
 
@@ -170,7 +171,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
       )
-      —→
+      —→[ auth-donate[ A , 0 ▷ᵈ B ] ]
       Configuration ads cs (B has v ∷ ds) ∋
       (Configuration [] [] [ B has v ] ∋
          ⟨ A , v ⟩ᵈ
@@ -201,7 +202,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & SETₑ.\\-left {[ B has v ]}
       )
-      —→
+      —→[ donate[ 0 ▷ᵈ B ] ]
       Configuration ads cs (B has v ∷ ds) ∋
       ( ⟨ B , v ⟩ᵈ
       ∣∣ Γ
@@ -222,7 +223,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & SETₑ.\\-left {[ A has v ]}
       )
-      —→
+      —→[ auth-destroy[ A , 0 ] ]
       Configuration ads cs ds ∋
       (Configuration [] [] [] ∋
          ⟨ A , v ⟩ᵈ
@@ -253,7 +254,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
       )
-      —→
+      —→[ destroy[ 1 ] ]
       Γ
 
   ------------------------------------------------------------
@@ -269,7 +270,8 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ------------------------------------------------------------------------
 
     → Γ
-      —→ Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs ds ∋
+      —→[ advertise[ v , vsᶜ , vsᵛ , vsᵖ , ad ] ]
+      Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs ds ∋
       (  ` ad
       ∣∣ Γ
       ∶- refl & SETₐ.\\-left {[ v , vsᶜ , vsᵛ , vsᵖ , ad ]} & refl & refl & refl & refl
@@ -277,7 +279,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
 
 
   [C-AuthCommit] :
-    ∀ {A : Participant} {bs : List (⊤ ⊎ ⊥)}
+    ∀ {A : Participant} {bs : List (Maybe ⊤)}
       {v vsᶜ vsᵛ vsᵖ} {ad : Advertisement v vsᶜ vsᵛ vsᵖ}
       {ads rads cs ds}
       {Γ : Configuration′ (ads , rads) (cs , []) (ds , [])}
@@ -290,14 +292,14 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
     → let
         secrets =
           map (A ,_)
-            (map (λ { (inj₁ tt  , x) → x , inj₁ ((lengthₛ x) , refl)
-                    ; (inj₂ bot , x) → x , inj₂ bot })
+            (map (λ { (just tt , x) → x , just ((lengthₛ x) , refl)
+                    ; (nothing , x) → x , nothing })
               (zip bs (secretsᵖ A (G ad))))
 
       in ( -- 1. Δ is well-formed
            Δ ≡ fromSecrets secrets
-         × -- 2. only dishonest participants are allowed to commit to ⊥ values
-           All (λ{ (p , _ , n) → (p SETₚ.∈ Hon → (isInj₂ n ≡ nothing))}) secrets
+         × -- 2. only dishonest participants are allowed to commit to invalid lengths
+           All (λ{ (p , _ , n) → (p SETₚ.∈ Hon → Is-just n)}) secrets
          )
 
       -----------------------------------------------------------------------
@@ -307,7 +309,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & {!!} & refl & refl & refl & refl
       )
-      —→
+      —→[ auth-commit[ A , (v , vsᶜ , vsᵛ , vsᵖ , ad) , secrets ] ]
       Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs ds ∋
       ((Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs ds ∋
       (  ` ad
@@ -346,7 +348,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & {!!} & refl & refl & refl & refl
       )
-      —→
+      —→[ auth-init[ A , (v , vsᶜ , vsᵛ , vsᵖ , ad) , toℕ iᵖ ] ]
       Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs (dsˡ ++ dsʳ) ∋
       ((Configuration ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads) cs ds ∋
          ` ad
@@ -389,13 +391,13 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       )
       ∣∣ Δ
       ∶- sym (++-identityʳ ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads))
-       & {!!}
+       & {!refl!}
        & sym (++-identityʳ cs)
        & SETᶜ.\\-left {cs}
        & sym (++-identityʳ ds)
        & SETₑ.\\-left {ds}
       )
-      —→
+      —→[ init[ v , vsᶜ , vsᵛ , vsᵖ , ad ] ]
       Configuration ads ((v , vsᶜ , C ad) ∷ cs) ds ∋
       (  ⟨ C ad , v ⟩ᶜ
       ∣∣ Γ
@@ -423,12 +425,12 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
       )
-      —→  casesToContracts cases
+      —→[ split ]
+        casesToContracts cases
       ∣∣ᶜˢ Γ
 
   [C-AuthRev] :
-    ∀ {A : Participant} {s : Secret} {n : ℕ} {n′ : ℕ ⊎ ⊥}
-      {p : n′ ≡ inj₁ n}
+    ∀ {A : Participant} {s : Secret} {n : ℕ}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
       -- only valid lengths
@@ -437,11 +439,11 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       -------------------------------------------------------------
 
     → Configuration ads cs ds ∋
-      (  (⟨ A ∶ s ♯ n′ ⟩ {case p of λ{ refl → length→isValidSecret len_s}})
+      (  (⟨ A ∶ s ♯ just n ⟩ {length→isValidSecret len_s})
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
       )
-      —→
+      —→[ auth-rev[ A , s ] ]
       Configuration ads cs ds ∋
       (   [ A , s , n , len_s ]
       ∣∣ˢˢ Γ
@@ -478,7 +480,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ (ds′ ∣∣ᵈˢ (ss ∣∣ˢˢ Γ))
       ∶- refl & refl & refl & refl & refl & refl
       )
-      —→
+      —→[ put[ vs , s ] ]
       Configuration ads ((v′ , vs′ , [ c′ ]) ∷ cs) ds ∋
       (  ⟨ [ c′ ] , v′ ⟩ᶜ
       ∣∣ (ss ∣∣ˢˢ Γ)
@@ -500,13 +502,12 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
       )
-      —→
+      —→[ withdraw[ A , v ] ]
       Configuration ads cs (A has v ∷ ds) ∋
       (  ⟨ A , v ⟩ᵈ
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
       )
-
 
 
   [C-AuthControl] :
@@ -524,7 +525,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
       )
-      —→
+      —→[ auth-control[ A , (v , vs , contract) ▷ᵇ i ] ]
       Configuration ads ((v , vs , contract) ∷ cs) ds ∋
       (Configuration [] [ (v , vs , contract) ] [] ∋
          ⟨ contract , v ⟩ᶜ
@@ -549,7 +550,7 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
       )
-      —→
+      —→[ empty ]
       Configuration ads ((v , vs , [ contract ‼ i ]) ∷ cs) ds ∋
       (  ⟨ [ contract ‼ i ] , v ⟩ᶜ
       ∣∣ Γ
@@ -557,71 +558,44 @@ data _—→_ : ∀ {ads cs ds ads′ cs′ ds′}
       )
 
 
-infix -1 _—→′_
-data _—→′_ : ∀ {ads cs ds ads′ cs′ ds′}
-          → Configuration ads cs ds
-          → Configuration ads′ cs′ ds′
-          → Set where
-
-  [REORDER] : ∀ {ads cs ds ads′ cs′ ds′}
-                {Γ Γ′ : Configuration ads cs ds}
-                {Δ Δ′ : Configuration ads′ cs′ ds′}
-
-    → Γ′ ≈ Γ  -- reorder input
-    → Γ —→ Δ  -- propagate to bottom layer
-    → Δ  ≈ Δ′ -- reorder output
-      -------------
-    → Γ′ —→′ Δ′
-
 -----------------------------------------------------------------------------------
 -- Semantic rules for timed configurations.
-
-record TimedConfiguration (ads : AdvertisedContracts)
-                          (cs  : ActiveContracts)
-                          (ds  : Deposits)
-                          : Set where
-
-  constructor _at_
-  field
-    cfg  : Configuration ads cs ds
-    time : Time
-
-open TimedConfiguration
 
 infix 3 _≈ₜ_
 _≈ₜ_ : ∀ {ads cs ds} → TimedConfiguration ads cs ds → TimedConfiguration ads cs ds → Set
 c ≈ₜ c′ = (time c ≡ time c′)
         × (cfgToList (cfg c) ↭ cfgToList (cfg c′))
 
-infix -1 _—→ₜ_
-data _—→ₜ_ : ∀ {ads cs ds ads′ cs′ ds′}
-           → TimedConfiguration ads cs ds
-           → TimedConfiguration ads′ cs′ ds′
-           → Set where
+infix -1 _—→ₜ[_]_
+data _—→ₜ[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
+              → TimedConfiguration ads cs ds
+              → Label
+              → TimedConfiguration ads′ cs′ ds′
+              → Set where
 
   -- iv) Rules for handling time
   [Action] :
     ∀ {ads cs ds} {Γ : Configuration ads cs ds}
       {ads′ cs′ ds′} {Γ′ : Configuration ads′ cs′ ds′}
-      {t : Time}
+      {t : Time} {a : Label}
 
 
-    → Γ —→ Γ′
+    → Γ —→[ a ] Γ′
       ----------------------------------------
-    → Γ at t —→ₜ Γ′ at t
+    → Γ at t —→ₜ[ a ] Γ′ at t
 
   [Delay] :
     ∀ {ads cs ds} {Γ : Configuration ads cs ds}
       {t δ : Time}
 
       ----------------------------------------
-    → Γ at t —→ₜ Γ at (t + δ)
+    → Γ at t —→ₜ[ delay[ δ ] ] Γ at (t + δ)
 
   [Timeout] :
     ∀ {ads cs ds} {Γ : Configuration ads cs ds}
       {ads′ cs′ ds′} {Γ″ : Configuration ads′ cs′ ds′}
       {v vs} {contract : Contracts v vs} {i : Index contract}
-      {t : Time}
+      {t : Time} {a : Label}
 
       {Γ′ : TimedConfiguration ads ((v , vs , contract) ∷ cs) ds}
     → Γ′ ≈ₜ (  ⟨ contract , v ⟩ᶜ
@@ -637,107 +611,93 @@ data _—→ₜ_ : ∀ {ads cs ds ads′ cs′ ds′}
          ⟨ [ contract ‼ i ] , v ⟩ᶜ
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
-      —→
+      —→[ a ]
       Γ″
 
       ----------------------------------------
 
-    → Γ′ —→ₜ Γ″ at t
-
-infix -1 _—→ₜ′_
-data _—→ₜ′_ : ∀ {ads cs ds ads′ cs′ ds′}
-          → TimedConfiguration ads cs ds
-          → TimedConfiguration ads′ cs′ ds′
-          → Set where
-
-  [REORDERₜ] : ∀ {ads cs ds ads′ cs′ ds′}
-                 {Γ Γ′ : TimedConfiguration ads cs ds}
-                 {Δ Δ′ : TimedConfiguration ads′ cs′ ds′}
-
-    → Γ′ ≈ₜ Γ  -- reorder input
-    → Γ —→ₜ Δ  -- propagate to bottom layer
-    → Δ ≈ₜ Δ′ -- reorder output
-      -------------
-    → Γ′ —→ₜ′ Δ′
+    → Γ′ —→ₜ[ a ] Γ″ at t
 
 -----------------------------------------------------------------------------------
 -- Reflexive transitive closure for —→.
 
-infix  -1 _—↠_
+infix  -1 _—↠[_]_
 infix  -2 start_
 infixr -1 _—→⟨_⟩_⊢_
 infix  0 _∎∎
 
-data _—↠_ : ∀ {ads cs ds ads′ cs′ ds′}
-          → Configuration ads cs ds
-          → Configuration ads′ cs′ ds′
-          → Set where
+data _—↠[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
+             → Configuration ads cs ds
+             → Labels
+             → Configuration ads′ cs′ ds′
+             → Set where
 
   _∎∎ : ∀ {ads cs ds}
           (M : Configuration ads cs ds)
 
-      ------
-    → M —↠ M
+      ------------
+    → M —↠[ [] ] M
 
-  _—→⟨_⟩_⊢_ : ∀ {ads cs ds ads′ cs′ ds′ ads″ cs″ ds″}
+  _—→⟨_⟩_⊢_ : ∀ {ads cs ds ads′ cs′ ds′ ads″ cs″ ds″ a as}
                 (L    : Configuration ads cs ds)
                 {L′   : Configuration ads cs ds}
                 {M M′ : Configuration ads′ cs′ ds′}
                 {N    : Configuration ads″ cs″ ds″}
 
-    → L′ —→ M′
+    → L′ —→[ a ] M′
     → (L ≈ L′) × (M ≈ M′)
-    → M —↠ N
-      ------------
-    → L —↠ N
+    → M —↠[ as ]  N
+      -------------------
+    → L —↠[ a ∷ as ] N
 
-start_ : ∀ {ads cs ds ads′ cs′ ds′}
+start_ : ∀ {ads cs ds ads′ cs′ ds′ as}
             {M : Configuration ads cs ds}
             {N : Configuration ads′ cs′ ds′}
 
-  → M —↠ N
-    ------
-  → M —↠ N
+  → M —↠[ as ] N
+    ------------
+  → M —↠[ as ] N
 
 start M—↠N = M—↠N
 
 -----------------------------------------------------------------------------------
 -- Reflexive transitive closure for —→ₜ.
 
-infix  -1 _—↠ₜ_
+infix  -1 _—↠ₜ[_]_
 infix  -2 startₜ_
 infixr -1 _—→ₜ⟨_⟩_⊢_
 infix  0 _∎∎ₜ
 
-data _—↠ₜ_ : ∀ {ads cs ds ads′ cs′ ds′}
-           → TimedConfiguration ads cs ds
-           → TimedConfiguration ads′ cs′ ds′
-           → Set where
+data _—↠ₜ[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
+              → TimedConfiguration ads cs ds
+              → Labels
+              → TimedConfiguration ads′ cs′ ds′
+              → Set where
 
   _∎∎ₜ : ∀ {ads cs ds}
            (M : TimedConfiguration ads cs ds)
 
-      -------
-    → M —↠ₜ M
+      -------------
+    → M —↠ₜ[ [] ] M
 
-  _—→ₜ⟨_⟩_⊢_ : ∀ {ads cs ds ads′ cs′ ds′ ads″ cs″ ds″}
+  _—→ₜ⟨_⟩_⊢_ : ∀ {ads cs ds ads′ cs′ ds′ ads″ cs″ ds″ a as}
                  (L    : TimedConfiguration ads cs ds)
                  {L′   : TimedConfiguration ads cs ds}
                  {M M′ : TimedConfiguration ads′ cs′ ds′}
                  {N    : TimedConfiguration ads″ cs″ ds″}
 
-    → L′ —→ₜ M′
+    → L′ —→ₜ[ a ] M′
     → (L ≈ₜ L′) × (M ≈ₜ M′)
-    → M —↠ₜ N
-      -------
-    → L —↠ₜ N
+    → M —↠ₜ[ as ] N
+      ---------------------
+    → L —↠ₜ[ a ∷ as ] N
 
-startₜ_ : ∀ {ads cs ds ads′ cs′ ds′}
+startₜ_ : ∀ {ads cs ds ads′ cs′ ds′ as}
             {M : TimedConfiguration ads cs ds}
             {N : TimedConfiguration ads′ cs′ ds′}
 
-  → M —↠ₜ N
-    -------
-  → M —↠ₜ N
+  → M —↠ₜ[ as ] N
+    -------------
+  → M —↠ₜ[ as ] N
 
 startₜ M—↠N = M—↠N

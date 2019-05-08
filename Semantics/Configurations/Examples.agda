@@ -6,11 +6,10 @@ module Semantics.Configurations.Examples where
 
 open import Level        using (0ℓ)
 open import Function     using (_∋_)
-open import Data.Empty   using (⊥)
 open import Data.Unit    using (⊤; tt)
+open import Data.Maybe   using (just)
 open import Data.Nat     using (ℕ; suc; _+_; _≤_; _>_; _≟_)
 open import Data.Product using (∃; ∃-syntax; Σ; Σ-syntax; _×_; _,_; proj₁; proj₂)
-open import Data.Sum     using (_⊎_; inj₁; inj₂)
 open import Data.List    using (List; []; _∷_; [_]; _++_ ; map; length; filter; zip)
 open import Data.Fin     using ()
   renaming (zero to 0ᶠ; suc to sucᶠ)
@@ -134,8 +133,7 @@ _ : Configuration [] [] []
 _ = (A ∶ "qwerty" ♯ 6)
 
 _ : Configuration [] [] []
-_ = ⟨ A ∶ "qwerty" ♯ inj₁ 6 ⟩
+_ = ⟨ A ∶ "qwerty" ♯ just 6 ⟩
 
 _ : Configuration [] [] []
-_ = ⟨ A ∶ "qwerty" ♯ inj₂ impossible ⟩
-  where postulate impossible : ⊥
+_ = ⟨ A ∶ "qwerty" ♯ nothing ⟩

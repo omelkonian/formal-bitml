@@ -2,11 +2,11 @@
 -- Decidable equality for configurations.
 ------------------------------------------------------------------------
 
-open import Data.Empty   using (⊥)
 open import Data.Unit    using (⊤; tt)
+open import Data.Maybe   using (just)
 open import Data.Nat     using (ℕ; suc; _+_; _≤_; _>_; _≟_)
+open import Data.Maybe   using (Maybe; just; nothing)
 open import Data.Product using (∃; ∃-syntax; Σ; Σ-syntax; _×_; _,_; proj₁; proj₂)
-open import Data.Sum     using (_⊎_; inj₁; inj₂)
 open import Data.List    using (List; []; _∷_; [_]; _++_; length)
 open import Data.Fin     using ()
   renaming (zero to 0ᶠ; suc to sucᶠ)
@@ -39,12 +39,13 @@ open import Semantics.Configurations.Types      Participant _≟ₚ_ Honest
 -------------------------------------------------------------------
 
 -- Secret lengths.
-_≟ₛₗ_ : Decidable {A = ℕ ⊎ ⊥} _≡_
-inj₁ x  ≟ₛₗ inj₁ y with x ≟ y
+_≟ₛₗ_ : Decidable {A = Maybe ℕ} _≡_
+just x  ≟ₛₗ just y  with x ≟ y
 ... | no ¬p    = no λ{ refl → ¬p refl }
 ... | yes refl = yes refl
-inj₁ x  ≟ₛₗ inj₂ ()
-inj₂ () ≟ₛₗ _
+just _  ≟ₛₗ nothing = no λ ()
+nothing ≟ₛₗ just _  = no λ ()
+nothing ≟ₛₗ nothing = yes refl
 
 -- Configurations.
 _≟ᶜᶠ_ : ∀ {p₁ p₂ p₃} → Decidable {A = Configuration′ p₁ p₂ p₃} _≡_
@@ -87,7 +88,7 @@ _∃≟ᶜᶠ_ : Decidable {A = ∃[ p₁ ] ∃[ p₂ ] ∃[ p₃ ] Configuratio
   with p SETₚ.≣ p′
 ... | no ¬p    = no λ{refl →  ¬p refl}
 ... | yes refl
-  with a ≟ᵃ a′
+  with a ≟ᵃᶜ a′
 ... | no ¬p    = no λ{refl →  ¬p refl}
 ... | yes refl = yes refl
 (p auth[ x ]∶- _) ≟ᶜᶠ ∅ᶜ = no λ ()
@@ -230,3 +231,5 @@ _∃≟ᶜᶠ_ : Decidable {A = ∃[ p₁ ] ∃[ p₂ ] ∃[ p₃ ] Configuratio
 ... | yes refl = yes refl
 
 module SETᶜᶠ = SET _∃≟ᶜᶠ_
+Set⟨Configuration⟩ : Set
+Set⟨Configuration⟩ = Set' where open SETᶜᶠ

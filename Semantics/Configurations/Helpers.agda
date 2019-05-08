@@ -4,13 +4,12 @@
 
 open import Level        using (0ℓ)
 open import Function     using (_∘_)
-open import Data.Empty   using (⊥; ⊥-elim)
+open import Data.Empty   using (⊥-elim)
 open import Data.Unit    using (⊤; tt)
 open import Data.Bool    using (T; Bool; true; false; _∧_; if_then_else_)
 open import Data.Maybe   using (Maybe; just; nothing; maybe′)
 open import Data.Nat     using (ℕ; suc; _+_; _≤_; _>_; _≟_)
 open import Data.Product using (∃; ∃-syntax; Σ; Σ-syntax; _×_; _,_; proj₁; proj₂)
-open import Data.Sum     using (_⊎_; inj₁; inj₂; isInj₁; isInj₂)
 open import Data.String  using ()
   renaming (length to lengthₛ)
 
@@ -112,7 +111,7 @@ depositsᶜ {_} {_} {ds} _ = ds
 
 committedSecrets : ∀ {ads cs ds rads rcs rds}
                  → Configuration′ (ads , rads) (cs , rcs) (ds , rds)
-                 → List (Participant × Secret × (ℕ ⊎ ⊥))
+                 → List (Participant × Secret × Maybe ℕ)
 committedSecrets ⟨ x ∶ s ♯ n ⟩ =  [  x , s , n ]
 committedSecrets (l ∣∣ r ∶- _) = committedSecrets l ++ committedSecrets r
 committedSecrets _ = []
@@ -196,7 +195,8 @@ _∣∣ᵇ_ {ads} {cs} {ds} Γ (i , j , p ∷ ps) =
   ∣∣ᵇ (i , j , ps)
 
 CommittedSecret : Set
-CommittedSecret = Participant × (Σ[ s ∈ Secret ] ((Σ[ n ∈ ℕ ] (lengthₛ s ≡ n)) ⊎ ⊥))
+CommittedSecret = Participant
+                × Σ[ s ∈ Secret ] Maybe (Σ[ n ∈ ℕ ] (lengthₛ s ≡ n))
 
 infixl 4 _∣∅_
 _∣∅_ : ∀ {ads cs ds}
@@ -212,16 +212,17 @@ _∣∅_ {ads} {cs} {ds} Γ (s ∷ ss) =
    & ++-idʳ & (SETₑ.\\-left {ds})
   ∣∅ ss
 
-length→isValidSecret : ∀ {s n} → lengthₛ s ≡ n → isValidSecret s (inj₁ n)
+length→isValidSecret : ∀ {s n} → lengthₛ s ≡ n → isValidSecret s (just n)
 length→isValidSecret {s} {n} eq with lengthₛ s ≟ n
 ... | no ¬p = ⊥-elim (¬p eq)
 ... | yes p = tt
 
 fromSecrets : List CommittedSecret → List (Configuration [] [] [])
 fromSecrets [] = []
-fromSecrets ((p , s , inj₂ ()) ∷ ss)
-fromSecrets ((p , s , inj₁ (n , n≡)) ∷ ss) =
-  (⟨ p ∶ s ♯ inj₁ n ⟩ {length→isValidSecret n≡}) ∷ fromSecrets ss
+fromSecrets ((p , s , nothing) ∷ ss) =
+  ⟨ p ∶ s ♯ nothing ⟩ ∷ fromSecrets ss
+fromSecrets ((p , s , just (n , n≡)) ∷ ss) =
+  (⟨ p ∶ s ♯ just n ⟩ {length→isValidSecret n≡}) ∷ fromSecrets ss
 
 authDecorations : ∀ {v vs} → Contract v vs → List Participant
 authDecorations (x       ∶ c) = x ∷ authDecorations c
