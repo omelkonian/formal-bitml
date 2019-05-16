@@ -123,13 +123,14 @@ record TimedConfiguration (ads : AdvertisedContracts)
                           (cs  : ActiveContracts)
                           (ds  : Deposits)
                           : Set where
-
-  constructor _at_
   field
     cfg  : Configuration ads cs ds
     time : Time
 
 open TimedConfiguration public
+
+-- _at_ : ∀ {ads cs ds} → Configuration ads cs ds → Time → TimedConfiguration ads cs ds
+pattern _at_ c t = record { cfg = c ; time = t}
 
 ∃TimedConfiguration : Set
 ∃TimedConfiguration = ∃[ ads ] ∃[ cs ] ∃[ ds ] TimedConfiguration ads cs ds

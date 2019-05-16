@@ -4,6 +4,7 @@
 
 open import Data.Product using (Σ; Σ-syntax; proj₂)
 open import Data.Nat     using (ℕ; _>_)
+open import Data.Maybe   using (Maybe; just; nothing)
 open import Data.List    using (List; length)
 
 open import Relation.Binary                       using (Decidable)
@@ -120,3 +121,14 @@ data Label : Set where
 
 Labels : Set
 Labels = List Label
+
+authDecoration : Label → Maybe Participant
+authDecoration auth-join[ p , _ ↔ _ ]       = just p
+authDecoration auth-divide[ p , _ ▷ _ , _ ] = just p
+authDecoration auth-donate[ p , _ ▷ᵈ _ ]    = just p
+authDecoration auth-destroy[ p , _ ]        = just p
+authDecoration auth-commit[ p , _ , _ ]     = just p
+authDecoration auth-init[ p , _ , _ ]       = just p
+authDecoration auth-rev[ p , _ ]            = just p
+authDecoration auth-control[ p , _ ▷ᵇ _ ]   = just p
+authDecoration _                            = nothing

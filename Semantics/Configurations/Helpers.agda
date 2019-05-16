@@ -195,34 +195,33 @@ _∣∣ᵇ_ {ads} {cs} {ds} Γ (i , j , p ∷ ps) =
   ∣∣ᵇ (i , j , ps)
 
 CommittedSecret : Set
-CommittedSecret = Participant
-                × Σ[ s ∈ Secret ] Maybe (Σ[ n ∈ ℕ ] (lengthₛ s ≡ n))
-
-infixl 4 _∣∅_
-_∣∅_ : ∀ {ads cs ds}
-     → Configuration ads cs ds
-     → List (Configuration [] [] [])
-     → Configuration ads cs ds
-_∣∅_ {ads} {cs} {ds} Γ []       = Γ
-_∣∅_ {ads} {cs} {ds} Γ (s ∷ ss) =
-     Γ
-  ∣∣ s
-  ∶- ++-idʳ & (SETₐ.\\-left {ads})
-   & ++-idʳ & (SETᶜ.\\-left {cs})
-   & ++-idʳ & (SETₑ.\\-left {ds})
-  ∣∅ ss
+CommittedSecret = Σ[ s ∈ Secret ] Maybe (Σ[ n ∈ ℕ ] (lengthₛ s ≡ n))
 
 length→isValidSecret : ∀ {s n} → lengthₛ s ≡ n → isValidSecret s (just n)
 length→isValidSecret {s} {n} eq with lengthₛ s ≟ n
 ... | no ¬p = ⊥-elim (¬p eq)
 ... | yes p = tt
 
-fromSecrets : List CommittedSecret → List (Configuration [] [] [])
-fromSecrets [] = []
-fromSecrets ((p , s , nothing) ∷ ss) =
-  ⟨ p ∶ s ♯ nothing ⟩ ∷ fromSecrets ss
-fromSecrets ((p , s , just (n , n≡)) ∷ ss) =
-  (⟨ p ∶ s ♯ just n ⟩ {length→isValidSecret n≡}) ∷ fromSecrets ss
+infixl 4 _∣∅_
+_∣∅_ : ∀ {ads cs ds}
+     → Configuration ads cs ds
+     → List (Participant × CommittedSecret)
+     → Configuration ads cs ds
+_∣∅_ {ads} {cs} {ds} Γ []       = Γ
+_∣∅_ {ads} {cs} {ds} Γ ((p , s , nothing) ∷ ss) =
+     Γ
+  ∣∣ ⟨ p ∶ s ♯ nothing ⟩
+  ∶- ++-idʳ & (SETₐ.\\-left {ads})
+   & ++-idʳ & (SETᶜ.\\-left {cs})
+   & ++-idʳ & (SETₑ.\\-left {ds})
+  ∣∅ ss
+_∣∅_ {ads} {cs} {ds} Γ ((p , s , just (n , n≡)) ∷ ss) =
+     Γ
+  ∣∣ (⟨ p ∶ s ♯ just n ⟩ {length→isValidSecret n≡})
+  ∶- ++-idʳ & (SETₐ.\\-left {ads})
+   & ++-idʳ & (SETᶜ.\\-left {cs})
+   & ++-idʳ & (SETₑ.\\-left {ds})
+  ∣∅ ss
 
 authDecorations : ∀ {v vs} → Contract v vs → List Participant
 authDecorations (x       ∶ c) = x ∷ authDecorations c

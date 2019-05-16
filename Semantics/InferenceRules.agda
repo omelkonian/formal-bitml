@@ -50,7 +50,6 @@ open import Semantics.Labels.Types           Participant _≟ₚ_ Honest
 -- Semantic rules for untimed configurations.
 
 -- T0D0 generalize all Γ to Configuration′
--- T0D0 Keep transition labels?
 
 infix -1 _—→[_]_
 data _—→[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
@@ -279,28 +278,16 @@ data _—→[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
 
 
   [C-AuthCommit] :
-    ∀ {A : Participant} {bs : List (Maybe ⊤)}
+    ∀ {A : Participant} {secrets : List CommittedSecret}
       {v vsᶜ vsᵛ vsᵖ} {ad : Advertisement v vsᶜ vsᵛ vsᵖ}
       {ads rads cs ds}
       {Γ : Configuration′ (ads , rads) (cs , []) (ds , [])}
-      {Δ : List (Configuration [] [] [])}
-
+      {pr : map proj₁ secrets ≡ secretsᵖ A (G ad)}
       -- rads are all satisfied
     → rads SETₐ.⊆ [ v , vsᶜ , vsᵛ , vsᵖ , ad ]
 
-      -- commitment of secrets is proper
-    → let
-        secrets =
-          map (A ,_)
-            (map (λ { (just tt , x) → x , just ((lengthₛ x) , refl)
-                    ; (nothing , x) → x , nothing })
-              (zip bs (secretsᵖ A (G ad))))
-
-      in ( -- 1. Δ is well-formed
-           Δ ≡ fromSecrets secrets
-         × -- 2. only dishonest participants are allowed to commit to invalid lengths
-           All (λ{ (p , _ , n) → (p SETₚ.∈ Hon → Is-just n)}) secrets
-         )
+      -- only dishonest participants are allowed to commit to invalid lengths
+    → (A SETₚ.∈ Hon → All (λ {(_ , m) → Is-just m }) secrets)
 
       -----------------------------------------------------------------------
 
@@ -315,7 +302,7 @@ data _—→[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
       (  ` ad
       ∣∣ Γ
       ∶- refl & {!!} & refl & refl & refl & refl
-      ∣∅ Δ
+      ∣∅ map (A ,_) secrets
       ))
       ∣∣ A auth[ ♯▷ ad ]∶- refl & refl & refl
       ∶- sym (++-identityʳ ((v , vsᶜ , vsᵛ , vsᵖ , ad) ∷ ads))
@@ -556,7 +543,6 @@ data _—→[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
       )
-
 
 -----------------------------------------------------------------------------------
 -- Semantic rules for timed configurations.
