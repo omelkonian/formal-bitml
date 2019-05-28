@@ -172,6 +172,7 @@ module AdvM (Adv : Participant) (Adv∉ : Adv ∉ Hon) where
                   ( R✴′ ∈ prefixRuns (R ✴)
                   × strategy R✴′ [] ≡ auth-commit[ B , ad , Δ ]
                   × (s , nothing) ∈ Δ
+                  -- T0D0 why not valid?
                   )
               )
           )
