@@ -112,6 +112,9 @@ data Configuration′ :
              )
           → Configuration′ (ads , rads) (cs , rcs) (ds , rds)
 
+∃Configuration′ : Set
+∃Configuration′ = ∃[ p₁ ] ∃[ p₂ ] ∃[ p₃ ] Configuration′ p₁ p₂ p₃
+
 -- "Closed" configurations; they stand on their own.
 Configuration : AdvertisedContracts → ActiveContracts → Deposits → Set
 Configuration ads cs ds = Configuration′ (ads , []) (cs , []) (ds , [])

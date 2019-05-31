@@ -549,8 +549,7 @@ data _—→[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
 
 infix 3 _≈ₜ_
 _≈ₜ_ : ∀ {ads cs ds} → TimedConfiguration ads cs ds → TimedConfiguration ads cs ds → Set
-c ≈ₜ c′ = (time c ≡ time c′)
-        × (cfgToList (cfg c) ↭ cfgToList (cfg c′))
+c ≈ₜ c′ = (time c ≡ time c′) × (cfg c ≈ cfg c′)
 
 infix -1 _—→ₜ[_]_
 data _—→ₜ[_]_ : ∀ {ads cs ds ads′ cs′ ds′}

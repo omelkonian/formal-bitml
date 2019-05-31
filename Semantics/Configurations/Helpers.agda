@@ -238,9 +238,7 @@ removeTopDecorations (_       ∶ c) = removeTopDecorations c
 removeTopDecorations (after _ ∶ c) = removeTopDecorations c
 removeTopDecorations c             = c
 
-cfgToList : ∀ {p₁ p₂ p₃}
-          → Configuration′ p₁ p₂ p₃
-          → List (∃[ p₁ ] ∃[ p₂ ] ∃[ p₃ ] Configuration′ p₁ p₂ p₃)
+cfgToList : ∀ {p₁ p₂ p₃} → Configuration′ p₁ p₂ p₃ → List ∃Configuration′
 cfgToList ∅ᶜ               = []
 cfgToList (l ∣∣ r ∶- _)    = cfgToList l ++ cfgToList r
 cfgToList {p₁} {p₂} {p₃} c = [ p₁ , p₂ , p₃ , c ]

@@ -51,6 +51,7 @@ variable
   Γ′ : Configuration ads′ cs′ ds′
   Δ : Configuration′ ([] , rads) ([] , []) ([] , [])
   Γp : Configuration′ p₁ p₂ p₃
+  Γp′ : Configuration′ p₁ p₂ p₃
   Δs : List (Configuration [] [] [])
 
   R R′ R″ : Run
@@ -67,6 +68,9 @@ variable
 
   A : Participant
   secrets : List CommittedSecret
+
+----------------------------------------
+-- Helpers.
 
 strip-cases-helper : stripSecrets ((v , vs , c) ∷ cs′ ∣∣ᶜˢ Γ)
                    ≡ (  ⟨ c , v ⟩ᶜ
@@ -135,131 +139,126 @@ strip-spentForStipulation₂ : toStipulate (G ad) ≡ spentForStipulation Δ ad
 strip-spentForStipulation₂ {ad = ad} {Δ = Δ} p
   rewrite strip-spentForStipulation {ad = ad} {Γp = Δ}  = p
 
-toNothing : CommittedSecret → CommittedSecret
-toNothing (x , _) = x , nothing
 
-proj₁∘toNothing : map proj₁ (map toNothing secrets) ≡ map proj₁ secrets
-proj₁∘toNothing {secrets = []}          = refl
-proj₁∘toNothing {secrets = _ ∷ secrets} rewrite proj₁∘toNothing {secrets = secrets} = refl
+open import Data.List.Properties using (map-++-commute)
+strip-cfgToList :
+  cfgToList (stripSecrets Γp) ≡ map (map₂ (map₂ (map₂ stripSecrets))) (cfgToList Γp)
+strip-cfgToList {Γp = ∅ᶜ} = refl
+strip-cfgToList {Γp = ` _} = refl
+strip-cfgToList {Γp = ⟨ _ , _ ⟩ᶜ} = refl
+strip-cfgToList {Γp = ⟨ _ , _ ⟩ᵈ} = refl
+strip-cfgToList {Γp = _ auth[ _ ]∶- _} = refl
+strip-cfgToList {Γp = ⟨ _ ∶ _ ♯ _ ⟩} = refl
+strip-cfgToList {Γp = _ ∶ _ ♯ _} = refl
+strip-cfgToList {Γp = l ∣∣ r ∶- _}
+  rewrite strip-cfgToList {Γp = l}
+        | strip-cfgToList {Γp = r}
+        = sym (map-++-commute (map₂ (map₂ (map₂ stripSecrets))) (cfgToList l) (cfgToList r))
 
-strip-ad₂ :
-    stripSecrets (Γp ∣∅ map (A ,_) secrets)
-  ≡ (stripSecrets Γp ∣∅ map (A ,_) (map toNothing secrets))
-strip-ad₂ {secrets = []} = refl
-strip-ad₂ {A = A} {secrets = (_ , nothing) ∷ secrets } {Γp = Γp}
-  rewrite strip-ad₂ {A = A} {secrets = secrets} {Γp = Γp} = {!refl!}
-strip-ad₂ {A = A} {secrets = (_ , just x) ∷ secrets } {Γp = Γp}
-  rewrite strip-ad₂ {A = A} {secrets = secrets} {Γp = Γp} = {!refl!}
+open import Data.List.Relation.Binary.Permutation.Inductive.Properties using (map⁺)
+strip-≈ : Γp              ≈ Γp′
+        → stripSecrets Γp ≈ stripSecrets Γp′
+strip-≈ {Γp = Γp} {Γp′ = Γp′} Γp≈
+  rewrite strip-cfgToList {Γp = Γp}
+        | strip-cfgToList {Γp = Γp′}
+        = map⁺ (map₂ (map₂ (map₂ stripSecrets))) Γp≈
 
-p₁′ :
-    (∀ A s → α ≢ auth-rev[ A , s ])
-  → Γ —→[ α ] Γ′
-    ------------------------------------------------
-  → stripSecrets Γ —→[ stripLabel α ] stripSecrets Γ′
+strip-lastCfg : lastCfg (R ∗) ≡ stripSecretsₜ (lastCfg R)
+strip-lastCfg {_ ∙ˢ}        = refl
+strip-lastCfg {_ ∷ˢ⟦ _ ⟧ _} = refl
 
-p₁′ α≢ ([C-AuthRev] {A = A} {s = s} _) = ⊥-elim (α≢ A s refl)
-p₁′ _ ([C-Withdraw] x) = [C-Withdraw] x
-p₁′ _ ([C-AuthControl] x) = [C-AuthControl] x
-p₁′ _ [DEP-AuthJoin] = [DEP-AuthJoin]
-p₁′ _ [DEP-Join] = [DEP-Join]
-p₁′ _ [DEP-AuthDivide] = [DEP-AuthDivide]
-p₁′ _ [DEP-Divide] = [DEP-Divide]
-p₁′ _ [DEP-AuthDonate] = [DEP-AuthDonate]
-p₁′ _ [DEP-Donate] = [DEP-Donate]
-p₁′ _ [DEP-AuthDestroy] = [DEP-AuthDestroy]
-p₁′ _ [DEP-Destroy] = [DEP-Destroy]
-p₁′ _ ([C-Advertise] x x₁) = [C-Advertise] x x₁
-
-p₁′ _ ([C-AuthInit] {ad = ad} {dsˡ = dsˡ} {dsʳ = dsʳ} {Γ = Γ} {p = refl} x x₁) =
-  [C-AuthInit] {dsˡ = dsˡ} {dsʳ = dsʳ} {p = refl} x (strip-committedParticipants₂ {ad = ad} {Γp = Γ} x₁)
-
-p₁′ _ ([C-Init] {ad = ad} {Δ = Δ} x x₁ x₂) =
-  [C-Init] x (strip-committedParticipants₂ {ad = ad} {Γp = Δ} x₁)
-             (strip-spentForStipulation₂ {ad = ad} {Δ = Δ} x₂)
-
-p₁′ _ ([C-Split] {ads} {cs} {ds} {Γ} {vs = vs} {cases = cases} refl refl)
-  rewrite strip-cases {casesToContracts cases} {ads} {cs} {ds} {Γ}
-        = [C-Split] refl refl
-
-p₁′ _ ([C-PutRev] {Γ = Γ} {ds′ = ds′} {ss = ss} pr x x₁ x₂ x₃)
-  rewrite strip-ds {ds′ = ds′} {Γ = ss ∣∣ˢˢ Γ}
-        | strip-ss {ss = ss} {Γ = Γ}
-        = [C-PutRev] {Γ = stripSecrets Γ} {ds′ = ds′} {ss = ss} pr x x₁ x₂ x₃
-
-p₁′ _ ([C-Control] {v = v} {contract = c} {i = i})
-  rewrite strip-b {Γ = ⟨ c , v ⟩ᶜ} {ps = authDecorations (c ‼ i)} {i = 0ᶠ} {j = i}
-        = [C-Control]
-
-p₁′ _ ([C-AuthCommit] {A = A} {secrets = secrets} {v = v}
-                      {vsᶜ = vsᶜ} {vsᵛ = vsᵛ} {vsᵖ = vsᵖ} {ad = ad}
-                      {ads = ads} {rads = rads} {cs = cs} {ds = ds} {Γ = Γ}
-                      {pr = pr}
-                      x p)
-  rewrite strip-ad₂ {A = A} {secrets = secrets}
-                    {Γp = ` ad ∣∣ Γ ∶- refl & {!!} & refl & refl & refl & refl}
-   = [C-AuthCommit] {A = A} {secrets = map toNothing secrets}
-                            {v = v} {vsᶜ = vsᶜ} {vsᵛ = vsᵛ} {vsᵖ = vsᵖ} {ad = ad}
-                            {ads = ads} {rads = rads} {cs = cs} {ds = ds} {Γ = stripSecrets Γ}
-                            {pr = trans proj₁∘toNothing pr}
-                            x λ A∈Hon → {!!}
-
-{-
-p₁T :
-    (∀ A s → α ≢ auth-rev[ A , s ])
-  → Γ at t —→ₜ[ α ] Γ′ at t′
-  → stripSecrets Γ at t —→ₜ[ α ] stripSecrets Γ′ at t′
-p₁T α≢ ([Action] x) = [Action] (p₁′ α≢ x)
-p₁T [Delay] = [Delay]
-p₁T ([Timeout] x x₁ x₂) = {!!}
-
+----------------------------------------
+-- Lemma I.
 
 infix -1 _——→[_]_
 _——→[_]_ : Run → Label → Run → Set
-R ——→[ α ] R′ =
-  let (_ , _ , _ , c at _)  = lastCfg R
-      (_ , _ , _ , c′ at _) = lastCfg R′
-  in c —→[ α ] c′
+R ——→[ α ] R′ = proj₂ (proj₂ (proj₂ (lastCfg R))) —→ₜ[ α ] proj₂ (proj₂ (proj₂ (lastCfg R′)))
 
-h : (∀ A s → α ≢ auth-rev[ A , s ])
-  → R ——→[ α ] R′
-    -------------------
-  → R ✴ ——→[ α ] R′ ✴
-h {α} {R} {R′} eq t = {!t!}
+module _ (α≢₁ : ∀ A s      → α ≢ auth-rev[ A , s ])
+         (α≢₂ : ∀ A ⟨G⟩C Δ → α ≢ auth-commit[ A , ⟨G⟩C , Δ ]) where
 
-strip-preserves-semantics :
+  strip-preserves-semantics :
+      ( ∀ R′ → R   ——→ₜ[ α ] R′
+               --------------------
+             → R ∗ ——→ₜ[ α ] R′ ∗ )
 
-    (∀ A s → α ≢ auth-rev[ A , s ])
+    × ( ∀ R″ → R ∗ ——→ₜ[ α ] R″
+               --------------------------
+             → ∃[ R′ ] ( (R ——→ₜ[ α ] R′)
+                       × R′ ∗ ≡ R″ ∗ ))
 
-  → ( ∀ R′
-    → R   ——→ₜ[ α ] R′
-      --------------------
-    → R ✴ ——→ₜ[ α ] R′ ✴ )
+  strip-preserves-semantics {R = R} = pr₁ , pr₂
+    where
+      strip-→ : Γ —→[ α ] Γ′
+            ------------------------------------------------
+          → stripSecrets Γ —→[ α ] stripSecrets Γ′
+      strip-→ ([C-AuthRev] {A = A} {s = s} _)
+        = ⊥-elim (α≢₁ A s refl)
+      strip-→ ([C-AuthCommit] {A = A} {secrets = secrets} {v = v} {vsᶜ = vsᶜ} {vsᵛ = vsᵛ} {vsᵖ = vsᵖ} {ad = ad} _ _ )
+        = ⊥-elim (α≢₂ A (v , vsᶜ , vsᵛ , vsᵖ , ad) secrets refl)
 
-  × ( ∀ R″
-    → R ✴ ——→ₜ[ α ] R″
-      --------------------------
-    → ∃[ R′ ] ( (R ——→ₜ[ α ] R′)
-              × R′ ✴ ≡ R″ ✴ ))
+      strip-→ ([C-Withdraw] x)      = [C-Withdraw] x
+      strip-→ ([C-AuthControl] x)   = [C-AuthControl] x
+      strip-→ [DEP-AuthJoin]        = [DEP-AuthJoin]
+      strip-→ [DEP-Join]            = [DEP-Join]
+      strip-→ [DEP-AuthDivide]      = [DEP-AuthDivide]
+      strip-→ [DEP-Divide]          = [DEP-Divide]
+      strip-→ [DEP-AuthDonate]      = [DEP-AuthDonate]
+      strip-→ [DEP-Donate]          = [DEP-Donate]
+      strip-→ [DEP-AuthDestroy]     = [DEP-AuthDestroy]
+      strip-→ [DEP-Destroy]         = [DEP-Destroy]
+      strip-→ ([C-Advertise] x x₁)  = [C-Advertise] x x₁
 
-strip-preserves-semantics {R = R} eq = p₁ , p₂
-  where
+      strip-→ ([C-AuthInit] {ad = ad} {dsˡ = dsˡ} {dsʳ = dsʳ} {Γ = Γ} {p = refl} x x₁) =
+        [C-AuthInit] {dsˡ = dsˡ} {dsʳ = dsʳ} {p = refl} x (strip-committedParticipants₂ {ad = ad} {Γp = Γ} x₁)
 
-    p₁ : ∀ R′
-      → R   ——→ₜ[ α ] R′
-        --------------------
-      → R ✴ ——→ₜ[ α ] R′ ✴
-    p₁ R′ t =
-      let (ads  , cs  , ds  , tc)  = lastCfg R
-          (ads′ , cs′ , ds′ , tc′) = lastCfg R′
-      in {!p₁T t !}
+      strip-→ ([C-Init] {ad = ad} {Δ = Δ} x x₁ x₂) =
+        [C-Init] x (strip-committedParticipants₂ {ad = ad} {Γp = Δ} x₁)
+                   (strip-spentForStipulation₂ {ad = ad} {Δ = Δ} x₂)
 
-    p₂ : ∀ R″
-      → R ✴ ——→ₜ[ α ] R″
-        --------------------------
-      → ∃[ R′ ] ( (R ——→ₜ[ α ] R′)
-                × R′ ✴ ≡ R″ ✴ )
-    p₂ t = {!!}
+      strip-→ ([C-Split] {ads} {cs} {ds} {Γ} {vs = vs} {cases = cases} refl refl)
+        rewrite strip-cases {casesToContracts cases} {ads} {cs} {ds} {Γ}
+              = [C-Split] refl refl
 
+      strip-→ ([C-PutRev] {Γ = Γ} {ds′ = ds′} {ss = ss} pr x x₁ x₂ x₃)
+        rewrite strip-ds {ds′ = ds′} {Γ = ss ∣∣ˢˢ Γ}
+              | strip-ss {ss = ss} {Γ = Γ}
+              = [C-PutRev] {Γ = stripSecrets Γ} {ds′ = ds′} {ss = ss} pr x x₁ x₂ x₃
+
+      strip-→ ([C-Control] {v = v} {contract = c} {i = i})
+        rewrite strip-b {Γ = ⟨ c , v ⟩ᶜ} {ps = authDecorations (c ‼ i)} {i = 0ᶠ} {j = i}
+              = [C-Control]
+
+      strip-→ₜ : Γ at t —→ₜ[ α ] Γ′ at t′
+          → stripSecrets Γ at t —→ₜ[ α ] stripSecrets Γ′ at t′
+      strip-→ₜ ([Action] Γ→) = [Action] (strip-→ Γ→)
+      strip-→ₜ [Delay]      = [Delay]
+      strip-→ₜ {t = t} {t′ = t′} ([Timeout] {Γ = Γ} {Γ″ = Γ″} {v = v} {contract = c} {Γ′ = Γ′ at t}
+                                       (refl , Γ≈)
+                                       ∀≤t
+                                       c‼i→)
+          = [Timeout] {Γ = stripSecrets Γ} {Γ″ = stripSecrets Γ″} {Γ′ = stripSecrets Γ′ at t}
+                      (refl , strip-≈ {Γp = Γ′}
+                                      {Γp′ = ⟨ c , v ⟩ᶜ ∣∣ Γ ∶- refl & refl & refl & refl & refl & refl} Γ≈)
+                      ∀≤t
+                      (strip-→ c‼i→)
+
+      pr₁ : ∀ R′
+        → R   ——→[ α ] R′
+          -----------------
+        → R ∗ ——→[ α ] R′ ∗
+      pr₁ R′ R→ rewrite strip-lastCfg {R}
+                      | strip-lastCfg {R′}
+                      = strip-→ₜ R→
+
+      pr₂ : ∀ R″
+        → R ∗ ——→ₜ[ α ] R″
+          --------------------------
+        → ∃[ R′ ] ( (R ——→ₜ[ α ] R′)
+                  × R′ ∗ ≡ R″ ∗ )
+      pr₂ t = {!!}
+
+{-
 module _ (Adv : Participant) (Adv∉ : Adv ∉ Hon) where
   open SM.AdvM Adv Adv∉
 

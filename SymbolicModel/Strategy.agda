@@ -79,16 +79,16 @@ stripSecrets ⟨ p ∶ a ♯ _ ⟩ = ⟨ p ∶ a ♯ nothing ⟩
 stripSecrets (l ∣∣ r ∶- p) = stripSecrets l ∣∣ stripSecrets r ∶- p
 stripSecrets c = c
 
-stripCommit : CommittedSecret → CommittedSecret
-stripCommit (s , _) = s , nothing
+stripSecretsₜ : ∃TimedConfiguration → ∃TimedConfiguration
+stripSecretsₜ (ads , cs , ds , Γ at t) = ads , cs , ds , stripSecrets Γ at t
 
 stripLabel : Label → Label
-stripLabel auth-commit[ p , ad , ss ] = auth-commit[ p , ad , map stripCommit ss ]
+stripLabel auth-commit[ p , ad , _ ] = auth-commit[ p , ad , [] ]
 stripLabel a = a
 
 -- Hide all committed secrets in a symbolic run.
-_✴ : Run → Run
-_✴ = mapRun (λ{ (ads , cs , ds , Γ at t) → (ads , cs , ds , stripSecrets Γ at t) }) stripLabel
+_∗ : Run → Run
+_∗ = mapRun stripSecretsₜ stripLabel
 
 infix -1 _——→ₜ[_]_
 _——→ₜ[_]_ : Run → Label → Run → Set
@@ -99,7 +99,7 @@ R ——→ₜ[ α ] R′ =
 
 _∈ʳ_ : Configuration′ p₁ p₂ p₃ → Run → Set
 _∈ʳ_ {p₁} {p₂} {p₃} c R =
-  (p₁ , p₂ , p₃ , c) ∈ cfgToList (cfg (proj₂ (proj₂ (proj₂ (lastCfg (R ✴))))))
+  (p₁ , p₂ , p₃ , c) ∈ cfgToList (cfg (proj₂ (proj₂ (proj₂ (lastCfg (R ∗))))))
 
 ----------------------------------
 -- Symbolic strategies.
@@ -111,21 +111,21 @@ record ParticipantStrategy (A : Participant) : Set where
     valid    : -- participant is honest
                A ∈ Hon
                -- only moves enabled by the semantics
-             × (∀ {R : Run} {α : Label} → α ∈ strategy (R ✴) →
+             × (∀ {R : Run} {α : Label} → α ∈ strategy (R ∗) →
                  ∃[ R′ ] (R ——→ₜ[ α ] R′))
                -- only self-authorizations
-             × (∀ {R : Run} {α : Label} → α ∈ strategy (R ✴) →
+             × (∀ {R : Run} {α : Label} → α ∈ strategy (R ∗) →
                  Allₘ (_≡ A) (authDecoration α))
                -- coherent secret lengths
              × (∀ {R : Run} {Δ Δ′ : List CommittedSecret} {ad : ∃Advertisement} →
-                  auth-commit[ A , ad , Δ  ] ∈ strategy (R ✴) →
-                  auth-commit[ A , ad , Δ′ ] ∈ strategy (R ✴) →
+                  auth-commit[ A , ad , Δ  ] ∈ strategy (R ∗) →
+                  auth-commit[ A , ad , Δ′ ] ∈ strategy (R ∗) →
                     Δ ≡ Δ′)
                -- persistence
-             × (∀ {R R′ : Run} {α : Label} → α ∈ strategy (R ✴)
+             × (∀ {R R′ : Run} {α : Label} → α ∈ strategy (R ∗)
                  → ∃[ α′ ] (R ——→ₜ[ α′ ] R′)
                  → ∃[ R″ ] (R′ ——→ₜ[ α ] R″) →
-                   α ∈ strategy (R′ ✴))
+                   α ∈ strategy (R′ ∗))
 
 open ParticipantStrategy public
 
@@ -143,7 +143,7 @@ module AdvM (Adv : Participant) (Adv∉ : Adv ∉ Hon) where
 
       valid :
         ∀ {R : Run} {moves : HonestMoves} →
-          let α = strategy (R ✴) moves in
+          let α = strategy (R ∗) moves in
           ( -- pick from honest moves
             ∃[ A ]
               ( A ∈ Hon
@@ -167,10 +167,10 @@ module AdvM (Adv : Participant) (Adv∉ : Adv ∉ Hon) where
           ⊎ ∃[ B ] ∃[ s ]
               ( α ≡ auth-rev[ B , s ]
               × B ∉ Hon
-              × ⟨ B ∶ s ♯ nothing ⟩ ∈ʳ (R ✴)
-              × ∃[ R✴′ ] ∃[ Δ ] ∃[ ad ]
-                  ( R✴′ ∈ prefixRuns (R ✴)
-                  × strategy R✴′ [] ≡ auth-commit[ B , ad , Δ ]
+              × ⟨ B ∶ s ♯ nothing ⟩ ∈ʳ (R ∗)
+              × ∃[ R∗′ ] ∃[ Δ ] ∃[ ad ]
+                  ( R∗′ ∈ prefixRuns (R ∗)
+                  × strategy R∗′ [] ≡ auth-commit[ B , ad , Δ ]
                   × (s , nothing) ∈ Δ
                   -- T0D0 why not valid?
                   )
@@ -181,7 +181,7 @@ module AdvM (Adv : Participant) (Adv∉ : Adv ∉ Hon) where
             → B ∉ Hon
             → α ≡ auth-commit[ B , ad , Δ ]
               -----------------------------
-            → α ≡ strategy (R ✴) [])
+            → α ≡ strategy (R ∗) [])
 
   open AdversarialStrategy public
 
@@ -191,8 +191,8 @@ module AdvM (Adv : Participant) (Adv∉ : Adv ∉ Hon) where
 
   runAdversary : Strategies → Run → Label
   runAdversary (S† , S) R =
-    let R✴ = R ✴
-    in strategy S† R✴ (mapWith∈ Hon (λ {A} A∈ → A , strategy (S A∈) R✴))
+    let R∗ = R ∗
+    in strategy S† R∗ (mapWith∈ Hon (λ {A} A∈ → A , strategy (S A∈) R∗))
 
   data _-conforms-to-_ : Run → Strategies → Set where
 
