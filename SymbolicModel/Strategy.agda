@@ -191,10 +191,11 @@ module AdvM (Adv : Participant) (Adv∉ : Adv ∉ Hon) where
   Strategies = AdversarialStrategy -- ^ adversarial strategy
              × HonestStrategies    -- ^ participant strategies
 
+  runHonestAll : Run → HonestStrategies → HonestMoves
+  runHonestAll R S = mapWith∈ Hon (λ {A} A∈ → A , strategy (S A∈) (R ∗))
+
   runAdversary : Strategies → Run → Label
-  runAdversary (S† , S) R =
-    let R∗ = R ∗
-    in strategy S† R∗ (mapWith∈ Hon (λ {A} A∈ → A , strategy (S A∈) R∗))
+  runAdversary (S† , S) R = strategy S† (R ∗) (runHonestAll (R ∗) S)
 
   data _-conforms-to-_ : Run → Strategies → Set where
 

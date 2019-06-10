@@ -7,7 +7,7 @@ open import Function using (_∋_; _∘_; case_of_)
 open import Data.Empty   using (⊥; ⊥-elim)
 open import Data.Unit    using (⊤; tt)
 open import Data.Product using (∃; ∃-syntax; Σ; Σ-syntax; _×_; _,_; proj₁; proj₂; map₁; map₂)
-open import Data.Sum     using (_⊎_)
+open import Data.Sum     using (_⊎_; inj₁; inj₂)
 open import Data.Nat     using (_>_; _≥_)
 open import Data.Fin     using (Fin; fromℕ; toℕ)
   renaming (zero to 0ᶠ; suc to sucᶠ; _≟_ to _≟ᶠ_)
@@ -233,17 +233,31 @@ module _ (α≢₁ : ∀ A s      → α ≢ auth-rev[ A , s ])
       ... | Γ″ , Γ→ , Γ≡ = (ads′ , cs′ , ds′ , Γ″ at t′) , Γ→ , cong (λ g → (ads′ , cs′ , ds′ , g at t′)) Γ≡
 
 
-{-
 module _ (Adv : Participant) (Adv∉ : Adv ∉ Hon) where
   open SM.AdvM Adv Adv∉
 
+  variable
+    S† : AdversarialStrategy
+    S  : HonestStrategies
+
+  valid-hon-move : ∀ {A} (A∈ : A ∈ Hon)
+    → runAdversary (S† , S) R ∈ concatMap proj₂ (runHonestAll (R ∗) S)
+    → runAdversary (S† , S) R ∈ strategy (S A∈) (R ∗)
+  valid-hon-move = {!!}
+
   adversarial-move-is-semantic :
-      (SS : Strategies)
-    → ∃[ R′ ] ( R ——→[ runAdversary SS R ] R′)
-  adversarial-move-is-semantic = {!!}
+    ∃[ T′ ] ( R ——→[ runAdversary (S† , S) R ] T′)
+  adversarial-move-is-semantic {R = R} {S† = S†} {S = S} =
+    let
+      moves = runHonestAll (R ∗) S
+      (cases , v) = valid S† {R = R} {moves = moves}
+    in case cases of
+    λ { (inj₁ (A , A∈ , eq , α∈ ))
+      → let (_ , R→ , _) = valid (S A∈)
+        in R→ {R} {runAdversary (S† , S) R} (valid-hon-move {S† = S†} {S = S} {R = R} {A = A} A∈ α∈)
+      ; c → {!!}
+      }
 
 
 -- T0D0 induction on list of honest strategies
 -- T0D0 induction on the run itself
-
--}
