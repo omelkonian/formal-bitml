@@ -37,14 +37,18 @@ open import Semantics.InferenceRules         Participant _≟ₚ_ Honest
 open import Semantics.Labels.Types           Participant _≟ₚ_ Honest
 
 variable
-  ads : AdvertisedContracts
-  cs  : ActiveContracts
-  ds  : Deposits
-  Γ   : Configuration ads cs ds
+  ads ads′ ads″ rads adsʳ radsʳ adsˡ radsˡ : AdvertisedContracts
+  cs  cs′  cs″  rcs  csʳ  rcsʳ  csˡ  rcsˡ  : ActiveContracts
+  ds  ds′  ds″  rds  dsʳ  rdsʳ  dsˡ  rdsˡ  : Deposits
+  Γ Γ₀ : Configuration ads  cs  ds
+  Γ′   : Configuration ads′ cs′ ds′
+  Γ″   : Configuration ads″ cs″ ds″
 
-  p₁ : AdvertisedContracts × AdvertisedContracts
-  p₂ : ActiveContracts     × ActiveContracts
-  p₃ : Deposits            × Deposits
+  p₁ p₁′ : AdvertisedContracts × AdvertisedContracts
+  p₂ p₂′ : ActiveContracts     × ActiveContracts
+  p₃ p₃′ : Deposits            × Deposits
+  Γp  : Configuration′ p₁  p₂  p₃
+  Γp′ : Configuration′ p₁′ p₂′ p₃′
 
 ----------------------------------
 -- Symbolic runs.
@@ -74,13 +78,13 @@ prefixRuns (tc ∷ˢ⟦ α ⟧ R) = let rs = prefixRuns R in rs ++ map (tc ∷ˢ
 --------------------------------------
 -- Stripping.
 
-stripSecrets : Configuration′ p₁ p₂ p₃ → Configuration′ p₁ p₂ p₃
-stripSecrets ⟨ p ∶ a ♯ _ ⟩ = ⟨ p ∶ a ♯ nothing ⟩
-stripSecrets (l ∣∣ r ∶- p) = stripSecrets l ∣∣ stripSecrets r ∶- p
-stripSecrets c = c
+_∗ᶜ : Configuration′ p₁ p₂ p₃ → Configuration′ p₁ p₂ p₃
+⟨ p ∶ a ♯ _ ⟩ ∗ᶜ = ⟨ p ∶ a ♯ nothing ⟩
+(l ∣∣ r ∶- p) ∗ᶜ = l ∗ᶜ ∣∣ r ∗ᶜ ∶- p
+c             ∗ᶜ = c
 
-stripSecretsₜ : ∃TimedConfiguration → ∃TimedConfiguration
-stripSecretsₜ (ads , cs , ds , Γ at t) = ads , cs , ds , stripSecrets Γ at t
+_∗ᵗ : ∃TimedConfiguration → ∃TimedConfiguration
+(ads , cs , ds , Γ at t) ∗ᵗ = ads , cs , ds , (Γ ∗ᶜ) at t
 
 stripLabel : Label → Label
 stripLabel auth-commit[ p , ad , _ ] = auth-commit[ p , ad , [] ]
@@ -88,14 +92,12 @@ stripLabel a = a
 
 -- Hide all committed secrets in a symbolic run.
 _∗ : Run → Run
-_∗ = mapRun stripSecretsₜ stripLabel
+_∗ = mapRun _∗ᵗ stripLabel
 
-infix -1 _——→ₜ[_]_
-_——→ₜ[_]_ : Run → Label → Run → Set
-R ——→ₜ[ α ] R′ =
-  let (_ , _ , _ , tc)  = lastCfg R
-      (_ , _ , _ , tc′) = lastCfg R′
-  in tc —→ₜ[ α ] tc′
+infix -1 _——→[_]_
+_——→[_]_ : Run → Label → ∃TimedConfiguration → Set
+R ——→[ α ] (_ , _ , _ , tc′)
+  = proj₂ (proj₂ (proj₂ (lastCfg R))) —→ₜ[ α ] tc′
 
 _∈ʳ_ : Configuration′ p₁ p₂ p₃ → Run → Set
 _∈ʳ_ {p₁} {p₂} {p₃} c R =
@@ -112,7 +114,7 @@ record ParticipantStrategy (A : Participant) : Set where
                A ∈ Hon
                -- only moves enabled by the semantics
              × (∀ {R : Run} {α : Label} → α ∈ strategy (R ∗) →
-                 ∃[ R′ ] (R ——→ₜ[ α ] R′))
+                 ∃[ R′ ] (R ——→[ α ] R′))
                -- only self-authorizations
              × (∀ {R : Run} {α : Label} → α ∈ strategy (R ∗) →
                  Allₘ (_≡ A) (authDecoration α))
@@ -122,10 +124,10 @@ record ParticipantStrategy (A : Participant) : Set where
                   auth-commit[ A , ad , Δ′ ] ∈ strategy (R ∗) →
                     Δ ≡ Δ′)
                -- persistence
-             × (∀ {R R′ : Run} {α : Label} → α ∈ strategy (R ∗)
-                 → ∃[ α′ ] (R ——→ₜ[ α′ ] R′)
-                 → ∃[ R″ ] (R′ ——→ₜ[ α ] R″) →
-                   α ∈ strategy (R′ ∗))
+             × (∀ {R : Run} {T′ : ∃TimedConfiguration} {α : Label} → α ∈ strategy (R ∗)
+                 → ∃[ α′ ] (R ——→[ α′ ] T′)
+                 → ∃[ R″ ] (T′ ∷ˢ⟦ α ⟧ R ——→[ α ] R″) →
+                   α ∈ strategy ((T′ ∷ˢ⟦ α ⟧ R) ∗))
 
 open ParticipantStrategy public
 
@@ -152,13 +154,13 @@ module AdvM (Adv : Participant) (Adv∉ : Adv ∉ Hon) where
             -- independent move
           ⊎  authDecoration α ≡ nothing
           × (∀ δ → α ≢ delay[ δ ])
-          × ∃[ R′ ] (R ——→ₜ[ α ] R′)
+          × ∃[ R′ ] (R ——→[ α ] R′)
             -- move from dishonest participant
           ⊎ (∃[ B ]
                ( (authDecoration α ≡ just B)
                × (B ∉ Hon)
                × (∀ s → α ≢ auth-rev[ B , s ])
-               × ∃[ R′ ] (R ——→ₜ[ α ] R′) ))
+               × ∃[ R′ ] (R ——→[ α ] R′) ))
             -- delay
           ⊎ ∃[ δ ]
               ( (α ≡ delay[ δ ])
@@ -202,8 +204,8 @@ module AdvM (Adv : Participant) (Adv∉ : Adv ∉ Hon) where
         ----------------------------------------------
       → ((ads , cs , ds , Γ at 0) ∙ˢ) -conforms-to- SS
 
-    step : ∀ {R R′ : Run} {SS : Strategies}
+    step : ∀ {R : Run} {T′ : ∃TimedConfiguration} {SS : Strategies}
       → R -conforms-to- SS
-      → R ——→ₜ[ runAdversary SS R ] R′
-        ------------------------------
-      → R′ -conforms-to- SS
+      → R ——→[ runAdversary SS R ] T′
+        -----------------------------------------------
+      → (T′ ∷ˢ⟦ runAdversary SS R ⟧ R) -conforms-to- SS

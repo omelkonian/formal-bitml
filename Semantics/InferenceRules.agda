@@ -263,7 +263,7 @@ data _—→[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
     ∀ {v vsᶜ vsᵛ vsᵖ} {ad : Advertisement v vsᶜ vsᵛ vsᵖ}
       {ads cs ds} {Γ : Configuration ads cs ds}
 
-    → ∃[ p ] (p SETₚ.∈ participantsᵍ (G ad) → p SETₚ.∈ Hon)
+    → ∃[ p ] (p SETₚ.∈ participantsᵍ (G ad) → p SETₚ.∈ Hon) -- T0D0 use Any
     → (∀ d → d SETₑᵣ.∈ depositsᵃ ad → deposit d SETₑ.∈ depositsᶜ Γ)
 
       ------------------------------------------------------------------------
@@ -476,16 +476,12 @@ data _—→[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
 
   [C-Withdraw] :
     ∀ {ads cs ds} {Γ : Configuration ads cs ds}
-      {A : Participant}
-      {v} {c : Contract v []}
-
-      -- `withdraw` command
-    → c ≡ withdraw A
+      {A : Participant} {v : Value}
 
       -------------------------------------------------------
 
-    → Configuration ads ((v , [] , [ c ]) ∷ cs) ds ∋
-      (  ⟨ [ c ] , v ⟩ᶜ
+    → Configuration ads ((v , [] , [ withdraw A ]) ∷ cs) ds ∋
+      (  ⟨ [ withdraw A ] , v ⟩ᶜ
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl
       )
@@ -582,12 +578,6 @@ data _—→ₜ[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
       {v vs} {contract : Contracts v vs} {i : Index contract}
       {t : Time} {a : Label}
 
-      {Γ′ : TimedConfiguration ads ((v , vs , contract) ∷ cs) ds}
-    → Γ′ ≈ₜ (  ⟨ contract , v ⟩ᶜ
-            ∣∣ Γ
-            ∶- refl & refl & refl & refl & refl & refl
-            ) at t
-
       -- all time constraints are satisfied
     → All (_≤ t) (timeDecorations (contract ‼ i))
 
@@ -599,9 +589,15 @@ data _—→ₜ[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
       —→[ a ]
       Γ″
 
-      ----------------------------------------
+      ---------------------------------------------------------
 
-    → Γ′ —→ₜ[ a ] Γ″ at t
+    → TimedConfiguration ads ((v , vs , contract) ∷ cs) ds ∋
+      (  ⟨ contract , v ⟩ᶜ
+      ∣∣ Γ
+      ∶- refl & refl & refl & refl & refl & refl
+      ) at t
+      —→ₜ[ a ]
+      Γ″ at t
 
 -----------------------------------------------------------------------------------
 -- Reflexive transitive closure for —→.
