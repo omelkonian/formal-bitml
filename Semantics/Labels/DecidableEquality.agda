@@ -1,6 +1,7 @@
 ------------------------------------------------------------------------
 -- Decidable equality for labels.
 ------------------------------------------------------------------------
+{-# OPTIONS --allow-unsolved-metas #-}
 
 open import Data.Nat     using (_>_)
 open import Data.Product using (Σ; Σ-syntax)

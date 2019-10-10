@@ -23,5 +23,5 @@ open import Semantics.Labels.Types Participant _≟ₚ_ Honest
 _ = empty
 
 -- join
-_ = A ∶ 0 ↔ 1
+_ = auth-join[ A , 0 ↔ 1 ]
 _ = join[ 0 ↔ 1 ]

@@ -1,6 +1,7 @@
 ------------------------------------------------------------------------
 -- Properties of the symbolic model.
 ------------------------------------------------------------------------
+{-# OPTIONS --allow-unsolved-metas #-}
 
 open import Function using (_∋_; _∘_; case_of_)
 

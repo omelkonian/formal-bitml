@@ -37,8 +37,8 @@ AdvertisedContracts = List ∃Advertisement
 ActiveContracts : Set
 ActiveContracts = List ∃Contracts
 
-data Action (p : Participant) -- the participant that authorises this action
-  : AdvertisedContracts -- the contract advertisments it requires
+data Action (p : Participant) -- the participant that authorizes this action
+  : AdvertisedContracts -- the contract advertisements it requires
   → ActiveContracts     -- the active contracts it requires
   → Values              -- the deposits it requires from this participant
   → Deposits            -- the deposits it produces

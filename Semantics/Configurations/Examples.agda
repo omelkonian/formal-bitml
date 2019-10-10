@@ -7,7 +7,7 @@ module Semantics.Configurations.Examples where
 open import Level        using (0ℓ)
 open import Function     using (_∋_)
 open import Data.Unit    using (⊤; tt)
-open import Data.Maybe   using (just)
+open import Data.Maybe   using (just; nothing)
 open import Data.Nat     using (ℕ; suc; _+_; _≤_; _>_; _≟_)
 open import Data.Product using (∃; ∃-syntax; Σ; Σ-syntax; _×_; _,_; proj₁; proj₂)
 open import Data.List    using (List; []; _∷_; [_]; _++_ ; map; length; filter; zip)

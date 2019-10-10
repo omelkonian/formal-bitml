@@ -127,34 +127,6 @@ module Data.Set' {A : Set} (_≟_ : Decidable (_≡_ {A = A})) where
       pzs : noDuplicates zs
       pzs = lem₂ {as = xs} pxs
 
-  infixr 4 _∪_
-  _∪_ : Set' → Set' → Set'
-  x@(xs , pxs) ∪ y@(ys , pys) = xs ++ proj₁ z , {!!}
-    where
-      z : Set'
-      z = y ─ x
-
-  fromList : List A → Set'
-  fromList [] = [] , tt
-  fromList (x ∷ xs) with x ∈? xs
-  ... | yes _ = fromList xs
-  ... | no  _ = x ∷ proj₁ (fromList xs) , {!!}
-
-  ------------------------------------------------------------------------
-  -- Notation.
-
-  -- data ∀∈ (xs : Set') (P : A → Set) : Set where
-  --  mk∀∈ : ∀ (x : A) → (x ∈ xs) → P x → ∀∈ xs P
-
-  -- infix 2 ∀∈
-  -- syntax ∀∈ xs (λ x → P) = ∀[ x ∈ xs ] P
-
-  -- data ∃∈ (xs : Set') (P : A → Set) : Set where
-  --  mk∃∈ : ∃[ x ] ((x ∈ xs) × P x) → ∃∈ xs P
-
-  -- infix 2 ∃∈
-  -- syntax ∃∈ xs (λ x → P) = ∃[ x ∈ xs ] P
-
   ------------------------------------------------------------------------
   -- Deletion/Non-membership.
 
@@ -195,28 +167,6 @@ module Data.Set' {A : Set} (_≟_ : Decidable (_≡_ {A = A})) where
   ... | no ¬p = \\-‼ {xs} {i}
   ... | yes (here refl) = \\-left {xs}
   ... | yes (there ())
-
-  ⊆→\\ : ∀ {xs ys}
-       → xs ⊆ ys
-       → [] ≡ xs \\ ys
-  ⊆→\\ xs⊆ys = {!!}
-
-  _∉?_ : Decidable {A = A} _∉_
-  x ∉? xs with x ∈? xs
-  ... | yes x∈xs = no (λ ¬x∈xs → ¬x∈xs x∈xs)
-  ... | no  x∉xs = yes x∉xs
-
-  open import Relation.Unary       using (∁)
-  open import Data.List.All        using (All)
-    renaming ([] to All-[]; _∷_ to _All-∷_)
-  open import Data.List.Properties using (filter-none)
-
-  filter-∉? : ∀ {xs} → filter (_∉? xs) xs ≡ []
-  filter-∉? {xs} = filter-none (_∉? xs) {xs = xs} h
-    where
-      h : ∀ {xs : List A} → All (∁ (_∉ xs)) xs
-      h {[]}     = All-[]
-      h {x ∷ xs} = {!!} All-∷ {!!}
 
   ------------------------------------------------------------------------
   -- Permutation relation.

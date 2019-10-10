@@ -4,7 +4,8 @@ open import Level        using (0ℓ)
 open import Function     using (_∋_; _∘_)
 open import Data.Empty   using (⊥; ⊥-elim)
 open import Data.Unit    using (⊤; tt)
-open import Data.Maybe   using (just)
+open import Data.Maybe   using (Maybe; just; Is-just)
+open import Data.Maybe.Relation.Unary.Any renaming (just to mjust)
 open import Data.Bool    using (T; Bool; true; false; _∧_)
 open import Data.Nat     using (ℕ; _≤_; _>_; z≤n; s≤s)
 open import Data.Nat.Properties using (≤-refl)
@@ -36,6 +37,7 @@ open import Types                                      Participant _≟ₚ_ Hone
 open import BitML.Types                                Participant _≟ₚ_ Honest
 open import BitML.DecidableEquality                    Participant _≟ₚ_ Honest
 open import Semantics.Actions.Types                    Participant _≟ₚ_ Honest
+open import Semantics.Labels.Types                     Participant _≟ₚ_ Honest
 open import Semantics.Configurations.Types             Participant _≟ₚ_ Honest
 open import Semantics.Configurations.Helpers           Participant _≟ₚ_ Honest
 open import Semantics.Configurations.DecidableEquality Participant _≟ₚ_ Honest
@@ -77,19 +79,19 @@ tc = ⟨ A :! 1
           })
       & refl
 
-tc∃ : ∃[ v ] ∃[ vsᶜ ] ∃[ vsᵛ ] ∃[ vsᵖ ] Advertisement v vsᶜ vsᵛ vsᵖ
+tc∃ : ∃Advertisement
 tc∃ = 1 , [] , [] , (1 ∷ 0 ∷ []) , tc
 
 tC : Contracts 1 []
 tC = C tc
 
-c∃ : ∃[ v ] ∃[ vsᶜ ] Contracts v vsᶜ
+c∃ : ∃Contracts
 c∃ = 1 , [] , tC
 
-c₁∃ : ∃[ v ] ∃[ vsᶜ ] Contracts v vsᶜ
+c₁∃ : ∃Contracts
 c₁∃ = 1 , [] , [ tC ‼ 0ᶠ ]
 
-c₂∃ : ∃[ v ] ∃[ vsᶜ ] Contracts v vsᶜ
+c₂∃ : ∃Contracts
 c₂∃ = 1 , [] , [ withdraw A ]
 
 ⟨A♯⟩ : Configuration [] [] []
@@ -229,19 +231,19 @@ c₁₀ = ⟨ A , 1 ⟩ᵈ
    ∶- refl & refl & refl & refl & refl & refl
 
 tc-semantics :
-  c₀
-  —↠[ advertise[ ? ]
-    ∷ auth-commit[ ? , ? , ? ]
-    ∷ auth-commit[ ? , ? , ? ]
-    ∷ auth-init[ ? , ? , ? ]
-    ∷ auth-init[ ? , ? , ? ]
-    ∷ init[ ? ]
-    ∷ auth-rev[ ? , ? ]
-    ∷ empty
-    ∷ put[ ? , ? ]
-    ∷ withdraw[ ? , ? ]
-    [] ]
-  c₁₀
+  c₀ —↠[
+    advertise[ tc∃ ]
+  ∷ auth-commit[ A , tc∃ , [ a , just (9 , refl) ] ]
+  ∷ auth-commit[ B , tc∃ , [] ]
+  ∷ auth-init[ A , tc∃ , 0 ]
+  ∷ auth-init[ B , tc∃ , 1 ]
+  ∷ init[ tc∃ ]
+  ∷ auth-rev[ A , a ]
+  ∷ empty
+  ∷ put[ [] , [ a ] ]
+  ∷ withdraw[ A , 1 ]
+  ∷ []
+  ] c₁₀
 tc-semantics =
   start
     c₀
@@ -255,26 +257,19 @@ tc-semantics =
         })
     ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₁
-  —→⟨ [C-AuthCommit] {A = A} {bs = [ just tt ]} {Γ = c₀} {Δ = [ ⟨A♯⟩ ]}
+  —→⟨ [C-AuthCommit] {A = A} {secrets = [ a , just (9 , refl) ]} {Γ = c₀} {pr = refl}
       -- satisfy rads (none in this case)
       (λ ())
-      -- secret commitments are proper
-      ( -- 1. provide Δ
-        refl
-      , -- 2. honest participants have not committed to ⊥
-        (λ{ (here refl) → refl ; (there ())}) All-∷ All-[]
-      )
+      -- honest participants have not committed to ⊥
+      (λ _ → mjust tt All-∷ All-[])
     ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₂
-  —→⟨ [C-AuthCommit] {A = B} {bs = []} {Γ = c₂′} {Δ = []}
+  —→⟨ [C-AuthCommit] {A = B} {secrets = []} {Γ = c₂′} {pr = refl}
       -- satisfy rads
       (λ {x} z → z)
-      -- secret commitments are proper
-      ( -- 1. provide Δ
-        refl
-      , -- 2. honest participants have not committed to ⊥
-        All-[]
-      )
+      -- honest participants have not committed to ⊥
+      (λ _ → All-[])
+      --  All-[]
     ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₃
   —→⟨ [C-AuthInit] {A = A} {iᵖ = 0ᶠ} {dsˡ = []} {dsʳ = [ B has 0 ]} {Γ = c₃′} {p = refl}
@@ -312,7 +307,7 @@ tc-semantics =
       refl
     ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₆
-  —→⟨ [C-AuthRev] {A = A} {s = a} {n = 9} {p = refl} {Γ = ⟨ tC , 1 ⟩ᶜ}
+  —→⟨ [C-AuthRev] {A = A} {s = a} {n = 9} {Γ = ⟨ tC , 1 ⟩ᶜ}
       -- valid length given
       refl
     ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
@@ -331,6 +326,6 @@ tc-semantics =
       refl
     ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₉
-  —→⟨ [C-Withdraw] {Γ = A♯} refl ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
+  —→⟨ [C-Withdraw] {Γ = A♯} ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₁₀
   ∎∎
