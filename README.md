@@ -4,6 +4,9 @@ Based on:
 > Massimo Bartoletti and Roberto Zunino, 2018, January.
 > "BitML: a calculus for Bitcoin smart contracts"
 
+# HTML
+Browse the Agda code in HTML [here](http://omelkonian.github.io/formal-bitml).
+
 # File structure
 
 - Utilities
