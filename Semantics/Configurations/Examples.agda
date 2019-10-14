@@ -26,7 +26,7 @@ open RawFunctor {0ℓ} listFunctor using (_<$>_)
 
 --------------------------------------------------------------------------------
 
-open import ExampleSetup using (Participant; _≟ₚ_; Honest; A; B)
+open import Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
 
 open import Utilities.Lists
 

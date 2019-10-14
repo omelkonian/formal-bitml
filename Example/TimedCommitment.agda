@@ -1,4 +1,4 @@
-module Example where -- (see BitML paper, Section 2)
+module Example.TimedCommitment where -- (see BitML paper, Section 2)
 
 open import Level        using (0ℓ)
 open import Function     using (_∋_; _∘_)
@@ -29,7 +29,7 @@ open import Utilities.Lists
 
 -------------------------------------------------------------------------
 
-open import ExampleSetup using (Participant; _≟ₚ_; Honest; A; B)
+open import Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
 
 open import Utilities.Lists
 

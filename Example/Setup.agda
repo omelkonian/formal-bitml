@@ -1,4 +1,4 @@
-module ExampleSetup where
+module Example.Setup where
 
 open import Data.Nat            using (_>_)
 open import Data.Nat.Properties using (≤-refl)

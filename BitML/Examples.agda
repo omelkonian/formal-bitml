@@ -15,7 +15,7 @@ import Data.List.Relation.Binary.Sublist.Heterogeneous as SB
 
 open import Utilities.Lists
 
-open import ExampleSetup using (Participant; _≟ₚ_; Honest; A; B)
+open import Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
 open import Types       Participant _≟ₚ_ Honest
 open import BitML.Types Participant _≟ₚ_ Honest
 
