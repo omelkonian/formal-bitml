@@ -440,7 +440,7 @@ data _—→[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
   [C-PutRev] :
     ∀ {ads cs ds} {Γ : Configuration ads cs ds}
       {v vs″} {c : Contract v vs″}
-      {v′ vs′} {c′ : Contract v′ vs′}
+      {v′ vs′} {c′ : Contracts v′ vs′}
       {s s′ : Secrets} {p : Predicate s′}
       {vs : Values} {ds′ : Deposits}
       {ss : List ValidSecret}
@@ -468,8 +468,8 @@ data _—→[_]_ : ∀ {ads cs ds ads′ cs′ ds′}
       ∶- refl & refl & refl & refl & refl & refl
       )
       —→[ put[ vs , s ] ]
-      Configuration ads ((v′ , vs′ , [ c′ ]) ∷ cs) ds ∋
-      (  ⟨ [ c′ ] , v′ ⟩ᶜ
+      Configuration ads ((v′ , vs′ , c′) ∷ cs) ds ∋
+      (  ⟨ c′ , v′ ⟩ᶜ
       ∣∣ (ss ∣∣ˢˢ Γ)
       ∶- refl & refl & refl & refl & refl & refl
       )

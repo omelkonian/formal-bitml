@@ -92,7 +92,7 @@ put_&reveal_if_⇒_∶-_ {_} {v} {vss} {s′ = sᵖ} vs s p c _ ≟ᶜ
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl with vss SETₙ.≟ₗ vss′
 ... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with c ≟ᶜ c′
+... | yes refl with c ≟ᶜˢ c′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
 (put vs &reveal s if x ⇒ c ∶- x₁) ≟ᶜ withdraw _     = no λ ()

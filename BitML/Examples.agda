@@ -26,18 +26,18 @@ ex-contracts₁ = withdraw A ∙
 
 ex-contracts₂ : Contracts 5 []
 ex-contracts₂ = A ∶ withdraw {5} A
-              ⊕ (put [] &reveal [] if `True ⇒ withdraw {5} A) {p₁ = tt}
+              ⊕ (put [] &reveal [] if `True ⇒ [ withdraw {5} A ]) {p₁ = tt}
               ∙
 
 ex-contracts₃ : Contracts 5 [ 100 ]
-ex-contracts₃ = (put [ 100 ] &reveal [] if `True ⇒ withdraw {105} A) {p₁ = tt}
+ex-contracts₃ = (put [ 100 ] &reveal [] if `True ⇒ [ withdraw {105} A ]) {p₁ = tt}
                  ∙
 
 ex-contracts₄ : Contracts 5 [ 10 ]
 ex-contracts₄ = (A ∶ withdraw {5} B)
               ⊕ (B ∶ split ( (2 ⊸ withdraw {2} A)
                            ⊕ (3 ⊸ after 100 ∶ withdraw {3} B)
-                           ⊕ (0 ⊸ (put [ 10 ] &reveal [] if `True ⇒ (A ∶ withdraw {10} B)) {p₁ = tt})
+                           ⊕ (0 ⊸ (put [ 10 ] &reveal [] if `True ⇒ [ A ∶ withdraw {10} B ]) {p₁ = tt})
                            ∙))
               ∙
 

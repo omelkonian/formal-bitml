@@ -57,6 +57,9 @@ Contracts v vs = List (Contract v vs)
 ∃Contracts : Set
 ∃Contracts = ∃[ v ] ∃[ vs ] Contracts v vs
 
+ContractCases : Values → Set
+ContractCases vs = List (∃[ v ] Contract v vs)
+
 infixr 9 _∶_
 
 infixr 5 _⊕_
@@ -74,9 +77,6 @@ _⊸_ : ∀ {vs : Values}
     → Contract v vs
     → ∃[ v ] Contract v vs
 _⊸_ {vs} v c = v , c
-
-ContractCases : Values → Set
-ContractCases vs = List (∃[ v ] Contract v vs)
 
 open import Data.List.Relation.Binary.Sublist.Propositional using (_⊆_)
 
@@ -106,7 +106,7 @@ data Contract where
                        → (vs : Values)
                        → (s : Secrets)
                        → Predicate s′
-                       → Contract v′ vs′
+                       → Contracts v′ vs′
                        → .( Put vs vs′ vs″
                           × (v′ ≡ v + sum vs)
                           × (s′ SETₛ.⊆ s)
@@ -135,7 +135,7 @@ put_&reveal_if_⇒_ : ∀ {v v′ vs′ s′ vs″}
   → (vs : Values)
   → (s : Secrets)
   → Predicate s′
-  → Contract v′ vs′
+  → Contracts v′ vs′
   → .{p₁ : put? vs vs′ vs″}
   → .{p₂ : True (v′ ≟ v + sum vs)}
   → .{p₃ : s′ SETₛ.⊆? s}
@@ -159,12 +159,16 @@ participantsᶜ : ∀ {v vs} → Contracts v vs → List Participant
 participantsᶜ = concatMap go
   where
     goᶜ : ∀ {vs} → ContractCases vs → List Participant
+    goˢ : ∀ {v vs} → Contracts v vs → List Participant
     go  : ∀ {v vs} → Contract v vs → List Participant
 
     goᶜ []             = []
     goᶜ ((_ , c) ∷ cs) = go c ++ goᶜ cs
 
-    go (put _ &reveal _ if _ ⇒ c ∶- _) = go c
+    goˢ []       = []
+    goˢ (c ∷ cs) = go c ++ goˢ cs
+
+    go (put _ &reveal _ if _ ⇒ c ∶- _) = goˢ c
     go (withdraw p)                    = [ p ]
     go (split cs ∶- _)                 = goᶜ cs
     go (p ∶ c)                         = p ∷ go c

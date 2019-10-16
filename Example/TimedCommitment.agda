@@ -65,7 +65,7 @@ tc : Advertisement 1 [] [] (1 ∷ 0 ∷ [])
 tc = ⟨ A :! 1
      ∣ A :secret a ∶- refl & refl
      ∣ B :! 0      ∶- refl & refl
-     ⟩ (put [] &reveal [ a ] if `True ⇒ withdraw A
+     ⟩ (put [] &reveal [ a ] if `True ⇒ [ withdraw A ]
         ∶- sound-put {p = tt} & refl & (λ ()))
      ⊕ (after t ∶ withdraw B)
      ∙
