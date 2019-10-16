@@ -50,6 +50,31 @@ data Contract : Value  -- the monetary value it carries
               → Values -- the volatile deposits it presumes (kind of a DeBruijn encoding)
               → Set
 
+-- Lists of contracts.
+Contracts : Value → Values → Set
+Contracts v vs = List (Contract v vs)
+
+∃Contracts : Set
+∃Contracts = ∃[ v ] ∃[ vs ] Contracts v vs
+
+infixr 9 _∶_
+
+infixr 5 _⊕_
+infix  8 _∙
+
+_⊕_ : ∀ {A : Set} → A → List A → List A
+_⊕_ = _∷_
+
+_∙ : ∀ {A : Set} → A → List A
+_∙ = [_]
+
+infix 1 _⊸_
+_⊸_ : ∀ {vs : Values}
+    → (v : Value)
+    → Contract v vs
+    → ∃[ v ] Contract v vs
+_⊸_ {vs} v c = v , c
+
 ContractCases : Values → Set
 ContractCases vs = List (∃[ v ] Contract v vs)
 
@@ -118,31 +143,6 @@ put_&reveal_if_⇒_ : ∀ {v v′ vs′ s′ vs″}
 (put vs &reveal s if p ⇒ c) {p₁} {p₂} {p₃} =
   put vs &reveal s if p ⇒ c
   ∶- (sound-put {p = p₁} , toWitness p₂ , SETₛ.sound-⊆ {p = p₃})
-
--- Lists of contracts.
-Contracts : Value → Values → Set
-Contracts v vs = List (Contract v vs)
-
-∃Contracts : Set
-∃Contracts = ∃[ v ] ∃[ vs ] Contracts v vs
-
-infixr 9 _∶_
-
-infixr 5 _⊕_
-infix  8 _∙
-
-_⊕_ : ∀ {A : Set} → A → List A → List A
-_⊕_ = _∷_
-
-_∙ : ∀ {A : Set} → A → List A
-_∙ = [_]
-
-infix 1 _⊸_
-_⊸_ : ∀ {vs : Values}
-    → (v : Value)
-    → Contract v vs
-    → ∃[ v ] Contract v vs
-_⊸_ {vs} v c = v , c
 
 ------------------------------------------------------------------------
 -- Utilities.
