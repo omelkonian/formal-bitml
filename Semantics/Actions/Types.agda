@@ -37,64 +37,69 @@ AdvertisedContracts = List ∃Advertisement
 ActiveContracts : Set
 ActiveContracts = List ∃Contracts
 
-data Action (p : Participant) -- the participant that authorizes this action
-  : AdvertisedContracts -- the contract advertisements it requires
-  → ActiveContracts     -- the active contracts it requires
-  → Values              -- the deposits it requires from this participant
-  → Deposits            -- the deposits it produces
-  → Set where
+variable
+  ads ads′ ads″ rads adsˡ radsˡ adsʳ radsʳ : AdvertisedContracts
+  cs cs′ cs″ rcs csˡ rcsˡ csʳ rcsʳ : ActiveContracts
+  ds ds′ ds″ rds dsˡ rdsˡ dsʳ rdsʳ : Deposits
+
+-- Indices for `Action`.
+record Actionⁱ : Set where
+  constructor Iᵃᶜ[_,_,_,_]
+  field
+    advertisements   : AdvertisedContracts -- the contract advertisements it requires
+    contracts        : ActiveContracts     -- the active contracts it requires
+    depositsRequired : Values              -- the deposits it requires from this participant
+    depositsProduced : Deposits            -- the deposits it produces
+open Actionⁱ public
+variable aci : Actionⁱ
+
+data Action (p : Participant) : Actionⁱ → Set where
 
   -- commit secrets to stipulate {G}C
-  ♯▷_ : ∀ {v vsᶜ vsᵛ vsᵖ} → (ad : Advertisement v vsᶜ vsᵛ vsᵖ)
-      → Action p [ v , vsᶜ , vsᵛ , vsᵖ , ad ] [] [] []
+  ♯▷_ : (ad : Advertisement ci pi)
+      → Action p Iᵃᶜ[ [ ci , pi , ad ] , [] , [] , [] ]
 
   -- spend x to stipulate {G}C
-  _▷ˢ_ : ∀ {v vsᶜ vsᵛ vsᵖ}
-       → (ad : Advertisement v vsᶜ vsᵛ vsᵖ)
+  _▷ˢ_ : (ad : Advertisement ci Iᵖ[ vsᵛ , vsᵖ ])
        → (i : Index vsᵖ)
        → {vs : Values}
        → .{pr : True (vs SETₙ.≟ₗ [ vsᵖ ‼ i ])}
-       → Action p [ v , vsᶜ , vsᵛ , vsᵖ , ad ] [] vs []
+       → Action p Iᵃᶜ[ [ ci , Iᵖ[ vsᵛ , vsᵖ ] , ad ] , [] , vs , [] ]
 
   -- take branch
-  _▷ᵇ_ : ∀ {v vs}
-      → (c : Contracts v vs)
-      → (i : Index c)
-      → Action p [] [ v , vs , c ] [] []
+  _▷ᵇ_ : (c : Contracts ci)
+       → (i : Index c)
+       → Action p Iᵃᶜ[ [] , [ ci , c ] , [] , [] ]
 
   -- join deposits
-  _↔_ : ∀ {vs}
-      → (x : Index vs)
+  _↔_ : (x : Index vs)
       → (y : Index vs)
       → {ds : Deposits}
       → .{pr₁ : False (x ≟ᶠ y)}
       → .{pr₂ : True (ds SETₑ.≟ₗ ((p has_) <$> vs at x ⟨ (vs ‼ x) + (vs ‼ y) ⟩remove y))}
-      → Action p [] [] vs ds
+      → Action p Iᵃᶜ[ [] , [] , vs , ds ]
 
   -- divide a deposit
-  _▷_,_ : ∀ {vs}
-    → (i : Index vs)
-    → (v₁ : Value)
-    → (v₂ : Value)
-    → {ds : Deposits}
-    → .{pr₁ : True ((vs ‼ i) ≟ (v₁ + v₂))}
-    → .{pr₂ : True (ds SETₑ.≟ₗ ((p has_) <$> (vs at i ⟨ v₁ ⟩ ++ [ v₂ ])))}
-    → Action p [] [] vs ds
+  _▷_,_ : (i : Index vs)
+        → (v₁ : Value)
+        → (v₂ : Value)
+        → {ds : Deposits}
+        → .{pr₁ : True ((vs ‼ i) ≟ (v₁ + v₂))}
+        → .{pr₂ : True (ds SETₑ.≟ₗ ((p has_) <$> (vs at i ⟨ v₁ ⟩ ++ [ v₂ ])))}
+        → Action p Iᵃᶜ[ [] , [] , vs , ds ]
 
   -- donate deposit to participant
-  _▷ᵈ_ : ∀ {vs}
-      → (i : Index vs)
-      → (p′ : Participant)
-      → {ds : Deposits}
-      → .{pr : True (ds SETₑ.≟ₗ [ p′ has (vs ‼ i) ])}
-      → Action p [] [] vs ds
+  _▷ᵈ_ : (i : Index vs)
+       → (p′ : Participant)
+       → {ds : Deposits}
+       → .{pr : True (ds SETₑ.≟ₗ [ p′ has (vs ‼ i) ])}
+       → Action p Iᵃᶜ[ [] , [] , vs , ds ]
 
   -- destroy deposit
-  destroy : ∀ {vs}
-        → (i : Index vs)
-        → {ds : Deposits}
-        → .{pr : True (ds SETₑ.≟ₗ (p has_ <$> remove vs i))}
-        → Action p [] [] vs ds
+  destroy : (i : Index vs)
+          → {ds : Deposits}
+          → .{pr : True (ds SETₑ.≟ₗ (p has_ <$> remove vs i))}
+          → Action p Iᵃᶜ[ [] , [] , vs , ds ]
 
 ∃Action : Set
-∃Action = ∃[ p ] ∃[ ads ] ∃[ cs ] ∃[ vs ] ∃[ ds ] Action p ads cs vs ds
+∃Action = ∃[ p ] ∃[ aci ] Action p aci

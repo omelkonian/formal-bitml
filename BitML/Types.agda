@@ -46,19 +46,34 @@ open import Types Participant _≟ₚ_ Honest
 ------------------------------------------------------------------------
 -- Contracts
 
-data Contract : Value  -- the monetary value it carries
-              → Values -- the volatile deposits it presumes (kind of a DeBruijn encoding)
-              → Set
+-- Indices for `Contract`.
+record Contractⁱ : Set where
+  constructor Iᶜ[_,_]
+  field
+    contractValue    : Value   -- the monetary value it carries
+    volatileDeposits : Values  -- the volatile deposits it presumes (kind of a DeBruijn encoding)
+open Contractⁱ public
+
+data Contract : Contractⁱ → Set
+
+∃Contract : Set
+∃Contract = ∃[ ci ] Contract ci
+
 
 -- Lists of contracts.
-Contracts : Value → Values → Set
-Contracts v vs = List (Contract v vs)
+Contracts : Contractⁱ → Set
+Contracts ci = List (Contract ci)
 
 ∃Contracts : Set
-∃Contracts = ∃[ v ] ∃[ vs ] Contracts v vs
+∃Contracts = ∃[ ci ] Contracts ci
 
 ContractCases : Values → Set
-ContractCases vs = List (∃[ v ] Contract v vs)
+ContractCases vs = List (∃[ v ] Contract Iᶜ[ v , vs ])
+
+variable
+  ci ci′ : Contractⁱ
+  c : Contract ci
+  c′ : Contract ci′
 
 infixr 9 _∶_
 
@@ -72,11 +87,10 @@ _∙ : ∀ {A : Set} → A → List A
 _∙ = [_]
 
 infix 1 _⊸_
-_⊸_ : ∀ {vs : Values}
-    → (v : Value)
-    → Contract v vs
-    → ∃[ v ] Contract v vs
-_⊸_ {vs} v c = v , c
+_⊸_ : (v : Value)
+    → Contract Iᶜ[ v , vs ]
+    → ∃[ v ] Contract Iᶜ[ v , vs ]
+_⊸_ v c = v , c
 
 open import Data.List.Relation.Binary.Sublist.Propositional using (_⊆_)
 
@@ -92,8 +106,9 @@ put? vs vs′ vs″ with vs SB.⊆? vs″
 ... | no _      = ⊥
 ... | yes refl  = ⊤
 
-sound-put : ∀ {vs vs′ vs″} → {p : put? vs vs′ vs″} → Put vs vs′ vs″
-sound-put {vs} {vs′} {vs″} {p} with vs SB.⊆? vs″
+sound-put : ∀ {p : put? vs vs′ vs″} → Put vs vs′ vs″
+sound-put {vs = vs} {vs′ = vs′} {vs″ = vs″} {p = p}
+  with vs SB.⊆? vs″
 ... | no _       = ⊥-elim p
 ... | yes vs⊆vs″ with vs′ SETₙ.≟ₗ complement-⊆ vs⊆vs″
 ... | no _       = ⊥-elim p
@@ -102,44 +117,43 @@ sound-put {vs} {vs′} {vs″} {p} with vs SB.⊆? vs″
 data Contract where
 
   -- collect deposits and secrets
-  put_&reveal_if_⇒_∶-_ : ∀ {v v′ vs′ s′ vs″}
-                       → (vs : Values)
-                       → (s : Secrets)
-                       → Predicate s′
-                       → Contracts v′ vs′
+  put_&reveal_if_⇒_∶-_ : (vs : Values)
+                       → (ss : Secrets)
+                       → Predicate ss′
+                       → Contracts Iᶜ[ v′ , vs′ ]
                        → .( Put vs vs′ vs″
                           × (v′ ≡ v + sum vs)
-                          × (s′ SETₛ.⊆ s)
+                          × (ss′ SETₛ.⊆ ss)
                           )
-                       → Contract v vs″
+                       → Contract Iᶜ[ v , vs″ ]
 
   -- transfer the balance to a participant
-  withdraw : ∀ {v vs} → Participant → Contract v vs
+  withdraw : Participant → Contract ci
 
   -- split the balance
-  split_∶-_ : ∀ {v vs} (cs : ContractCases vs)
+  split_∶-_ : (cs : ContractCases vs)
             → .(v ≡ sum (map proj₁ cs))
-            → Contract v vs
+            → Contract Iᶜ[ v , vs ]
 
   -- wait for participant's authorization
-  _∶_ : ∀ {v vs} → Participant → Contract v vs → Contract v vs
+  _∶_ : Participant → Contract ci → Contract ci
 
   -- wait of a period of time
-  after_∶_ : ∀ {v vs} → Time → Contract v vs → Contract v vs
+  after_∶_ : Time → Contract ci → Contract ci
 
 -- Implicit-proof-style operators.
-split_ : ∀ {v vs} (cs : ContractCases vs) → {p : True (v ≟ sum (map proj₁ cs))} → Contract v vs
+split_ : (cs : ContractCases vs) → {p : True (v ≟ sum (map proj₁ cs))} → Contract Iᶜ[ v , vs ]
 (split cs) {p} = split cs ∶- toWitness p
 
-put_&reveal_if_⇒_ : ∀ {v v′ vs′ s′ vs″}
-  → (vs : Values)
-  → (s : Secrets)
-  → Predicate s′
-  → Contracts v′ vs′
+put_&reveal_if_⇒_ :
+    (vs : Values)
+  → (ss : Secrets)
+  → Predicate ss′
+  → Contracts Iᶜ[ v′ , vs′ ]
   → .{p₁ : put? vs vs′ vs″}
   → .{p₂ : True (v′ ≟ v + sum vs)}
-  → .{p₃ : s′ SETₛ.⊆? s}
-  → Contract v vs″
+  → .{p₃ : ss′ SETₛ.⊆? ss}
+  → Contract Iᶜ[ v , vs″ ]
 (put vs &reveal s if p ⇒ c) {p₁} {p₂} {p₃} =
   put vs &reveal s if p ⇒ c
   ∶- (sound-put {p = p₁} , toWitness p₂ , SETₛ.sound-⊆ {p = p₃})
@@ -147,7 +161,7 @@ put_&reveal_if_⇒_ : ∀ {v v′ vs′ s′ vs″}
 ------------------------------------------------------------------------
 -- Utilities.
 
-secretsᵖ : ∀ {vsᵛ vsᵖ} → Participant → Precondition vsᵛ vsᵖ → Secrets
+secretsᵖ : Participant → Precondition pi → Secrets
 secretsᵖ _ (_ :? _)      = []
 secretsᵖ _ (_ :! _)      = []
 secretsᵖ A (B :secret s) with A SETₚ.≣ B
@@ -155,12 +169,12 @@ secretsᵖ A (B :secret s) with A SETₚ.≣ B
 ... | no  _ = []
 secretsᵖ A (l ∣ r ∶- _)  = secretsᵖ A l ++ secretsᵖ A r
 
-participantsᶜ : ∀ {v vs} → Contracts v vs → List Participant
+participantsᶜ : Contracts ci → List Participant
 participantsᶜ = concatMap go
   where
-    goᶜ : ∀ {vs} → ContractCases vs → List Participant
-    goˢ : ∀ {v vs} → Contracts v vs → List Participant
-    go  : ∀ {v vs} → Contract v vs → List Participant
+    goᶜ : ContractCases vs → List Participant
+    goˢ : Contracts ci → List Participant
+    go  : Contract ci → List Participant
 
     goᶜ []             = []
     goᶜ ((_ , c) ∷ cs) = go c ++ goᶜ cs
@@ -174,22 +188,22 @@ participantsᶜ = concatMap go
     go (p ∶ c)                         = p ∷ go c
     go (after _ ∶ c)                   = go c
 
-participantsᵍ : ∀ {vsᵛ vsᵖ} → Precondition vsᵛ vsᵖ → List Participant
+participantsᵍ : Precondition pi → List Participant
 participantsᵍ (p :? _)       = [ p ]
 participantsᵍ (p :! _)       = [ p ]
 participantsᵍ (p :secret _)  = [ p ]
 participantsᵍ (p₁ ∣ p₂ ∶- _) = participantsᵍ p₁ ++ participantsᵍ p₂
 
-depositsᵖ : ∀ {vsᵛ vsᵖ} → Precondition vsᵛ vsᵖ → List DepositRef
+depositsᵖ : Precondition pi → List DepositRef
 depositsᵖ (p₁ ∣ p₂ ∶- _) = depositsᵖ p₁ ++ depositsᵖ p₂
 depositsᵖ (a :! v)       = [ (a has v ⟨ true  ⟩) ]
 depositsᵖ (a :? v)       = [ (a has v ⟨ false ⟩) ]
 depositsᵖ (_ :secret _)  = []
 
-persistentDepositsᵖ : ∀ {vsᵛ vsᵖ} → Precondition vsᵛ vsᵖ → List Deposit
+persistentDepositsᵖ : Precondition pi → List Deposit
 persistentDepositsᵖ = map deposit ∘ filter ((_≟ᵇ true) ∘ persistent) ∘ depositsᵖ
 
-toStipulate : ∀ {vsᵛ vsᵖ} → Precondition vsᵛ vsᵖ → List (Participant × Value)
+toStipulate : Precondition pi → List (Participant × Value)
 toStipulate (p :! v)     = [ p , v ]
 toStipulate (l ∣ r ∶- _) = toStipulate l ++ toStipulate r
 toStipulate _            = []
@@ -197,36 +211,35 @@ toStipulate _            = []
 ------------------------------------------------------------------------
 -- Advertisements.
 
-module _ where
+infix 2 ⟨_⟩_∶-_
+record Advertisement (ci : Contractⁱ) (pi : Preconditionⁱ) : Set where
+  constructor ⟨_⟩_∶-_
 
-  infix 2 ⟨_⟩_∶-_
-  record Advertisement (v : Value) (vsᶜ vsᵛ vsᵖ : Values) : Set where
-    constructor ⟨_⟩_∶-_
+  field
+    G : Precondition pi
+    C : Contracts ci
 
-    field
-      G : Precondition vsᵛ vsᵖ
-      C : Contracts v vsᶜ
+    .valid : -- 1. each name in C appears in G
+             volatileDeposits ci ≾ volatileDeposits pi
 
-      .valid : -- 1. each name in C appears in G
-               vsᶜ ≾ vsᵛ
+             -- 2. each participant has a persistent deposit in G
+           × participantsᵍ G ++ participantsᶜ C
+               SETₚ.⊆
+             (participant <$> persistentDepositsᵖ G)
 
-               -- 2. each participant has a persistent deposit in G
-             × participantsᵍ G ++ participantsᶜ C
-                 SETₚ.⊆
-               (participant <$> persistentDepositsᵖ G)
+           -- 3. the contract's monetary value is the sum of all the persistent deposits in G
+           × contractValue ci ≡ sum (persistentDeposits pi)
 
-               -- 3. the contract's monetary value is the sum of all the persistent deposits in G
-             × v ≡ sum vsᵖ
+           -- *** correct by construction ***
+           -- - names in G are distinct
+           -- - secrets in `if ...` appear in `reveal ...`
+           -- - the names in put_&_ are distinct
 
-               -- *** correct by construction ***
-               -- - names in G are distinct
-               -- - secrets in `if ...` appear in `reveal ...`
-               -- - the names in put_&_ are distinct
-
-  open Advertisement public
+open Advertisement public
+variable ad : Advertisement ci pi
 
 ∃Advertisement : Set
-∃Advertisement = ∃[ v ] ∃[ vsᶜ ] ∃[ vsᵛ ] ∃[ vsᵖ ] Advertisement v vsᶜ vsᵛ vsᵖ
+∃Advertisement = ∃[ ci ] ∃[ pi ] Advertisement ci pi
 
 infix 2 put_&reveal_if_⇒_∶-_
 infixr 9 _&_
@@ -234,5 +247,5 @@ infixr 9 _&_
 _&_ : ∀ {A B : Set} → A → B → A × B
 _&_ = _,_
 
-depositsᵃ : ∀ {v vsᶜ vsᵛ vsᵖ} → Advertisement v vsᶜ vsᵛ vsᵖ → List DepositRef
+depositsᵃ : Advertisement ci pi → List DepositRef
 depositsᵃ ad = depositsᵖ (G ad)

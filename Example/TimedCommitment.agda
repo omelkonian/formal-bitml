@@ -41,7 +41,7 @@ open import Semantics.Labels.Types                     Participant _≟ₚ_ Hone
 open import Semantics.Configurations.Types             Participant _≟ₚ_ Honest
 open import Semantics.Configurations.Helpers           Participant _≟ₚ_ Honest
 open import Semantics.Configurations.DecidableEquality Participant _≟ₚ_ Honest
-open import Semantics.InferenceRules                   Participant _≟ₚ_ Honest
+open import Semantics.InferenceRules                   Participant _≟ₚ_ Honest hiding (A; B; t)
 
 -------------------------------------------------------------------------
 
@@ -61,7 +61,7 @@ a = "CHANGE_ME"
 t : Time
 t = 42
 
-tc : Advertisement 1 [] [] (1 ∷ 0 ∷ [])
+tc : Advertisement Iᶜ[ 1 , [] ] Iᵖ[ [] , 1 ∷ 0 ∷ [] ]
 tc = ⟨ A :! 1
      ∣ A :secret a ∶- refl & refl
      ∣ B :! 0      ∶- refl & refl
@@ -80,71 +80,71 @@ tc = ⟨ A :! 1
       & refl
 
 tc∃ : ∃Advertisement
-tc∃ = 1 , [] , [] , (1 ∷ 0 ∷ []) , tc
+tc∃ = Iᶜ[ 1 , [] ] , Iᵖ[ [] , 1 ∷ 0 ∷ [] ] , tc
 
-tC : Contracts 1 []
+tC : Contracts Iᶜ[ 1 , [] ]
 tC = C tc
 
 c∃ : ∃Contracts
-c∃ = 1 , [] , tC
+c∃ = Iᶜ[ 1 , [] ] , tC
 
 c₁∃ : ∃Contracts
-c₁∃ = 1 , [] , [ tC ‼ 0ᶠ ]
+c₁∃ = Iᶜ[ 1 , [] ] , [ tC ‼ 0ᶠ ]
 
 c₂∃ : ∃Contracts
-c₂∃ = 1 , [] , [ withdraw A ]
+c₂∃ = Iᶜ[ 1 , [] ] , [ withdraw A ]
 
-⟨A♯⟩ : Configuration [] [] []
+⟨A♯⟩ : Configuration Iᶜᶠ[ [] , [] , [] ]
 ⟨A♯⟩ = ⟨ A ∶ a ♯ just 9 ⟩
 
-A♯ : Configuration [] [] []
+A♯ : Configuration Iᶜᶠ[ [] , [] , [] ]
 A♯ = A ∶ a ♯ 9
 
 A♯9 : Participant × Secret × Maybe ℕ
 A♯9 = A , a , just 9
 
-Aauth♯ : Configuration′ ([] , [ tc∃ ]) ([] , []) ([] , [])
-Aauth♯ = A auth[ ♯▷ tc ]∶- refl & refl & refl
+Aauth♯ : Configuration′ Iᶜᶠ[ [] & [ tc∃ ] , [] & [] , [] & [] ]
+Aauth♯ = A auth[ ♯▷ tc ]∶- refl & refl & refl & refl & refl & refl
 
-Bauth♯ : Configuration′ ([] , [ tc∃ ]) ([] , []) ([] , [])
-Bauth♯ = B auth[ ♯▷ tc ]∶- refl & refl & refl
+Bauth♯ : Configuration′ Iᶜᶠ[ [] & [ tc∃ ] , [] & [] , [] & [] ]
+Bauth♯ = B auth[ ♯▷ tc ]∶- refl & refl & refl & refl & refl & refl
 
-Aauth▷ : Configuration′ ([] , [ tc∃ ]) ([] , []) ([] , [ A has 1 ])
-Aauth▷ = A auth[ Action A [ tc∃ ] [] [ 1 ] [] ∋
+Aauth▷ : Configuration′ Iᶜᶠ[ [] & [ tc∃ ] , [] & [] , [] & [ A has 1 ] ]
+Aauth▷ = A auth[ Action A Iᵃᶜ[ [ tc∃ ] , [] , [ 1 ] , [] ] ∋
                  (tc ▷ˢ 0ᶠ) {pr = fromWitness {0ℓ}
-                              {P = [ 1 ] ≡ [ [ 1 ] ‼ 0ᶠ ] }
-                              {Q = [ 1 ] SETₙ.≟ₗ [ [ 1 ] ‼ 0ᶠ ]}
-                              refl}
-               ]∶- refl & refl & refl
+                            {P = [ 1 ] ≡ [ [ 1 ] ‼ 0ᶠ ] }
+                            {Q = [ 1 ] SETₙ.≟ₗ [ [ 1 ] ‼ 0ᶠ ]}
+                            refl}
+               ]∶- refl & refl & refl & refl & refl & refl
 
-Bauth▷ : Configuration′ ([] , [ tc∃ ]) ([] , []) ([] , [ B has 0 ])
-Bauth▷ = B auth[ Action B [ tc∃ ] [] [ 0 ] [] ∋
+Bauth▷ : Configuration′ Iᶜᶠ[ [] & [ tc∃ ] , [] & [] , [] & [ B has 0 ] ]
+Bauth▷ = B auth[ Action B Iᵃᶜ[ [ tc∃ ] , [] , [ 0 ] , [] ] ∋
                  (tc ▷ˢ 1ᶠ) {pr = fromWitness {0ℓ}
-                              {P = [ 0 ] ≡ [ (1 ∷ [ 0 ]) ‼ 1ᶠ ] }
-                              {Q = [ 0 ] SETₙ.≟ₗ [ (1 ∷ [ 0 ]) ‼ 1ᶠ ]}
-                              refl}
-               ]∶- refl & refl & refl
+                            {P = [ 0 ] ≡ [ (1 ∷ [ 0 ]) ‼ 1ᶠ ] }
+                            {Q = [ 0 ] SETₙ.≟ₗ [ (1 ∷ [ 0 ]) ‼ 1ᶠ ]}
+                            refl}
+               ]∶- refl & refl & refl & refl & refl & refl
 
-c₀ : Configuration [] [] [ A has 1 - B has 0 ]
+c₀ : Configuration Iᶜᶠ[ [] , [] , [ A has 1 - B has 0 ] ]
 c₀ = ⟨ A , 1 ⟩ᵈ
   ∣∣ ⟨ B , 0 ⟩ᵈ
   ∶- refl & refl & refl & refl & refl & refl
 
 --> [C-Advertise]
-c₁ : Configuration [ tc∃ ] [] [ A has 1 - B has 0 ]
+c₁ : Configuration Iᶜᶠ[ [ tc∃ ] , [] , [ A has 1 - B has 0 ] ]
 c₁ = ` tc
   ∣∣ c₀
   ∶- refl & refl & refl & refl & refl & refl
 
 --> [C-AuthCommit]
-c₂ : Configuration [ tc∃ ] [] [ A has 1 - B has 0 ]
+c₂ : Configuration Iᶜᶠ[ [ tc∃ ] , [] , [ A has 1 - B has 0 ] ]
 c₂ = c₁
   ∣∣ ⟨A♯⟩
   ∶- refl & refl & refl & refl & refl & refl
   ∣∣ Aauth♯
   ∶- refl & refl & refl & refl & refl & refl
 
-c₂′ : Configuration′ ([] , [ tc∃ ]) ([] , []) ([ A has 1 - B has 0 ] , [])
+c₂′ : Configuration′ Iᶜᶠ[ [] & [ tc∃ ] , [] & [] , [ A has 1 - B has 0 ] & [] ]
 c₂′ = c₀
    ∣∣ ⟨A♯⟩
    ∶- refl & refl & refl & refl & refl & refl
@@ -152,12 +152,12 @@ c₂′ = c₀
    ∶- refl & refl & refl & refl & refl & refl
 
 --> [C-AuthCommit]
-c₃ : Configuration [ tc∃ ] [] [ A has 1 - B has 0 ]
+c₃ : Configuration Iᶜᶠ[ [ tc∃ ] , [] , [ A has 1 - B has 0 ] ]
 c₃ = c₂
   ∣∣ Bauth♯
   ∶- refl & refl & refl & refl & refl & refl
 
-c₃′ : Configuration′ ([] , tc∃ ∷ [ tc∃ ]) ([] , []) ([ A has 1 - B has 0 ] , [])
+c₃′ : Configuration′ Iᶜᶠ[ [] & (tc∃ ∷ [ tc∃ ]) , [] & [] , [ A has 1 - B has 0 ] & [] ]
 c₃′ = c₀
    ∣∣ ⟨A♯⟩
    ∶- refl & refl & refl & refl & refl & refl
@@ -167,12 +167,12 @@ c₃′ = c₀
    ∶- refl & refl & refl & refl & refl & refl
 
 --> [C-AuthInit]
-c₄ : Configuration [ tc∃ ] [] [ B has 0 ]
+c₄ : Configuration Iᶜᶠ[ [ tc∃ ] , [] , [ B has 0 ] ]
 c₄ = c₃
   ∣∣ Aauth▷
   ∶- refl & refl & refl & refl & refl & refl
 
-c₄′ : Configuration′ ([] , tc∃ ∷ tc∃ ∷ [ tc∃ ]) ([] , []) ([ B has 0 ] , [])
+c₄′ : Configuration′ Iᶜᶠ[ [] & (tc∃ ∷ tc∃ ∷ [ tc∃ ]) , [] & [] , [ B has 0 ] & [] ]
 c₄′ = c₀
    ∣∣ ⟨A♯⟩
    ∶- refl & refl & refl & refl & refl & refl
@@ -184,12 +184,12 @@ c₄′ = c₀
    ∶- refl & refl & refl & refl & refl & refl
 
 --> [C-AuthInit]
-c₅ : Configuration [ tc∃ ] [] []
+c₅ : Configuration Iᶜᶠ[ [ tc∃ ] , [] , [] ]
 c₅ = c₄
   ∣∣ Bauth▷
   ∶- refl & refl & refl & refl & refl & refl
 
-c₅′ : Configuration′ ([] , tc∃ ∷ tc∃ ∷ tc∃ ∷ [ tc∃ ]) ([] , []) ([] , [])
+c₅′ : Configuration′ Iᶜᶠ[ [] & (tc∃ ∷ tc∃ ∷ tc∃ ∷ [ tc∃ ]) , [] & [] , [] & [] ]
 c₅′ = c₀
    ∣∣ Aauth♯
    ∶- refl & refl & refl & refl & refl & refl
@@ -201,31 +201,31 @@ c₅′ = c₀
    ∶- refl & refl & refl & refl & refl & refl
 
 --> [C-Init]
-c₆ : Configuration [] [ c∃ ] []
-c₆ = ⟨ tC , 1 ⟩ᶜ
+c₆ : Configuration Iᶜᶠ[ [] , [ c∃ ] , [] ]
+c₆ = ⟨ tC ⟩ᶜ
   ∣∣ ⟨A♯⟩
   ∶- refl & refl & refl & refl & refl & refl
 
 --> [C-AuthRev]
-c₇ : Configuration [] [ c∃ ] []
+c₇ : Configuration Iᶜᶠ[ [] , [ c∃ ] , [] ]
 c₇ = A♯
-  ∣∣ ⟨ tC , 1 ⟩ᶜ
+  ∣∣ ⟨ tC ⟩ᶜ
   ∶- refl & refl & refl & refl & refl & refl
 
 --> [C-Control]
-c₈ : Configuration [] [ c₁∃ ] []
-c₈ = ⟨ [ tC ‼ 0ᶠ ] , 1 ⟩ᶜ
+c₈ : Configuration Iᶜᶠ[ [] , [ c₁∃ ] , [] ]
+c₈ = ⟨ [ tC ‼ 0ᶠ ] ⟩ᶜ
   ∣∣ A♯
   ∶- refl & refl & refl & refl & refl & refl
 
 --> [C-PutRev]
-c₉ : Configuration [] [ c₂∃ ] []
-c₉ = ⟨ [ withdraw {1} A  ] , 1 ⟩ᶜ
+c₉ : Configuration Iᶜᶠ[ [] , [ c₂∃ ] , [] ]
+c₉ = ⟨ [ withdraw A ] ⟩ᶜ
   ∣∣ A♯
   ∶- refl & refl & refl & refl & refl & refl
 
 --> [C-Withdraw]
-c₁₀ : Configuration [] [] [ A has 1 ]
+c₁₀ : Configuration Iᶜᶠ[ [] , [] , [ A has 1 ] ]
 c₁₀ = ⟨ A , 1 ⟩ᵈ
    ∣∣ A♯
    ∶- refl & refl & refl & refl & refl & refl
@@ -272,7 +272,7 @@ tc-semantics =
       --  All-[]
     ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₃
-  —→⟨ [C-AuthInit] {A = A} {iᵖ = 0ᶠ} {dsˡ = []} {dsʳ = [ B has 0 ]} {Γ = c₃′} {p = refl}
+  —→⟨ [C-AuthInit] {dsˡ = []} {dsʳ = [ B has 0 ]} {Γ = c₃′} {p = refl}
       -- satisfy rads
       (λ { (here refl) → here refl
          ; (there (here refl)) → here refl
@@ -282,7 +282,7 @@ tc-semantics =
       ((here refl) All-∷ ((here refl) All-∷ ((there (here refl)) All-∷ All-[])))
     ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₄
-  —→⟨ [C-AuthInit] {A = B} {iᵖ = 1ᶠ} {dsˡ = []} {dsʳ = []} {Γ = c₄′} {p = refl}
+  —→⟨ [C-AuthInit] {dsˡ = []} {dsʳ = []} {Γ = c₄′} {p = refl}
       -- satisfy rads (none in this case)
       (λ { (here refl) → here refl
          ; (there (here refl)) → here refl
@@ -307,7 +307,7 @@ tc-semantics =
       refl
     ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₆
-  —→⟨ [C-AuthRev] {A = A} {s = a} {n = 9} {Γ = ⟨ tC , 1 ⟩ᶜ}
+  —→⟨ [C-AuthRev] {s = a} {n = 9} {Γ = ⟨ tC ⟩ᶜ}
       -- valid length given
       refl
     ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢

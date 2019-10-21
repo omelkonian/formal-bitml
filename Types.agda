@@ -43,6 +43,17 @@ Secrets = List Secret
 Time : Set
 Time = ℕ
 
+variable
+  n : ℕ
+
+  v v′ v″ : Value
+  vs vs′ vs″ vsᶜ vsᵛ vsᵖ vsᵛₗ vsᵖₗ vsᵛᵣ vsᵖᵣ : Values
+
+  p p′ : Participant
+
+  s s′ s″ : Secret
+  ss ss′ ssₗ ssᵣ : Secrets
+
 ------------------------------------------------------------------------
 -- Arithmetic expressions.
 
@@ -54,19 +65,17 @@ data Arith :
 
   `len : (s : Secret) → Arith [ s ]
 
-  _`+_ : ∀ {s sₗ sᵣ}
-       → Arith sₗ
-       → Arith sᵣ
-       → .{_ : s ≡ sₗ ++ sᵣ}
-       → Arith s
+  _`+_ : Arith ssₗ
+       → Arith ssᵣ
+       → .{_ : ss ≡ ssₗ ++ ssᵣ}
+       → Arith ss
 
-  _`-_ : ∀ {s sₗ sᵣ}
-       → Arith sₗ
-       → Arith sᵣ
-       → .{_ : s ≡ sₗ ++ sᵣ}
-       → Arith s
+  _`-_ : Arith ssₗ
+       → Arith ssᵣ
+       → .{_ : ss ≡ ssₗ ++ ssᵣ}
+       → Arith ss
 
-⟦_⟧ᵃ : ∀ {s} → Arith s → ℕ
+⟦_⟧ᵃ : Arith ss → ℕ
 ⟦ ` x    ⟧ᵃ = x
 ⟦ `len s ⟧ᵃ = lengthˢ s
 ⟦ l `+ r ⟧ᵃ = ⟦ l ⟧ᵃ + ⟦ r ⟧ᵃ
@@ -81,30 +90,27 @@ data Predicate :
 
   `True : Predicate []
 
-  _`∧_ : ∀ {s sₗ sᵣ}
-       → Predicate sₗ
-       → Predicate sᵣ
-       → .{_ : s ≡ sₗ ++ sᵣ}
-       → Predicate s
+  _`∧_ : Predicate ssₗ
+       → Predicate ssᵣ
+       → .{_ : ss ≡ ssₗ ++ ssᵣ}
+       → Predicate ss
 
-  `¬_ : ∀ {s} → Predicate s → Predicate s
+  `¬_ : Predicate ss → Predicate ss
 
-  _`≡_ : ∀ {s sₗ sᵣ}
-       → Arith sₗ
-       → Arith sᵣ
-       → .{_ : s ≡ sₗ ++ sᵣ}
-       → Predicate s
+  _`≡_ : Arith ssₗ
+       → Arith ssᵣ
+       → .{_ : ss ≡ ssₗ ++ ssᵣ}
+       → Predicate ss
 
-  _`<_ : ∀ {s sₗ sᵣ}
-       → Arith sₗ
-       → Arith sᵣ
-       → .{_ : s ≡ sₗ ++ sᵣ}
-       → Predicate s
+  _`<_ : Arith ssₗ
+       → Arith ssᵣ
+       → .{_ : ss ≡ ssₗ ++ ssᵣ}
+       → Predicate ss
 
-⟦_⟧ᵇ : ∀ {s} → Predicate s → Bool
-⟦ `True ⟧ᵇ = true
+⟦_⟧ᵇ : Predicate ss → Bool
+⟦ `True ⟧ᵇ  = true
 ⟦ l `∧ r ⟧ᵇ = ⟦ l ⟧ᵇ ∧ ⟦ r ⟧ᵇ
-⟦ `¬ p ⟧ᵇ = not ⟦ p ⟧ᵇ
+⟦ `¬ p ⟧ᵇ   = not ⟦ p ⟧ᵇ
 ⟦ l `≡ r ⟧ᵇ with ⟦ l ⟧ᵃ ≟ ⟦ r ⟧ᵃ
 ... | yes _ = true
 ... | no  _ = false
@@ -138,33 +144,39 @@ open import Data.Set' {A = Value} _≟_ using () renaming (_≟ₗ_ to _≟ₙ�
 -------------------------------------------------------------------
 -- Contract preconditions.
 
-data Precondition : Values -- volatile deposits
-                  → Values -- persistent deposits
-                  → Set where
+-- Indices for `Precondition`.
+record Preconditionⁱ : Set where
+  constructor Iᵖ[_,_]
+  field
+    volatileDeposits   : Values
+    persistentDeposits : Values
+open Preconditionⁱ public
+variable pi pi′ : Preconditionⁱ
+
+data Precondition : Preconditionⁱ → Set where
 
   -- volatile deposit
-  _:?_ : Participant → (v : Value) → Precondition [ v ] []
+  _:?_ : Participant → (v : Value) → Precondition Iᵖ[ [ v ] , [] ]
 
   -- persistent deposit
-  _:!_ : Participant → (v : Value) → Precondition [] [ v ]
+  _:!_ : Participant → (v : Value) → Precondition Iᵖ[ [] , [ v ] ]
 
   -- committed secret (random nonce) by <Participant>
-  _:secret_ : Participant → Secret → Precondition [] []
+  _:secret_ : Participant → Secret → Precondition Iᵖ[ [] , [] ]
 
   -- composition
-  _∣_∶-_ : ∀ {vsᵛ vsᵖ vsᵛₗ vsᵖₗ vsᵛᵣ vsᵖᵣ}
-         → Precondition vsᵛₗ vsᵖₗ
-         → Precondition vsᵛᵣ vsᵖᵣ
+  _∣_∶-_ : Precondition Iᵖ[ vsᵛₗ , vsᵖₗ ]
+         → Precondition Iᵖ[ vsᵛᵣ , vsᵖᵣ ]
          → .( (vsᵛ ≡ vsᵛₗ ++ vsᵛᵣ)
             × (vsᵖ ≡ vsᵖₗ ++ vsᵖᵣ))
-         → Precondition vsᵛ vsᵖ
+         → Precondition Iᵖ[ vsᵛ , vsᵖ ]
 
 _∣_ : ∀ {vsᵛ vsᵖ vsᵛₗ vsᵖₗ vsᵛᵣ vsᵖᵣ}
-    → Precondition vsᵛₗ vsᵖₗ
-    → Precondition vsᵛᵣ vsᵖᵣ
+    → Precondition Iᵖ[ vsᵛₗ , vsᵖₗ ]
+    → Precondition Iᵖ[ vsᵛᵣ , vsᵖᵣ ]
     → {_ : True (vsᵛ ≟ₙₛ vsᵛₗ ++ vsᵛᵣ)}
     → {_ : True (vsᵖ ≟ₙₛ vsᵖₗ ++ vsᵖᵣ)}
-    → Precondition vsᵛ vsᵖ
+    → Precondition Iᵖ[ vsᵛ , vsᵖ ]
 (l ∣ r) {p₁} {p₂} = l ∣ r ∶- toWitness p₁ , toWitness p₂
 
 infix  5 _:?_
@@ -233,7 +245,7 @@ Set⟨Secret⟩ = Set'
 -- Sets of arithmetic expressions.
 open SETₛ  using () renaming (_≟ₗ_ to _≟ₛₛ_)
 
-_≟ₐᵣ_ : ∀ {s} → Decidable {A = Arith s} _≡_
+_≟ₐᵣ_ : Decidable {A = Arith ss} _≡_
 (` x)  ≟ₐᵣ (` y)      with x ≟ y
 ... | no ¬p           = no λ{refl → ¬p refl}
 ... | yes refl        = yes refl
@@ -242,10 +254,10 @@ _≟ₐᵣ_ : ∀ {s} → Decidable {A = Arith s} _≡_
 `len s   ≟ₐᵣ `len .s = yes refl
 `len _   ≟ₐᵣ (_ `+ _) = no λ ()
 `len _   ≟ₐᵣ (_ `- _) = no λ ()
-(_`+_ {s} {sₗ} {sᵣ} x x′) ≟ₐᵣ (_`+_ {s′} {sₗ′} {sᵣ′} y y′)
-                      with sₗ ≟ₛₛ sₗ′
+(_`+_ {ssₗ = ssₗ} {ssᵣ = ssᵣ} {ss = ss}  x x′) ≟ₐᵣ (_`+_ {ssₗ = ssₗ′} {ssᵣ = ssᵣ′} {ss = ss′} y y′)
+                      with ssₗ ≟ₛₛ ssₗ′
 ... | no ¬p           = no λ{refl → ¬p refl}
-... | yes refl        with sᵣ ≟ₛₛ sᵣ′
+... | yes refl        with ssᵣ ≟ₛₛ ssᵣ′
 ... | no ¬p           = no λ{refl → ¬p refl}
 ... | yes refl        with x ≟ₐᵣ y
 ... | no ¬p           = no λ{refl → ¬p refl}
@@ -255,10 +267,10 @@ _≟ₐᵣ_ : ∀ {s} → Decidable {A = Arith s} _≡_
 (_ `+ _) ≟ₐᵣ (` _) = no λ ()
 (_ `+ _) ≟ₐᵣ `len _ = no λ ()
 (_ `+ _) ≟ₐᵣ (_ `- _) = no λ ()
-(_`-_ {s} {sₗ} {sᵣ} x x′) ≟ₐᵣ (_`-_ {s′} {sₗ′} {sᵣ′} y y′)
-                      with sₗ ≟ₛₛ sₗ′
+(_`-_ {ssₗ = ssₗ} {ssᵣ = ssᵣ} {ss = ss}  x x′) ≟ₐᵣ (_`-_ {ssₗ = ssₗ′} {ssᵣ = ssᵣ′} {ss = ss′} y y′)
+                      with ssₗ ≟ₛₛ ssₗ′
 ... | no ¬p           = no λ{refl → ¬p refl}
-... | yes refl        with sᵣ ≟ₛₛ sᵣ′
+... | yes refl        with ssᵣ ≟ₛₛ ssᵣ′
 ... | no ¬p           = no λ{refl → ¬p refl}
 ... | yes refl        with x ≟ₐᵣ y
 ... | no ¬p           = no λ{refl → ¬p refl}
@@ -270,17 +282,17 @@ _≟ₐᵣ_ : ∀ {s} → Decidable {A = Arith s} _≡_
 (_ `- _) ≟ₐᵣ (_ `+ _) = no λ ()
 
 -- Sets of predicates.
-_≟ₚᵣₑ_ : ∀ {s} → Decidable {A = Predicate s} _≡_
+_≟ₚᵣₑ_ : Decidable {A = Predicate ss} _≡_
 `True ≟ₚᵣₑ `True       = yes refl
 `True ≟ₚᵣₑ (_ `∧ _)    = no λ ()
 `True ≟ₚᵣₑ (`¬ _)      = no λ ()
 `True ≟ₚᵣₑ (_ `≡ _)    = no λ ()
 `True ≟ₚᵣₑ (_ `< _)    = no λ ()
 
-(_`∧_ {_} {sₗ} {sᵣ} x y) ≟ₚᵣₑ (_`∧_ {_} {sₗ′} {sᵣ′} x′ y′)
-                       with sₗ ≟ₛₛ sₗ′
+(_`∧_ {ssₗ = ssₗ} {ssᵣ = ssᵣ} x y) ≟ₚᵣₑ (_`∧_ {ssₗ = ssₗ′} {ssᵣ = ssᵣ′} x′ y′)
+                       with ssₗ ≟ₛₛ ssₗ′
 ... | no ¬p            = no λ{refl → ¬p refl}
-... | yes refl         with sᵣ ≟ₛₛ sᵣ′
+... | yes refl         with ssᵣ ≟ₛₛ ssᵣ′
 ... | no ¬p            = no λ{refl → ¬p refl}
 ... | yes refl         with x ≟ₚᵣₑ x′
 ... | no ¬p            = no λ{refl → ¬p refl}
@@ -300,10 +312,10 @@ _≟ₚᵣₑ_ : ∀ {s} → Decidable {A = Predicate s} _≡_
 (`¬ _) ≟ₚᵣₑ (_ `≡ _)   = no λ ()
 (`¬ _) ≟ₚᵣₑ (_ `< _)   = no λ ()
 
-(_`≡_ {_} {sₗ} {sᵣ} x y) ≟ₚᵣₑ (_`≡_ {_} {sₗ′} {sᵣ′} x′ y′)
-                       with sₗ ≟ₛₛ sₗ′
+(_`≡_ {ssₗ = ssₗ} {ssᵣ = ssᵣ} x y) ≟ₚᵣₑ (_`≡_ {ssₗ = ssₗ′} {ssᵣ = ssᵣ′} x′ y′)
+                       with ssₗ ≟ₛₛ ssₗ′
 ... | no ¬p            = no λ{refl → ¬p refl}
-... | yes refl         with sᵣ ≟ₛₛ sᵣ′
+... | yes refl         with ssᵣ ≟ₛₛ ssᵣ′
 ... | no ¬p            = no λ{refl → ¬p refl}
 ... | yes refl         with x ≟ₐᵣ x′
 ... | no ¬p            = no λ{refl → ¬p refl}
@@ -315,10 +327,10 @@ _≟ₚᵣₑ_ : ∀ {s} → Decidable {A = Predicate s} _≡_
 (_ `≡ _) ≟ₚᵣₑ (_ `∧ _) = no λ ()
 (_ `≡ _) ≟ₚᵣₑ (_ `< _) = no λ ()
 
-(_`<_ {_} {sₗ} {sᵣ} x y) ≟ₚᵣₑ (_`<_ {_} {sₗ′} {sᵣ′} x′ y′)
-                       with sₗ ≟ₛₛ sₗ′
+(_`<_ {ssₗ = ssₗ} {ssᵣ = ssᵣ} x y) ≟ₚᵣₑ (_`<_ {ssₗ = ssₗ′} {ssᵣ = ssᵣ′} x′ y′)
+                       with ssₗ ≟ₛₛ ssₗ′
 ... | no ¬p            = no λ{refl → ¬p refl}
-... | yes refl         with sᵣ ≟ₛₛ sᵣ′
+... | yes refl         with ssᵣ ≟ₛₛ ssᵣ′
 ... | no ¬p            = no λ{refl → ¬p refl}
 ... | yes refl         with x ≟ₐᵣ x′
 ... | no ¬p            = no λ{refl → ¬p refl}
@@ -331,7 +343,7 @@ _≟ₚᵣₑ_ : ∀ {s} → Decidable {A = Predicate s} _≡_
 (_ `< _) ≟ₚᵣₑ (_ `≡ _) = no λ ()
 
 -- Sets of preconditions.
-_≟ₚᵣ_ : ∀ {vsᵛ vsᵖ} → Decidable {A = Precondition vsᵛ vsᵖ} _≡_
+_≟ₚᵣ_ : Decidable {A = Precondition pi} _≡_
 (x :? v)      ≟ₚᵣ (x′ :? v′)      with x ≟ₚ x′
 ... | no x≢x′                     = no λ{refl → x≢x′ refl}
 ... | yes refl                    with v ≟ v′
@@ -353,15 +365,15 @@ _≟ₚᵣ_ : ∀ {vsᵛ vsᵖ} → Decidable {A = Precondition vsᵛ vsᵖ} _�
 ... | yes refl                    = yes refl
 (_ :secret _) ≟ₚᵣ (_ ∣ _ ∶- _)         = no λ ()
 
-(_∣_∶-_ {_} {_} {vsᵛˡ} {vsᵛʳ} {vsᵖˡ} {vsᵖʳ} p₁ p₂ _) ≟ₚᵣ
-  (_∣_∶-_ {_} {_} {vsᵛˡ′} {vsᵛʳ′} {vsᵖˡ′} {vsᵖʳ′} p₁′ p₂′ _)
-                                  with vsᵛˡ ≟ₙₛ vsᵛˡ′
+(_∣_∶-_ {vsᵛₗ = vsᵛₗ} {vsᵖₗ = vsᵖₗ} {vsᵛᵣ = vsᵛᵣ} {vsᵖᵣ = vsᵖᵣ} p₁ p₂ _) ≟ₚᵣ
+  (_∣_∶-_ {vsᵛₗ = vsᵛₗ′} {vsᵖₗ = vsᵖₗ′} {vsᵛᵣ = vsᵛᵣ′} {vsᵖᵣ = vsᵖᵣ′} p₁′ p₂′ _)
+                                  with vsᵛₗ ≟ₙₛ vsᵛₗ′
 ... | no ¬p                       = no λ{refl → ¬p refl}
-... | yes refl                    with vsᵛʳ ≟ₙₛ vsᵛʳ′
+... | yes refl                    with vsᵛᵣ ≟ₙₛ vsᵛᵣ′
 ... | no ¬p                       = no λ{refl → ¬p refl}
-... | yes refl                    with vsᵖˡ ≟ₙₛ vsᵖˡ′
+... | yes refl                    with vsᵖₗ ≟ₙₛ vsᵖₗ′
 ... | no ¬p                       = no λ{refl → ¬p refl}
-... | yes refl                    with vsᵖʳ ≟ₙₛ vsᵖʳ′
+... | yes refl                    with vsᵖᵣ ≟ₙₛ vsᵖᵣ′
 ... | no ¬p                       = no λ{refl → ¬p refl}
 ... | yes refl                    with p₁ ≟ₚᵣ p₁′
 ... | no ¬p                       = no λ{refl → ¬p refl}

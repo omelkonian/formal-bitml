@@ -39,101 +39,94 @@ open import Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
 
 --------------------------------------------------------------------------------
 
-ex-cs : ∃[ v ] ∃[ vs ] Contracts v vs
-ex-cs = 1 , [] , [ withdraw A ]
+ex-cs : Contracts Iᶜ[ 1 , [] ]
+ex-cs = [ withdraw A ]
 
-∃ex-ad : ∃[ v ] ∃[ vsᶜ ] ∃[ vsᵛ ] ∃[ vsᵖ ] Advertisement v vsᶜ vsᵛ vsᵖ
-∃ex-ad = 5 , [ 100 ] , [ 100 ] , 2 ∷ 3 ∷ [] , ex-ad
+∃ex-cs : ∃[ ci ] Contracts ci
+∃ex-cs = Iᶜ[ 1 , [] ] , [ withdraw A ]
+
+∃ex-ad : ∃[ ci ] ∃[ pi ] Advertisement ci pi
+∃ex-ad = Iᶜ[ 5 , [ 100 ] ] , Iᵖ[ [ 100 ] , 2 ∷ 3 ∷ [] ] , ex-ad
 
 -- empty
-_ : Configuration [] [] []
+_ : Configuration Iᶜᶠ[ [] , [] , [] ]
 _ = ∅ᶜ
 
 -- advertisements
-_ : Configuration [ 5 , [ 100 ] , [ 100 ] , 2 ∷ 3 ∷ [] , ex-ad ] [] []
+_ : Configuration Iᶜᶠ[ [ ∃ex-ad ] , [] , [] ]
 _ = ` ex-ad
 
 -- active contracts
-_ : Configuration [] [ 1 , [] , [ withdraw A ] ] []
-_ = ⟨ ex-contracts₁ , 1 ⟩ᶜ
+_ : Configuration Iᶜᶠ[ [] , [ ∃ex-cs ] , [] ]
+_ = ⟨ ex-contracts₁ ⟩ᶜ
 
 -- deposits
-_ : Configuration [] [] (A has 4 ∷ [ A has 6 ])
+_ : Configuration Iᶜᶠ[ [] , [] , A has 4 ∷ [ A has 6 ] ]
 _ = ⟨ A , 4 ⟩ᵈ ∣∣ ⟨ A , 6 ⟩ᵈ
 
 -- authorized actions
 
 -- 1. donate
-_ : Configuration′ ([] , []) ([] , []) ([ B has 55 ] , [ A has 55 ])
-_ = A auth[ Action A [] [] [ 55 ] [ B has 55 ] ∋
+_ : Configuration′ Iᶜᶠ[ [] & [] , [] & [] , [ B has 55 ] & [ A has 55 ] ]
+_ = A auth[ Action A Iᵃᶜ[ [] , [] , [ 55 ] , [ B has 55 ] ] ∋
             0ᶠ ▷ᵈ B
           ]
 
 -- 2. divide
-_ : Configuration′ ([] , []) ([] , []) (A has 33 ∷ A has 67 ∷ [] , [ A has 100 ])
-_ = A auth[ Action A [] [] [ 100 ] (A has 33 ∷ A has 67 ∷ []) ∋
+_ : Configuration′ Iᶜᶠ[ [] & [] , [] & [] , (A has 33 ∷ A has 67 ∷ []) & [ A has 100 ] ]
+_ = A auth[ Action A Iᵃᶜ[ [] , [] , [ 100 ] , A has 33 ∷ A has 67 ∷ [] ] ∋
             0ᶠ ▷ 33 , 67
           ]
 
 -- 3. join
-_ : Configuration′ ([] , []) ([] , []) ([ A has 100 ] , A has 33 ∷ A has 67 ∷ [])
-_ = A auth[ Action A [] [] (33 ∷ 67 ∷ []) [ A has 100 ] ∋
+_ : Configuration′ Iᶜᶠ[ [] & [] , [] & [] , [ A has 100 ] & (A has 33 ∷ A has 67 ∷ []) ]
+_ = A auth[ Action A Iᵃᶜ[ [] , [] , 33 ∷ 67 ∷ [] , [ A has 100 ] ] ∋
             0ᶠ ↔ sucᶠ 0ᶠ
           ]
 
 -- 4. secret
-_ : Configuration′ ([] , [ ∃ex-ad ]) ([] , []) ([] , [])
+_ : Configuration′ Iᶜᶠ[ [] & [ ∃ex-ad ] , [] & [] , [] & [] ]
 _ = A auth[ ♯▷ ex-ad ]
 
 -- 5. spend
-_ : Configuration′ ([] , [ ∃ex-ad ]) ([] , []) ([] , [ A has 2 ])
-_ = A auth[ Action A [ ∃ex-ad ] [] [ 2 ] [] ∋
+_ : Configuration′ Iᶜᶠ[ [] & [ ∃ex-ad ] , [] & [] , [] & [ A has 2 ] ]
+_ = A auth[ Action A Iᵃᶜ[ [ ∃ex-ad ] , [] , [ 2 ] , [] ] ∋
             ex-ad ▷ˢ 0ᶠ
           ]
 
 -- 6. take branch
-_ : Configuration′ ([] , []) ([] , [ 5 , [ 100 ] , ex-contracts₃ ]) ([] , [])
+_ : Configuration′ Iᶜᶠ[ [] & [] , [] & [ Iᶜ[ 5 , [ 100 ] ] , ex-contracts₃ ] , [] & [] ]
 _ = A auth[ ex-contracts₃ ▷ᵇ 0ᶠ ]
 
 -- 7. combination
-Γ₁ : Configuration [ ∃ex-ad ]
-                   [ ex-cs ]
-                   []
-Γ₁ = ` ex-ad ∣∣ ⟨ ex-contracts₁ , 1 ⟩ᶜ
+Γ₁ : Configuration Iᶜᶠ[ [ ∃ex-ad ] , [ ∃ex-cs ] , [] ]
+Γ₁ = ` ex-ad ∣∣ ⟨ ex-contracts₁ ⟩ᶜ
 
-Γ₂ : Configuration [ ∃ex-ad ]
-                   [ ex-cs ]
-                   [ A has 1 ]
+Γ₂ : Configuration Iᶜᶠ[ [ ∃ex-ad ] , [ ∃ex-cs ] , [ A has 1 ] ]
 Γ₂ = Γ₁ ∣∣ ⟨ A , 1 ⟩ᵈ
 
-Γ₃ : Configuration [ ∃ex-ad ]
-                   [ ex-cs ]
-                   (A has 1 ∷ A has 2 ∷ [])
+Γ₃ : Configuration Iᶜᶠ[ [ ∃ex-ad ] , [ ∃ex-cs ] , A has 1 ∷ A has 2 ∷ [] ]
 Γ₃ = Γ₂ ∣∣ ⟨ A , 2 ⟩ᵈ
 
-Γ₄ : Configuration [ ∃ex-ad ]
-                   [ ex-cs ]
-                   [ A has 3 ]
+Γ₄ : Configuration Iᶜᶠ[ [ ∃ex-ad ] , [ ∃ex-cs ] , [ A has 3 ] ]
 Γ₄ = Γ₃
-  ∣∣ A auth[ Action A [] [] (1 ∷ 2 ∷ []) [ A has 3 ] ∋
+  ∣∣ A auth[ Action A Iᵃᶜ[ [] , [] , 1 ∷ 2 ∷ [] , [ A has 3 ] ] ∋
              0ᶠ ↔ sucᶠ 0ᶠ
-           ]∶- refl & refl & refl
+           ]∶- refl & refl & refl & refl & refl & refl
 
-Γ₅ : Configuration [ ∃ex-ad ]
-                   [ ex-cs ]
-                   []
+Γ₅ : Configuration Iᶜᶠ[ [ ∃ex-ad ] , [ ∃ex-cs ] , [] ]
 Γ₅ = Γ₄
-  ∣∣ A auth[ Action A [ ∃ex-ad ] [] [ 3 ] [] ∋
+  ∣∣ A auth[ Action A Iᵃᶜ[ [ ∃ex-ad ] , [] , [ 3 ] , [] ] ∋
              ex-ad ▷ˢ sucᶠ 0ᶠ
-           ]∶- refl & refl & refl
+           ]∶- refl & refl & refl & refl & refl & refl
 
 
 -- secrets
-_ : Configuration [] [] []
+_ : Configuration Iᶜᶠ[ [] , [] , [] ]
 _ = (A ∶ "qwerty" ♯ 6)
 
-_ : Configuration [] [] []
+_ : Configuration Iᶜᶠ[ [] , [] , [] ]
 _ = ⟨ A ∶ "qwerty" ♯ just 6 ⟩
 
-_ : Configuration [] [] []
+_ : Configuration Iᶜᶠ[ [] , [] , [] ]
 _ = ⟨ A ∶ "qwerty" ♯ nothing ⟩

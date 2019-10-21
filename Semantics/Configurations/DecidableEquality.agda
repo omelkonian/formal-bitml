@@ -48,8 +48,8 @@ nothing ≟ₛₗ just _  = no λ ()
 nothing ≟ₛₗ nothing = yes refl
 
 -- Configurations.
-_≟ᶜᶠ_ : ∀ {p₁ p₂ p₃} → Decidable {A = Configuration′ p₁ p₂ p₃} _≡_
-_∃≟ᶜᶠ_ : Decidable {A = ∃[ p₁ ] ∃[ p₂ ] ∃[ p₃ ] Configuration′ p₁ p₂ p₃} _≡_
+_≟ᶜᶠ_ : Decidable {A = Configuration′ cf′i} _≡_
+_∃≟ᶜᶠ_ : Decidable {A = ∃[ cf′i ] Configuration′ cf′i} _≡_
 
 ∅ᶜ ≟ᶜᶠ ∅ᶜ            = yes refl
 ∅ᶜ ≟ᶜᶠ (_ auth[ _ ]∶- _) = no λ ()
@@ -61,11 +61,9 @@ _∃≟ᶜᶠ_ : Decidable {A = ∃[ p₁ ] ∃[ p₂ ] ∃[ p₃ ] Configuratio
 (` ad) ≟ᶜᶠ (p auth[ x ]∶- _)    = no λ ()
 (` ad) ≟ᶜᶠ (c′ ∣∣ c′₁ ∶- x) = no λ ()
 
-⟨ c , v ⟩ᶜ ≟ᶜᶠ ⟨ .c , v′ ⟩ᶜ with v ≟ v′
-... | no ¬p    = no λ{refl →  ¬p refl}
-... | yes refl = yes refl
-⟨ c , v ⟩ᶜ ≟ᶜᶠ (p auth[ x ]∶- _)    = no λ ()
-⟨ c , v ⟩ᶜ ≟ᶜᶠ (c′ ∣∣ c′₁ ∶- x) = no λ ()
+⟨ c ⟩ᶜ ≟ᶜᶠ ⟨ .c ⟩ᶜ = yes refl
+⟨ c ⟩ᶜ ≟ᶜᶠ (p auth[ x ]∶- _)    = no λ ()
+⟨ c ⟩ᶜ ≟ᶜᶠ (c′ ∣∣ c′₁ ∶- x) = no λ ()
 
 ⟨ p , v ⟩ᵈ ≟ᶜᶠ ⟨ .p , .v ⟩ᵈ = yes refl
 ⟨ p , v ⟩ᵈ ≟ᶜᶠ (p₁ auth[ x ]∶- _) = no λ ()
@@ -93,7 +91,7 @@ _∃≟ᶜᶠ_ : Decidable {A = ∃[ p₁ ] ∃[ p₂ ] ∃[ p₃ ] Configuratio
 ... | yes refl = yes refl
 (p auth[ x ]∶- _) ≟ᶜᶠ ∅ᶜ = no λ ()
 (p auth[ x ]∶- _) ≟ᶜᶠ (` ad) = no λ ()
-(p auth[ x ]∶- _) ≟ᶜᶠ ⟨ c , v′ ⟩ᶜ = no λ ()
+(p auth[ x ]∶- _) ≟ᶜᶠ ⟨ c ⟩ᶜ = no λ ()
 (p auth[ x ]∶- _) ≟ᶜᶠ ⟨ p₁ , v ⟩ᵈ = no λ ()
 (p auth[ x ]∶- _) ≟ᶜᶠ ⟨ x₁ ∶ s ♯ n ⟩ = no λ ()
 (p auth[ x ]∶- _) ≟ᶜᶠ (x₁ ∶ s ♯ n) = no λ ()
@@ -129,14 +127,26 @@ _∃≟ᶜᶠ_ : Decidable {A = ∃[ p₁ ] ∃[ p₂ ] ∃[ p₃ ] Configuratio
 (x ∶ s ♯ n) ≟ᶜᶠ ⟨ x₁ ∶ s₁ ♯ n₁ ⟩ = no λ ()
 (x ∶ s ♯ n) ≟ᶜᶠ (c′ ∣∣ c′₁ ∶- x₁) = no λ ()
 
-(_∣∣_∶-_ {adsˡ} {radsˡ} {adsʳ} {radsʳ} {ads} {rads}
-         {csˡ} {rcsˡ} {csʳ} {rcsʳ} {cs} {rcs}
-         {dsˡ} {rdsˡ} {dsʳ} {rdsʳ} {ds} {rds}
+(_∣∣_∶-_ {adsˡ} {radsˡ}
+         {csˡ} {rcsˡ}
+         {dsˡ} {rdsˡ}
+         {adsʳ} {radsʳ}
+         {csʳ} {rcsʳ}
+         {dsʳ} {rdsʳ}
+         {ads} {rads}
+         {cs} {rcs}
+         {ds} {rds}
          l r _)
   ≟ᶜᶠ
-  (_∣∣_∶-_ {adsˡ′} {radsˡ′} {adsʳ′} {radsʳ′} {ads′} {rads′}
-         {csˡ′} {rcsˡ′} {csʳ′} {rcsʳ′} {cs′} {rcs′}
-         {dsˡ′} {rdsˡ′} {dsʳ′} {rdsʳ′} {ds′} {rds′}
+  (_∣∣_∶-_ {adsˡ′} {radsˡ′}
+           {csˡ′} {rcsˡ′}
+           {dsˡ′} {rdsˡ′}
+           {adsʳ′} {radsʳ′}
+           {csʳ′} {rcsʳ′}
+           {dsʳ′} {rdsʳ′}
+           {ads′} {rads′}
+           {cs′} {rcs′}
+           {ds′} {rds′}
          l′ r′ _)
   with ads SETₐ.≟ₗ ads′
 ... | no ¬p    = no λ{refl →  ¬p refl}
@@ -200,14 +210,14 @@ _∃≟ᶜᶠ_ : Decidable {A = ∃[ p₁ ] ∃[ p₂ ] ∃[ p₃ ] Configuratio
 ... | yes refl = yes refl
 (c ∣∣ c₁ ∶- x) ≟ᶜᶠ ∅ᶜ = no λ ()
 (c ∣∣ c₁ ∶- x) ≟ᶜᶠ (` ad) = no λ ()
-(c ∣∣ c₁ ∶- x) ≟ᶜᶠ ⟨ c₂ , v′ ⟩ᶜ = no λ ()
+(c ∣∣ c₁ ∶- x) ≟ᶜᶠ ⟨ c₂ ⟩ᶜ = no λ ()
 (c ∣∣ c₁ ∶- x) ≟ᶜᶠ ⟨ p , v ⟩ᵈ = no λ ()
 (c ∣∣ c₁ ∶- x) ≟ᶜᶠ (p auth[ x₁ ]∶- _) = no λ ()
 (c ∣∣ c₁ ∶- x) ≟ᶜᶠ ⟨ x₁ ∶ s ♯ n ⟩ = no λ ()
 (c ∣∣ c₁ ∶- x) ≟ᶜᶠ (x₁ ∶ s ♯ n) = no λ ()
 
-( (ads  , rads)  , (cs  , rcs)  , (ds  , rds)  , c ) ∃≟ᶜᶠ
-  ( (ads′ , rads′) , (cs′ , rcs′) , (ds′ , rds′) , c′ )
+(Iᶜᶠ[ (ads , rads) , (cs , rcs) , (ds , rds) ] , c) ∃≟ᶜᶠ
+  (Iᶜᶠ[ (ads′ , rads′) , (cs′ , rcs′) , (ds′ , rds′) ] , c′)
   with ads SETₐ.≟ₗ ads′
 ... | no ¬p    = no λ{refl →  ¬p refl}
 ... | yes refl

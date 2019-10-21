@@ -21,29 +21,29 @@ open import BitML.Types Participant _≟ₚ_ Honest
 
 --------------------------------------------------------------------------------
 
-ex-contracts₁ : Contracts 1 []
+ex-contracts₁ : Contracts Iᶜ[ 1 , [] ]
 ex-contracts₁ = withdraw A ∙
 
-ex-contracts₂ : Contracts 5 []
-ex-contracts₂ = A ∶ withdraw {5} A
-              ⊕ (put [] &reveal [] if `True ⇒ [ withdraw {5} A ]) {p₁ = tt}
+ex-contracts₂ : Contracts Iᶜ[ 5 , [] ]
+ex-contracts₂ = A ∶ withdraw {Iᶜ[ 5 , _ ]} A
+              ⊕ (put [] &reveal [] if `True ⇒ [ withdraw {Iᶜ[ 5 , _ ]} A ]) {p₁ = tt}
               ∙
 
-ex-contracts₃ : Contracts 5 [ 100 ]
-ex-contracts₃ = (put [ 100 ] &reveal [] if `True ⇒ [ withdraw {105} A ]) {p₁ = tt}
+ex-contracts₃ : Contracts Iᶜ[ 5 , [ 100 ] ]
+ex-contracts₃ = (put [ 100 ] &reveal [] if `True ⇒ [ withdraw {Iᶜ[ 105 , _ ]} A ]) {p₁ = tt}
                  ∙
 
-ex-contracts₄ : Contracts 5 [ 10 ]
-ex-contracts₄ = (A ∶ withdraw {5} B)
-              ⊕ (B ∶ split ( (2 ⊸ withdraw {2} A)
-                           ⊕ (3 ⊸ after 100 ∶ withdraw {3} B)
-                           ⊕ (0 ⊸ (put [ 10 ] &reveal [] if `True ⇒ [ A ∶ withdraw {10} B ]) {p₁ = tt})
+ex-contracts₄ : Contracts Iᶜ[ 5 , [ 10 ] ]
+ex-contracts₄ = (A ∶ withdraw {Iᶜ[ 5 , _ ]} B)
+              ⊕ (B ∶ split ( (2 ⊸ withdraw {Iᶜ[ 2 , _ ]} A)
+                           ⊕ (3 ⊸ after 100 ∶ withdraw {Iᶜ[ 3 , _ ]} B)
+                           ⊕ (0 ⊸ (put [ 10 ] &reveal [] if `True ⇒ [ A ∶ withdraw {Iᶜ[ 10 , _ ]} B ]) {p₁ = tt})
                            ∙))
               ∙
 
 
 -- see BitML paper, Section 2
-pay-or-refund : Advertisement 1 [] [] (1 ∷ 0 ∷ [])
+pay-or-refund : Advertisement Iᶜ[ 1 , [] ] Iᵖ[ [] , 1 ∷ 0 ∷ [] ]
 pay-or-refund = ⟨ A :! 1 ∣ B :! 0 ⟩
                   A ∶ withdraw B
                 ⊕ B ∶ withdraw A
@@ -60,7 +60,7 @@ pay-or-refund = ⟨ A :! 1 ∣ B :! 0 ⟩
                  & refl
 
 
-ex-ad : Advertisement 5 [ 100 ] [ 100 ] (2 ∷ 3 ∷ [])
+ex-ad : Advertisement Iᶜ[ 5 , [ 100 ] ] Iᵖ[ [ 100 ] , 2 ∷ 3 ∷ [] ]
 ex-ad = ⟨ B :! 2
         ∣ A :! 3   ∶- refl & refl
         ∣ A :? 100 ∶- refl & refl

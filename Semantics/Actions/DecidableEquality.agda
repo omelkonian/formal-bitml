@@ -36,7 +36,7 @@ open import Semantics.Actions.Types Participant _≟ₚ_ Honest
 ------------------------------------------------------------------------
 
 -- Actions.
-_≟ᵃᶜ_ : ∀ {p ads cs vs ds} → Decidable {A = Action p ads cs vs ds} _≡_
+_≟ᵃᶜ_ : Decidable {A = Action p aci} _≡_
 
 (♯▷ ad) ≟ᵃᶜ (♯▷ .ad)   = yes refl
 (♯▷ ad) ≟ᵃᶜ (.ad ▷ˢ i) = no λ ()
@@ -95,7 +95,7 @@ destroy i ≟ᵃᶜ (i₁ ▷ v₁ , v₂) = no λ ()
 destroy i ≟ᵃᶜ (i₁ ▷ᵈ p′)     = no λ ()
 
 _∃≟ᵃᶜ_ : Decidable {A = ∃Action} _≡_
-(p , ads , cs , vs , ds , a) ∃≟ᵃᶜ (p′ , ads′ , cs′ , vs′ , ds′ , a′)
+(p , Iᵃᶜ[ ads , cs , vs , ds ] , a) ∃≟ᵃᶜ (p′ , Iᵃᶜ[ ads′ , cs′ , vs′ , ds′ ] , a′)
   with p ≟ₚ p′
 ... | no ¬p = no λ{ refl → ¬p refl}
 ... | yes refl

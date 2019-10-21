@@ -46,18 +46,18 @@ open import BitML.Types Participant _≟ₚ_ Honest
 ------------------------------------------------------------------------
 
 -- Contracts.
-_≟ᶜˢ_ : ∀ {v vs} → Decidable {A = Contracts v vs} _≡_
-_∃≟ᶜˢ_ : Decidable {A = ∃[ v ] ∃[ vs ] Contracts v vs} _≡_
+_≟ᶜˢ_ : Decidable {A = Contracts ci} _≡_
+_∃≟ᶜˢ_ : Decidable {A = ∃Contracts} _≡_
 
 -- NB: mutual recursion needed  here to satisfy the termination checker
-_≟ᶜ_ : ∀ {v vs} → Decidable {A = Contract v vs} _≡_
-_∃s≟ᶜ′_ : ∀ {vs} → Decidable {A = List (∃[ v ] Contract v vs)} _≡_
-_∃s≟ᶜ_ : Decidable {A = List (∃[ v ] ∃[ vs ] Contract v vs)} _≡_
+_≟ᶜ_ : Decidable {A = Contract ci} _≡_
+_∃s≟ᶜ′_ : Decidable {A = List (∃[ v ] Contract Iᶜ[ v , vs ])} _≡_
+_∃s≟ᶜ_ : Decidable {A = List ∃Contract} _≡_
 
 []                  ∃s≟ᶜ []                      = yes refl
 []                  ∃s≟ᶜ (_ ∷ _)                 = no λ ()
 (_ ∷ _)             ∃s≟ᶜ []                      = no λ ()
-((v , vs , c) ∷ cs) ∃s≟ᶜ ((v′ , vs′ , c′) ∷ cs′) with v ≟ v′
+((Iᶜ[ v , vs ] , c) ∷ cs) ∃s≟ᶜ ((Iᶜ[ v′ , vs′ ] , c′) ∷ cs′) with v ≟ v′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl with vs SETₙ.≟ₗ vs′
 ... | no ¬p    = no λ{refl → ¬p refl}
@@ -78,11 +78,11 @@ _∃s≟ᶜ_ : Decidable {A = List (∃[ v ] ∃[ vs ] Contract v vs)} _≡_
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
 
-put_&reveal_if_⇒_∶-_ {_} {v} {vss} {s′ = sᵖ} vs s p c _ ≟ᶜ
- put_&reveal_if_⇒_∶-_ {_} {v′} {vss′} {s′ = sᵖ′} vs′ s′ p′ c′ _
+put_&reveal_if_⇒_∶-_ {ss′ = sᵖ} {v′ = v} {vs′ = vss} vs ss p c _ ≟ᶜ
+ put_&reveal_if_⇒_∶-_ {ss′ = sᵖ′} {v′ = v′} {vs′ = vss′} vs′ ss′ p′ c′ _
                with vs SETₙ.≟ₗ vs′
 ... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with s SETₛ.≟ₗ s′
+... | yes refl with ss SETₛ.≟ₗ ss′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl with sᵖ SETₛ.≟ₗ sᵖ′
 ... | no ¬p    = no λ{refl → ¬p refl}
@@ -95,10 +95,10 @@ put_&reveal_if_⇒_∶-_ {_} {v} {vss} {s′ = sᵖ} vs s p c _ ≟ᶜ
 ... | yes refl with c ≟ᶜˢ c′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
-(put vs &reveal s if x ⇒ c ∶- x₁) ≟ᶜ withdraw _     = no λ ()
-(put vs &reveal s if x ⇒ c ∶- x₁) ≟ᶜ (split _ ∶- _) = no λ ()
-(put vs &reveal s if x ⇒ c ∶- x₁) ≟ᶜ (_ ∶ _)        = no λ ()
-(put vs &reveal s if x ⇒ c ∶- x₁) ≟ᶜ (after _ ∶ _)  = no λ ()
+(put _ &reveal _ if _ ⇒ _ ∶- _) ≟ᶜ withdraw _     = no λ ()
+(put _ &reveal _ if _ ⇒ _ ∶- _) ≟ᶜ (split _ ∶- _) = no λ ()
+(put _ &reveal _ if _ ⇒ _ ∶- _) ≟ᶜ (_ ∶ _)        = no λ ()
+(put _ &reveal _ if _ ⇒ _ ∶- _) ≟ᶜ (after _ ∶ _)  = no λ ()
 
 withdraw x ≟ᶜ withdraw x′ with x ≟ₚ x′
 ... | no ¬p = no λ{refl → ¬p refl}
@@ -136,7 +136,7 @@ withdraw x ≟ᶜ (after _ ∶ _)                         = no λ ()
 (after _ ∶ _) ≟ᶜ (split _ ∶- _)                     = no λ ()
 (after _ ∶ _) ≟ᶜ (_ ∶ _)                            = no λ ()
 
-_∃≟ᶜ_ : Decidable {A = ∃[ v ] ∃[ vs ] Contract v vs} _≡_
+_∃≟ᶜ_ : Decidable {A = ∃[ ci ] Contract ci} _≡_
 c ∃≟ᶜ c′ with [ c ] ∃s≟ᶜ [ c′ ]
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
@@ -150,7 +150,7 @@ c ∃≟ᶜ c′ with [ c ] ∃s≟ᶜ [ c′ ]
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
 
-(v , vs , cs) ∃≟ᶜˢ (v′ , vs′ , cs′) with v ≟ v′
+(Iᶜ[ v , vs ] , cs) ∃≟ᶜˢ (Iᶜ[ v′ , vs′ ] , cs′) with v ≟ v′
 ... | no ¬p = no λ{refl → ¬p refl}
 ... | yes refl with vs SETₙ.≟ₗ vs′
 ... | no ¬p = no λ{refl → ¬p refl}
@@ -163,7 +163,7 @@ Set⟨Contracts⟩ : Set
 Set⟨Contracts⟩ = Set' where open SETᶜ
 
 -- Advertisements.
-_≟ₐ_ : ∀ {v vsᶜ vsᵛ vsᵖ} → Decidable {A = Advertisement v vsᶜ vsᵛ vsᵖ} _≡_
+_≟ₐ_ : Decidable {A = Advertisement ci pi} _≡_
 (⟨ G₁ ⟩ C₁ ∶- _) ≟ₐ (⟨ G₂ ⟩ C₂ ∶- _) with G₁ ≟ₚᵣ G₂
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl with C₁ ≟ᶜˢ C₂
@@ -171,7 +171,7 @@ _≟ₐ_ : ∀ {v vsᶜ vsᵛ vsᵖ} → Decidable {A = Advertisement v vsᶜ vs
 ... | yes refl = yes refl
 
 _∃≟ₐ_ : Decidable {A = ∃Advertisement} _≡_
-(v , vsᶜ , vsᵛ , vsᵖ , ad) ∃≟ₐ (v′ , vsᶜ′ , vsᵛ′ , vsᵖ′ , ad′) with v ≟ v′
+(Iᶜ[ v , vsᶜ ] , Iᵖ[ vsᵛ , vsᵖ ] , ad) ∃≟ₐ (Iᶜ[ v′ , vsᶜ′ ] , Iᵖ[ vsᵛ′ , vsᵖ′ ] , ad′) with v ≟ v′
 ... | no ¬p = no λ{refl → ¬p refl}
 ... | yes refl with vsᶜ SETₙ.≟ₗ vsᶜ′
 ... | no ¬p = no λ{refl → ¬p refl}

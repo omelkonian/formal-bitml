@@ -37,18 +37,11 @@ open import Semantics.InferenceRules         Participant _≟ₚ_ Honest
 open import Semantics.Labels.Types           Participant _≟ₚ_ Honest
 
 variable
-  ads ads′ ads″ rads adsʳ radsʳ adsˡ radsˡ : AdvertisedContracts
-  cs  cs′  cs″  rcs  csʳ  rcsʳ  csˡ  rcsˡ  : ActiveContracts
-  ds  ds′  ds″  rds  dsʳ  rdsʳ  dsˡ  rdsˡ  : Deposits
-  Γ Γ₀ : Configuration ads  cs  ds
-  Γ′   : Configuration ads′ cs′ ds′
-  Γ″   : Configuration ads″ cs″ ds″
-
   p₁ p₁′ : AdvertisedContracts × AdvertisedContracts
   p₂ p₂′ : ActiveContracts     × ActiveContracts
   p₃ p₃′ : Deposits            × Deposits
-  Γp  : Configuration′ p₁  p₂  p₃
-  Γp′ : Configuration′ p₁′ p₂′ p₃′
+  Γp  : Configuration′ Iᶜᶠ[ p₁ , p₂ , p₃ ]
+  Γp′ : Configuration′ Iᶜᶠ[ p₁′ , p₂′ , p₃′ ]
 
 ----------------------------------
 -- Symbolic runs.
@@ -78,13 +71,13 @@ prefixRuns (tc ∷ˢ⟦ α ⟧ R) = let rs = prefixRuns R in rs ++ map (tc ∷ˢ
 --------------------------------------
 -- Stripping.
 
-_∗ᶜ : Configuration′ p₁ p₂ p₃ → Configuration′ p₁ p₂ p₃
+_∗ᶜ : Configuration′ cf′i → Configuration′ cf′i
 ⟨ p ∶ a ♯ _ ⟩ ∗ᶜ = ⟨ p ∶ a ♯ nothing ⟩
 (l ∣∣ r ∶- p) ∗ᶜ = l ∗ᶜ ∣∣ r ∗ᶜ ∶- p
 c             ∗ᶜ = c
 
 _∗ᵗ : ∃TimedConfiguration → ∃TimedConfiguration
-(ads , cs , ds , Γ at t) ∗ᵗ = ads , cs , ds , (Γ ∗ᶜ) at t
+(cfi , Γ at t) ∗ᵗ = cfi , (Γ ∗ᶜ) at t
 
 stripLabel : Label → Label
 stripLabel auth-commit[ p , ad , _ ] = auth-commit[ p , ad , [] ]
@@ -96,12 +89,12 @@ _∗ = mapRun _∗ᵗ stripLabel
 
 infix -1 _——→[_]_
 _——→[_]_ : Run → Label → ∃TimedConfiguration → Set
-R ——→[ α ] (_ , _ , _ , tc′)
-  = proj₂ (proj₂ (proj₂ (lastCfg R))) —→ₜ[ α ] tc′
+R ——→[ α ] (_ , tc′)
+  = proj₂ (lastCfg R) —→ₜ[ α ] tc′
 
-_∈ʳ_ : Configuration′ p₁ p₂ p₃ → Run → Set
-_∈ʳ_ {p₁} {p₂} {p₃} c R =
-  (p₁ , p₂ , p₃ , c) ∈ cfgToList (cfg (proj₂ (proj₂ (proj₂ (lastCfg (R ∗))))))
+_∈ʳ_ : Configuration′ cf′i → Run → Set
+_∈ʳ_ {cf′i = cf′i} c R =
+  (cf′i , c) ∈ cfgToList (cfg (proj₂ (lastCfg (R ∗))))
 
 ----------------------------------
 -- Symbolic strategies.
@@ -199,11 +192,11 @@ module AdvM (Adv : Participant) (Adv∉ : Adv ∉ Hon) where
 
   data _-conforms-to-_ : Run → Strategies → Set where
 
-    base : ∀ {ads cs ds} {Γ : Configuration ads cs ds} {SS : Strategies}
+    base : ∀ {Γ : Configuration cfi} {SS : Strategies}
 
       → Initial Γ
         ----------------------------------------------
-      → ((ads , cs , ds , Γ at 0) ∙ˢ) -conforms-to- SS
+      → ((cfi , Γ at 0) ∙ˢ) -conforms-to- SS
 
     step : ∀ {R : Run} {T′ : ∃TimedConfiguration} {SS : Strategies}
       → R -conforms-to- SS

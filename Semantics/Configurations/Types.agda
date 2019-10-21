@@ -46,63 +46,63 @@ isValidSecret s (just n) with lengthₛ s ≟ n
 ... | yes _ = ⊤
 ... | no  _ = ⊥
 
-data Configuration′ :
-    ------ current ------ × ----- required ------
-    ( AdvertisedContracts × AdvertisedContracts )
-  → ( ActiveContracts     × ActiveContracts     )
-  → ( Deposits            × Deposits            )
-  → Set where
+record Configuration′ⁱ : Set where
+  constructor Iᶜᶠ[_,_,_]
+  field             ------ current ---- × ----- required ----
+    advertisments : AdvertisedContracts × AdvertisedContracts
+    contracts     : ActiveContracts     × ActiveContracts
+    deposits      : Deposits            × Deposits
+open Configuration′ⁱ public
+variable cf′i cf′i′ cf′i″ : Configuration′ⁱ
+
+data Configuration′ : Configuration′ⁱ → Set where
 
   -- empty
-  ∅ᶜ : Configuration′ ([] , []) ([] , []) ([] , [])
+  ∅ᶜ : Configuration′ Iᶜᶠ[ [] & [] , [] & [] , [] & [] ]
 
   -- contract advertisement
-  `_ : ∀ {v vsᶜ vsᵛ vsᵖ}
-     → (ad : Advertisement v vsᶜ vsᵛ vsᵖ)
-     → Configuration′ ([ v , vsᶜ , vsᵛ , vsᵖ , ad ] , []) ([] , []) ([] , [])
+  `_ : (ad : Advertisement ci pi)
+     → Configuration′ Iᶜᶠ[ [ ci , pi , ad ] & [] , [] & [] , [] & [] ]
 
   -- active contract
-  ⟨_,_⟩ᶜ : ∀ {v vs}
-         → (c : Contracts v vs)
-         → (v′ : Value) -- T0D0 remove, redundant?
-         -- → .{pr : True (v ≟ v′)}
-         → Configuration′ ([] , []) ([ v , vs , c ] , []) ([] , [])
+  ⟨_⟩ᶜ : (c : Contracts ci)
+       → Configuration′ Iᶜᶠ[ [] & [] , [ ci , c ] & [] , [] & [] ]
 
   -- deposit redeemable by a participant
   ⟨_,_⟩ᵈ : (p : Participant)
          → (v : Value)
-         → Configuration′ ([] , []) ([] , []) ([ p has v ] , [])
+         → Configuration′ Iᶜᶠ[ [] & [] , [] & [] , [ p has v ] & [] ]
 
   -- authorization to perform an action
-  _auth[_]∶-_ : ∀ {ads cs vs ds} {p₁ p₂ p₃}
+  _auth[_]∶-_ : ∀ {p₁₁ p₁₂ p₂₁ p₂₂ p₃₁ p₃₂}
               → (p : Participant)
-              → Action p ads cs vs ds
-              → .( (p₁ ≡ ([] , ads))
-                 × (p₂ ≡ ([] , cs))
-                 × (p₃ ≡ (ds , ((p has_) <$> vs)))
+              → Action p Iᵃᶜ[ ads , cs , vs , ds ]
+              → .( (p₁₁ ≡ [])
+                 × (p₁₂ ≡ ads)
+                 × (p₂₁ ≡ [])
+                 × (p₂₂ ≡ cs)
+                 × (p₃₁ ≡ ds)
+                 × (p₃₂ ≡ ((p has_) <$> vs))
                  )
-              → Configuration′ p₁ p₂ p₃
+              → Configuration′ Iᶜᶠ[ p₁₁ & p₁₂ , p₂₁ & p₂₂ , p₃₁ & p₃₂ ]
 
   -- committed secret
   ⟨_∶_♯_⟩ : Participant
           → (s : Secret)
           → (n : Maybe ℕ)
           → .{pr : isValidSecret s n}
-          → Configuration′ ([] , []) ([] , []) ([] , [])
+          → Configuration′ Iᶜᶠ[ [] & [] , [] & [] , [] & [] ]
 
   -- revealed secret
   _∶_♯_ : Participant
         → (s : Secret)
         → (n : ℕ)
         → .{pr : True (lengthₛ s ≟ n)}
-        → Configuration′ ([] , []) ([] , []) ([] , [])
+        → Configuration′ Iᶜᶠ[ [] & [] , [] & [] , [] & [] ]
 
   -- parallel composition
-  _∣∣_∶-_ : ∀ {adsˡ radsˡ adsʳ radsʳ ads rads : AdvertisedContracts}
-              {csˡ rcsˡ csʳ rcsʳ cs rcs : ActiveContracts}
-              {dsˡ rdsˡ dsʳ rdsʳ ds rds : Deposits}
-          → Configuration′ (adsˡ , radsˡ) (csˡ , rcsˡ) (dsˡ , rdsˡ)
-          → Configuration′ (adsʳ , radsʳ) (csʳ , rcsʳ) (dsʳ , rdsʳ)
+  _∣∣_∶-_ : Configuration′ Iᶜᶠ[ adsˡ & radsˡ , csˡ & rcsˡ , dsˡ & rdsˡ ]
+          → Configuration′ Iᶜᶠ[ adsʳ & radsʳ , csʳ & rcsʳ , dsʳ & rdsʳ ]
           → .( ads  ≡ adsˡ ++ adsʳ
              × rads ≡ radsˡ ++ (radsʳ SETₐ.\\ adsˡ)
              × cs   ≡ csˡ  ++ csʳ
@@ -110,30 +110,35 @@ data Configuration′ :
              × ds   ≡ (dsˡ SETₑ.\\ rdsʳ) ++ dsʳ -- NB: deposits are "linear"
              × rds  ≡ rdsˡ ++ (rdsʳ SETₑ.\\ dsˡ)
              )
-          → Configuration′ (ads , rads) (cs , rcs) (ds , rds)
+          → Configuration′ Iᶜᶠ[ ads & rads , cs & rcs , ds & rds ]
 
 ∃Configuration′ : Set
-∃Configuration′ = ∃[ p₁ ] ∃[ p₂ ] ∃[ p₃ ] Configuration′ p₁ p₂ p₃
+∃Configuration′ = ∃[ cfi′ ] Configuration′ cfi′
 
 -- "Closed" configurations; they stand on their own.
-Configuration : AdvertisedContracts → ActiveContracts → Deposits → Set
-Configuration ads cs ds = Configuration′ (ads , []) (cs , []) (ds , [])
+
+record Configurationⁱ : Set where
+  constructor Iᶜᶠ[_,_,_]
+  field
+    advertisments : AdvertisedContracts
+    contracts     : ActiveContracts
+    deposits      : Deposits
+open Configurationⁱ public
+variable cfi cfi′ cfi″ : Configurationⁱ
+
+Configuration : Configurationⁱ → Set
+Configuration Iᶜᶠ[ ads , cs , ds ] = Configuration′ Iᶜᶠ[ ads & [] , cs & [] , ds & [] ]
 
 ∃Configuration : Set
-∃Configuration = ∃[ ads ] ∃[ cs ] ∃[ ds ] Configuration ads cs ds
+∃Configuration = ∃[ cfi ] Configuration cfi
 
-record TimedConfiguration (ads : AdvertisedContracts)
-                          (cs  : ActiveContracts)
-                          (ds  : Deposits)
-                          : Set where
+record TimedConfiguration (cfi : Configurationⁱ) : Set where
+  -- constructor _at_
   field
-    cfg  : Configuration ads cs ds
+    cfg  : Configuration cfi
     time : Time
-
+pattern _at_ Γ t = record {cfg = Γ ; time = t}
 open TimedConfiguration public
 
--- _at_ : ∀ {ads cs ds} → Configuration ads cs ds → Time → TimedConfiguration ads cs ds
-pattern _at_ c t = record { cfg = c ; time = t}
-
 ∃TimedConfiguration : Set
-∃TimedConfiguration = ∃[ ads ] ∃[ cs ] ∃[ ds ] TimedConfiguration ads cs ds
+∃TimedConfiguration = ∃[ cfi ] TimedConfiguration cfi

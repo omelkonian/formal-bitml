@@ -28,29 +28,29 @@ open import Semantics.Actions.Types Participant _≟ₚ_ Honest
 --------------------------------------------------------------------------------
 
 -- donate
-_ : Action A [] [] (0 ∷ 10 ∷ 20 ∷ []) [ B has 10 ]
+_ : Action A Iᵃᶜ[ [] , [] , 0 ∷ 10 ∷ 20 ∷ [] , [ B has 10 ] ]
 _ = sucᶠ 0ᶠ ▷ᵈ B
 
 -- divide
-_ : Action A [] [] [ 100 ] (A has 33 ∷ A has 67 ∷ [])
+_ : Action A Iᵃᶜ[ [] , [] , [ 100 ] , A has 33 ∷ A has 67 ∷ [] ]
 _ = 0ᶠ ▷ 33 , 67
 
 -- join
-_ : Action A [] [] (33 ∷ 67 ∷ []) [ A has 100 ]
+_ : Action A Iᵃᶜ[ [] , [] , 33 ∷ 67 ∷ [] , [ A has 100 ] ]
 _ = 0ᶠ ↔ sucᶠ 0ᶠ
 
 -- secret
-_ : Action A [ 5 , [ 100 ] , [ 100 ] , 2 ∷ 3 ∷ [] , ex-ad ] [] [] []
+_ : Action A Iᵃᶜ[ [ Iᶜ[ 5 , [ 100 ] ] , Iᵖ[ [ 100 ] , 2 ∷ 3 ∷ [] ] , ex-ad ] , [] , [] , [] ]
 _ = ♯▷ ex-ad
 
 -- spend
-_ : Action A [ 5 , [ 100 ] , [ 100 ] , 2 ∷ 3 ∷ [] , ex-ad ] [] [ 3 ] []
+_ : Action A Iᵃᶜ[ [ Iᶜ[ 5 , [ 100 ] ] , Iᵖ[ [ 100 ] , 2 ∷ 3 ∷ [] ] , ex-ad ] , [] , [ 3 ] , [] ]
 _ = ex-ad ▷ˢ sucᶠ 0ᶠ
 
 -- take branch
-_ : Action A [] [ 5 , [ 100 ] , ex-contracts₃ ] [] []
+_ : Action A Iᵃᶜ[ [] , [ Iᶜ[ 5 , [ 100 ] ] , ex-contracts₃ ] , [] , [] ]
 _ = ex-contracts₃ ▷ᵇ 0ᶠ
 
 -- destroy
-_ : Action A [] [] [ 100 ] []
+_ : Action A Iᵃᶜ[ [] , [] , [ 100 ] , [] ]
 _ = destroy 0ᶠ

@@ -34,8 +34,8 @@ module SymbolicModel.Helpers
 open import Utilities.Lists
 import Data.Set' as SET
 
-open import Types                            Participant _≟ₚ_ Honest
-open import BitML.Types                      Participant _≟ₚ_ Honest
+open import Types                            Participant _≟ₚ_ Honest hiding (ss)
+open import BitML.Types                      Participant _≟ₚ_ Honest hiding (c)
 open import BitML.DecidableEquality          Participant _≟ₚ_ Honest
 open import Semantics.Actions.Types          Participant _≟ₚ_ Honest
 open import Semantics.Configurations.Types   Participant _≟ₚ_ Honest
@@ -45,35 +45,28 @@ open import Semantics.Labels.Types           Participant _≟ₚ_ Honest
 open import SymbolicModel.Strategy           Participant _≟ₚ_ Honest as SM
 
 variable
-  Δ : Configuration′ ([] , rads) ([] , []) ([] , [])
-  Δs : List (Configuration [] [] [])
+  Δ : Configuration′ Iᶜᶠ[ [] & rads , [] & [] , [] & [] ]
+  Δs : List (Configuration Iᶜᶠ[ [] , [] , [] ])
 
   R R′ R″ : Run
   T T′ T″ : ∃TimedConfiguration
-  α : Label
-  t t′ : Time
 
-  v : Value
-  vs vsᶜ vsᵛ vsᵖ : Values
-  c : Contracts v vs
-  ad : Advertisement v vsᶜ vsᵛ vsᵖ
+  c : Contracts ci
 
   ps : List Participant
   ss : List ValidSecret
 
-  A : Participant
-  secrets : List CommittedSecret
 
-strip-cases-helper : ((v , vs , c) ∷ cs′ ∣∣ᶜˢ Γ) ∗ᶜ
-                   ≡ (  ⟨ c , v ⟩ᶜ
+strip-cases-helper : ((ci , c) ∷ cs′ ∣∣ᶜˢ Γ) ∗ᶜ
+                   ≡ (  ⟨ c ⟩ᶜ
                      ∣∣ (cs′ ∣∣ᶜˢ Γ) ∗ᶜ
-                     ∶- refl & refl & refl & (SETᶜ.\\-left {[ v , vs , c ]}) & refl & refl )
+                     ∶- refl & refl & refl & (SETᶜ.\\-left {[ ci , c ]}) & refl & refl )
 strip-cases-helper = refl
 
 strip-cases : (cs′ ∣∣ᶜˢ Γ) ∗ᶜ ≡ (cs′ ∣∣ᶜˢ (Γ ∗ᶜ))
 strip-cases {cs′ = []} = refl
-strip-cases {cs′ = (v , vs , c) ∷ cs′} {ads} {cs} {ds} {Γ}
-  rewrite strip-cases-helper {v} {vs} {c} {cs′} {ads} {cs} {ds} {Γ}
+strip-cases {cs′ = (ci , c) ∷ cs′} {ads} {cs} {ds} {Γ}
+  rewrite strip-cases-helper {ci} {c} {cs′} {ads} {cs} {ds} {Γ}
         | strip-cases {cs′} {ads} {cs} {ds} {Γ}
         = refl
 
@@ -96,56 +89,56 @@ strip-committedParticipants : committedParticipants (Γp ∗ᶜ) ad
                             ≡ committedParticipants Γp ad
 strip-committedParticipants {Γp = ∅ᶜ}              = refl
 strip-committedParticipants {Γp = ` _}             = refl
-strip-committedParticipants {Γp = ⟨ _ , _ ⟩ᶜ}      = refl
+strip-committedParticipants {Γp = ⟨ _ ⟩ᶜ}          = refl
 strip-committedParticipants {Γp = ⟨ _ , _ ⟩ᵈ}      = refl
 strip-committedParticipants {Γp = _ auth[ _ ]∶- _} = refl
 strip-committedParticipants {Γp = ⟨ _ ∶ _ ♯ _ ⟩}   = refl
 strip-committedParticipants {Γp = _ ∶ _ ♯ _}       = refl
-strip-committedParticipants {ad = ad} {Γp = l ∣∣ r ∶- _}
-  rewrite strip-committedParticipants {ad = ad} {Γp = l}
-        | strip-committedParticipants {ad = ad} {Γp = r}
+strip-committedParticipants {Γp = l ∣∣ r ∶- _} {ad = ad}
+  rewrite strip-committedParticipants {Γp = l} {ad = ad}
+        | strip-committedParticipants {Γp = r} {ad = ad}
         = refl
 
 strip-committedParticipants₂ :
     All (λ p → p SETₚ.∈ committedParticipants Γp ad)                ps
   → All (λ p → p SETₚ.∈ committedParticipants (Γp ∗ᶜ) ad) ps
-strip-committedParticipants₂ {ad = ad} {Γp = Γp} p
-  rewrite strip-committedParticipants {ad = ad} {Γp = Γp} = p
+strip-committedParticipants₂ {Γp = Γp} {ad = ad} p
+  rewrite strip-committedParticipants {Γp = Γp} {ad = ad} = p
 
 strip-spentForStipulation : spentForStipulation (Γp ∗ᶜ) ad
                           ≡ spentForStipulation Γp ad
 strip-spentForStipulation {Γp = ∅ᶜ}              = refl
 strip-spentForStipulation {Γp = ` _}             = refl
-strip-spentForStipulation {Γp = ⟨ _ , _ ⟩ᶜ}      = refl
+strip-spentForStipulation {Γp = ⟨ _ ⟩ᶜ}          = refl
 strip-spentForStipulation {Γp = ⟨ _ , _ ⟩ᵈ}      = refl
 strip-spentForStipulation {Γp = _ auth[ _ ]∶- _} = refl
 strip-spentForStipulation {Γp = ⟨ _ ∶ _ ♯ _ ⟩}   = refl
 strip-spentForStipulation {Γp = _ ∶ _ ♯ _}       = refl
-strip-spentForStipulation {ad = ad} {Γp = l ∣∣ r ∶- _}
-  rewrite strip-spentForStipulation {ad = ad} {Γp = l}
-        | strip-spentForStipulation {ad = ad} {Γp = r}
+strip-spentForStipulation {Γp = l ∣∣ r ∶- _} {ad = ad}
+  rewrite strip-spentForStipulation {Γp = l} {ad = ad}
+        | strip-spentForStipulation {Γp = r} {ad = ad}
         = refl
 
 strip-spentForStipulation₂ : toStipulate (G ad) ≡ spentForStipulation Δ ad
                            → toStipulate (G ad) ≡ spentForStipulation (Δ ∗ᶜ) ad
 strip-spentForStipulation₂ {ad = ad} {Δ = Δ} p
-  rewrite strip-spentForStipulation {ad = ad} {Γp = Δ}  = p
+  rewrite strip-spentForStipulation {Γp = Δ} {ad = ad} = p
 
 
 open import Data.List.Properties using (map-++-commute)
 strip-cfgToList :
-  cfgToList (Γp ∗ᶜ) ≡ map (map₂ (map₂ (map₂ _∗ᶜ))) (cfgToList Γp)
-strip-cfgToList {Γp = ∅ᶜ} = refl
-strip-cfgToList {Γp = ` _} = refl
-strip-cfgToList {Γp = ⟨ _ , _ ⟩ᶜ} = refl
-strip-cfgToList {Γp = ⟨ _ , _ ⟩ᵈ} = refl
+  cfgToList (Γp ∗ᶜ) ≡ map (map₂ _∗ᶜ) (cfgToList Γp)
+strip-cfgToList {Γp = ∅ᶜ}              = refl
+strip-cfgToList {Γp = ` _}             = refl
+strip-cfgToList {Γp = ⟨ _ ⟩ᶜ}          = refl
+strip-cfgToList {Γp = ⟨ _ , _ ⟩ᵈ}      = refl
 strip-cfgToList {Γp = _ auth[ _ ]∶- _} = refl
-strip-cfgToList {Γp = ⟨ _ ∶ _ ♯ _ ⟩} = refl
-strip-cfgToList {Γp = _ ∶ _ ♯ _} = refl
+strip-cfgToList {Γp = ⟨ _ ∶ _ ♯ _ ⟩}   = refl
+strip-cfgToList {Γp = _ ∶ _ ♯ _}       = refl
 strip-cfgToList {Γp = l ∣∣ r ∶- _}
   rewrite strip-cfgToList {Γp = l}
         | strip-cfgToList {Γp = r}
-        = sym (map-++-commute (map₂ (map₂ (map₂ _∗ᶜ))) (cfgToList l) (cfgToList r))
+        = sym (map-++-commute (map₂ _∗ᶜ) (cfgToList l) (cfgToList r))
 
 open import Data.List.Relation.Binary.Permutation.Inductive.Properties using (map⁺)
 strip-≈ : Γp    ≈ Γp′
@@ -153,17 +146,17 @@ strip-≈ : Γp    ≈ Γp′
 strip-≈ {Γp = Γp} {Γp′ = Γp′} Γp≈
   rewrite strip-cfgToList {Γp = Γp}
         | strip-cfgToList {Γp = Γp′}
-        = map⁺ (map₂ (map₂ (map₂ _∗ᶜ))) Γp≈
+        = map⁺ (map₂ _∗ᶜ) Γp≈
 
 strip-lastCfg : lastCfg (R ∗) ≡ (lastCfg R) ∗ᵗ
 strip-lastCfg {_ ∙ˢ}        = refl
 strip-lastCfg {_ ∷ˢ⟦ _ ⟧ _} = refl
 
-strip-idempotent : ∀ (γ : Configuration′ p₁ p₂ p₃) →
+strip-idempotent : ∀ (γ : Configuration′ cf′i) →
   (γ ∗ᶜ) ∗ᶜ ≡ γ ∗ᶜ
 strip-idempotent ∅ᶜ                = refl
 strip-idempotent (` _)             = refl
-strip-idempotent ⟨ _ , _ ⟩ᶜ        = refl
+strip-idempotent ⟨ _ ⟩ᶜ            = refl
 strip-idempotent ⟨ _ , _ ⟩ᵈ        = refl
 strip-idempotent (_ auth[ _ ]∶- _) = refl
 strip-idempotent ⟨ _ ∶ _ ♯ _ ⟩     = refl
@@ -172,7 +165,7 @@ strip-idempotent (l ∣∣ r ∶- _)     rewrite strip-idempotent l
                                         | strip-idempotent r
                                         = refl
 
-strip-strip-rewrite : ∀ {l : Configuration ads cs ds} {γ : Configuration ads′ cs′ ds′} {pr}
+strip-strip-rewrite : ∀ {l : Configuration Iᶜᶠ[ ads , cs , ds ]} {γ : Configuration Iᶜᶠ[ ads′ , cs′ , ds′ ]} {pr}
   → (_∣∣_∶-_ {ads = ads ++ ads′} {rads = []}
              {cs = cs  ++ cs′} {rcs = []}
              {ds = ds ++ ds′} {rds = []}

@@ -28,7 +28,6 @@ open import Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
 DepositIndex : Set
 DepositIndex = ℕ
 
--- T0D0 inherently-typed?
 data Label : Set where
 
   ---------------
@@ -41,7 +40,7 @@ data Label : Set where
   -- A:x,y
   auth-join[_,_↔_] : Participant → DepositIndex → DepositIndex → Label
   -- join(x,y)
-  join[_↔_] :           DepositIndex → DepositIndex → Label
+  join[_↔_] : DepositIndex → DepositIndex → Label
 
   ----------
   -- divide
@@ -49,7 +48,7 @@ data Label : Set where
   -- A:x,v,v'
   auth-divide[_,_▷_,_] : Participant → DepositIndex → Value → Value → Label
   -- divide(x,v,v')
-  divide[_▷_,_] :         DepositIndex → Value → Value → Label
+  divide[_▷_,_] : DepositIndex → Value → Value → Label
 
   ----------
   -- donate
@@ -57,7 +56,7 @@ data Label : Set where
   -- A:x,B
   auth-donate[_,_▷ᵈ_] : Participant → DepositIndex → Participant → Label
   -- donate(x,B)
-  donate[_▷ᵈ_] :         DepositIndex → Participant → Label
+  donate[_▷ᵈ_] : DepositIndex → Participant → Label
 
   -----------
   -- destroy
@@ -65,7 +64,7 @@ data Label : Set where
   -- A:x,j
   auth-destroy[_,_] : Participant → DepositIndex → Label
   -- destroy(x)
-  destroy[_] :               DepositIndex → Label
+  destroy[_] : DepositIndex → Label
 
   -------------
   -- advertise
@@ -79,9 +78,9 @@ data Label : Set where
   -- A:{G}C,Δ
   auth-commit[_,_,_] : Participant → ∃Advertisement → List CommittedSecret → Label
   -- A:{G}C,x
-  auth-init[_,_,_] : Participant → ∃Advertisement → DepositIndex         → Label
+  auth-init[_,_,_] : Participant → ∃Advertisement → DepositIndex → Label
   -- init(G,C)
-  init[_] :                    ∃Advertisement                        → Label
+  init[_] : ∃Advertisement → Label
 
   --------
   -- split
@@ -111,7 +110,7 @@ data Label : Set where
   -- auth-control
 
   -- A:x,D
-  auth-control[_,_▷ᵇ_] : Participant → (c : ∃Contracts) → Index (proj₂ (proj₂ c)) → Label
+  auth-control[_,_▷ᵇ_] : Participant → (c : ∃Contracts) → Index (proj₂ c) → Label
 
   ---------
   -- delay
