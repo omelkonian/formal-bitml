@@ -9,27 +9,14 @@ Browse the Agda code in HTML [here](http://omelkonian.github.io/formal-bitml).
 
 # File structure
 
-- Utilities
-  + `Lists.agda`: Useful list definitions
-    * indexing
-    * `≾` relation on lists
+- `BitML.BasicTypes.agda`: Basic BitML datatypes (+ decidable equality for them)
 
-- Data
-  + `Set'.agda`: Sets from lists and and helpful properties that require decidable equality
-    * `⊆` relation on lists
-    * set operations `∅, ─, ∪` etc...
-    * decidable procedure for `↭`
-
-- `Types.agda`: Basic BitML datatypes (+ decidable equality for them)
-
-- `ExampleSetup.agda`: Setup of hypothetical participants (including an honest one)
-
-- BitML: Contracts and Advertisements
+- BitML.Contracts: Contracts and Advertisements
   * `Types.agda`: Types of contracts and advertisements (+ helper functions)
   * `DecidableEquality.agda`: decidable equality for contracts/advertisements
   * `Examples.agda`: Examples of contracts/advertisements
 
-- Semantics
+- BitML.Semantics
   + Actions: Inherently-typed actions that participants can authorize
     * `Types.agda`: Types of actions
     * `DecidableEquality.agda`: decidable equality for actions
@@ -41,7 +28,18 @@ Browse the Agda code in HTML [here](http://omelkonian.github.io/formal-bitml).
     * `Examples.agda`: Examples of configurations
     * `Helpers.agda`: Shorthands for constructing configurations + implicit-style operators
 
+  + Labels: Untyped labels of inference rules
+    * `Types.agda`: Types of labels
+    * `DecidableEquality.agda`: decidable equality for labels
+    * `Examples.agda`: Examples of labels
+
   + `InferenceRules.agda`: The semantic rules of the BitML calculus, i.e. small-step semantics through configurations
 
-- `Example.agda`: Example inference for the timed-committement example, see Chapter 2 of the BitML paper.
+- BitML.Example: Example contract shown in Chapter 2 of the BitML paper
+  * `ExampleSetup.agda`: Setup of hypothetical participants (including an honest one)
+  * `Example.agda`: Example inference for the timed-committement example
 
+- BitML.SymbolicModel
+  * `Strategy.agda`: Defines honest and adversarial strategies
+  * `Helpers.agda`: Several helpers for dealing with strategies
+  * `Properties.agda`: Meta-theory found in Chapter 5 of the BitML paper

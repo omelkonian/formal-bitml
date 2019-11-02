@@ -34,14 +34,15 @@ open import Category.Functor using (RawFunctor)
 open import Data.List.Categorical renaming (functor to listFunctor)
 open RawFunctor {0ℓ} listFunctor using (_<$>_)
 
-module BitML.Types
+open import Prelude.Lists
+
+module BitML.Contracts.Types
   (Participant : Set)
   (_≟ₚ_ : Decidable {A = Participant} _≡_)
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
   where
 
-open import Utilities.Lists
-open import Types Participant _≟ₚ_ Honest
+open import BitML.BasicTypes Participant _≟ₚ_ Honest
 
 ------------------------------------------------------------------------
 -- Contracts

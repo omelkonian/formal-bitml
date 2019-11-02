@@ -2,7 +2,7 @@
 -- Configurations.
 ------------------------------------------------------------------------
 
-module Semantics.Configurations.Examples where
+module BitML.Semantics.Configurations.Examples where
 
 open import Level        using (0ℓ)
 open import Function     using (_∋_)
@@ -26,16 +26,16 @@ open RawFunctor {0ℓ} listFunctor using (_<$>_)
 
 --------------------------------------------------------------------------------
 
-open import Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
+open import BitML.Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
 
-open import Utilities.Lists
+open import Prelude.Lists
 
-open import Types                            Participant _≟ₚ_ Honest
-open import BitML.Types                      Participant _≟ₚ_ Honest
-open import BitML.Examples
-open import Semantics.Actions.Types          Participant _≟ₚ_ Honest
-open import Semantics.Configurations.Types   Participant _≟ₚ_ Honest
-open import Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
+open import BitML.BasicTypes                       Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types                  Participant _≟ₚ_ Honest
+open import BitML.Contracts.Examples
+open import BitML.Semantics.Actions.Types          Participant _≟ₚ_ Honest
+open import BitML.Semantics.Configurations.Types   Participant _≟ₚ_ Honest
+open import BitML.Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
 
 --------------------------------------------------------------------------------
 

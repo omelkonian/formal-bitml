@@ -2,7 +2,7 @@
 -- Examples of labels.
 ------------------------------------------------------------------------
 
-module Semantics.Labels.Examples where
+module BitML.Semantics.Labels.Examples where
 
 open import Data.List    using (List; []; _∷_; [_])
 
@@ -11,11 +11,11 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 --------------------------------------------------------------------------------
 
-open import Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
+open import BitML.Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
 
-open import Types                  Participant _≟ₚ_ Honest
-open import BitML.Types            Participant _≟ₚ_ Honest
-open import Semantics.Labels.Types Participant _≟ₚ_ Honest
+open import BitML.BasicTypes             Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types        Participant _≟ₚ_ Honest
+open import BitML.Semantics.Labels.Types Participant _≟ₚ_ Honest
 
 --------------------------------------------------------------------------------
 

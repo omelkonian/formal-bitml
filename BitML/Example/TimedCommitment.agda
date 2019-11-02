@@ -1,4 +1,4 @@
-module Example.TimedCommitment where -- (see BitML paper, Section 2)
+module BitML.Example.TimedCommitment where -- (see BitML paper, Section 2)
 
 open import Level        using (0ℓ)
 open import Function     using (_∋_; _∘_)
@@ -25,23 +25,22 @@ open import Relation.Binary using (Decidable)
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl)
 
-open import Utilities.Lists
+open import Prelude.Lists
 
 -------------------------------------------------------------------------
 
-open import Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
+open import BitML.Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
 
-open import Utilities.Lists
 
-open import Types                                      Participant _≟ₚ_ Honest
-open import BitML.Types                                Participant _≟ₚ_ Honest
-open import BitML.DecidableEquality                    Participant _≟ₚ_ Honest
-open import Semantics.Actions.Types                    Participant _≟ₚ_ Honest
-open import Semantics.Labels.Types                     Participant _≟ₚ_ Honest
-open import Semantics.Configurations.Types             Participant _≟ₚ_ Honest
-open import Semantics.Configurations.Helpers           Participant _≟ₚ_ Honest
-open import Semantics.Configurations.DecidableEquality Participant _≟ₚ_ Honest
-open import Semantics.InferenceRules                   Participant _≟ₚ_ Honest hiding (A; B; t)
+open import BitML.BasicTypes                                 Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types                            Participant _≟ₚ_ Honest
+open import BitML.Contracts.DecidableEquality                Participant _≟ₚ_ Honest
+open import BitML.Semantics.Actions.Types                    Participant _≟ₚ_ Honest
+open import BitML.Semantics.Labels.Types                     Participant _≟ₚ_ Honest
+open import BitML.Semantics.Configurations.Types             Participant _≟ₚ_ Honest
+open import BitML.Semantics.Configurations.Helpers           Participant _≟ₚ_ Honest
+open import BitML.Semantics.Configurations.DecidableEquality Participant _≟ₚ_ Honest
+open import BitML.Semantics.InferenceRules                   Participant _≟ₚ_ Honest hiding (A; B; t)
 
 -------------------------------------------------------------------------
 

@@ -20,21 +20,21 @@ open import Relation.Binary using (Decidable)
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl)
 
-module Semantics.Configurations.DecidableEquality
+import Prelude.Set' as SET
+open import Prelude.Lists
+
+module BitML.Semantics.Configurations.DecidableEquality
   (Participant : Set)
   (_≟ₚ_ : Decidable {A = Participant} _≡_)
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
   where
 
-import Data.Set' as SET
-open import Utilities.Lists
-
-open import Types                               Participant _≟ₚ_ Honest
-open import BitML.Types                         Participant _≟ₚ_ Honest
-open import BitML.DecidableEquality             Participant _≟ₚ_ Honest
-open import Semantics.Actions.Types             Participant _≟ₚ_ Honest
-open import Semantics.Actions.DecidableEquality Participant _≟ₚ_ Honest
-open import Semantics.Configurations.Types      Participant _≟ₚ_ Honest
+open import BitML.BasicTypes                          Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types                     Participant _≟ₚ_ Honest
+open import BitML.Contracts.DecidableEquality         Participant _≟ₚ_ Honest
+open import BitML.Semantics.Actions.Types             Participant _≟ₚ_ Honest
+open import BitML.Semantics.Actions.DecidableEquality Participant _≟ₚ_ Honest
+open import BitML.Semantics.Configurations.Types      Participant _≟ₚ_ Honest
 
 -------------------------------------------------------------------
 

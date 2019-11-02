@@ -25,24 +25,24 @@ open import Data.Maybe.Relation.Unary.All using () renaming (All to Allₘ)
 open import Relation.Binary                       using (Decidable)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; cong; sym; trans; inspect)
 
-module SymbolicModel.Helpers
+open import Prelude.Lists
+import Prelude.Set' as SET
+
+module BitML.SymbolicModel.Helpers
   (Participant : Set)
   (_≟ₚ_ : Decidable {A = Participant} _≡_)
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
   where
 
-open import Utilities.Lists
-import Data.Set' as SET
-
-open import Types                            Participant _≟ₚ_ Honest hiding (ss)
-open import BitML.Types                      Participant _≟ₚ_ Honest hiding (c)
-open import BitML.DecidableEquality          Participant _≟ₚ_ Honest
-open import Semantics.Actions.Types          Participant _≟ₚ_ Honest
-open import Semantics.Configurations.Types   Participant _≟ₚ_ Honest
-open import Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
-open import Semantics.InferenceRules         Participant _≟ₚ_ Honest
-open import Semantics.Labels.Types           Participant _≟ₚ_ Honest
-open import SymbolicModel.Strategy           Participant _≟ₚ_ Honest as SM
+open import BitML.BasicTypes                       Participant _≟ₚ_ Honest hiding (ss)
+open import BitML.Contracts.Types                  Participant _≟ₚ_ Honest hiding (c)
+open import BitML.Contracts.DecidableEquality      Participant _≟ₚ_ Honest
+open import BitML.Semantics.Actions.Types          Participant _≟ₚ_ Honest
+open import BitML.Semantics.Configurations.Types   Participant _≟ₚ_ Honest
+open import BitML.Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
+open import BitML.Semantics.InferenceRules         Participant _≟ₚ_ Honest
+open import BitML.Semantics.Labels.Types           Participant _≟ₚ_ Honest
+open import BitML.SymbolicModel.Strategy           Participant _≟ₚ_ Honest as SM
 
 variable
   Δ : Configuration′ Iᶜᶠ[ [] & rads , [] & [] , [] & [] ]

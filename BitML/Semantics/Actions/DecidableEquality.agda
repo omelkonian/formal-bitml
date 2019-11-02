@@ -19,19 +19,19 @@ open import Category.Functor using (RawFunctor)
 open import Data.List.Categorical renaming (functor to listFunctor)
 open RawFunctor {0ℓ} listFunctor using (_<$>_)
 
-module Semantics.Actions.DecidableEquality
+import Prelude.Set' as SET
+open import Prelude.Lists
+
+module BitML.Semantics.Actions.DecidableEquality
   (Participant : Set)
   (_≟ₚ_ : Decidable {A = Participant} _≡_)
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
   where
 
-import Data.Set' as SET
-open import Utilities.Lists
-
-open import Types                   Participant _≟ₚ_ Honest
-open import BitML.Types             Participant _≟ₚ_ Honest
-open import BitML.DecidableEquality Participant _≟ₚ_ Honest
-open import Semantics.Actions.Types Participant _≟ₚ_ Honest
+open import BitML.BasicTypes                  Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types             Participant _≟ₚ_ Honest
+open import BitML.Contracts.DecidableEquality Participant _≟ₚ_ Honest
+open import BitML.Semantics.Actions.Types     Participant _≟ₚ_ Honest
 
 ------------------------------------------------------------------------
 

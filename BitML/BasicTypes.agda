@@ -17,7 +17,7 @@ open import Relation.Nullary.Decidable            using (True; fromWitness; toWi
 open import Relation.Binary                       using (Decidable)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-module Types
+module BitML.BasicTypes
   (Participant : Set)
   (_≟ₚ_ : Decidable {A = Participant} _≡_)
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
@@ -139,7 +139,7 @@ record DepositRef : Set where
     persistent : Bool
 open DepositRef public
 
-open import Data.Set' {A = Value} _≟_ using () renaming (_≟ₗ_ to _≟ₙₛ_)
+open import Prelude.Set' {A = Value} _≟_ using () renaming (_≟ₗ_ to _≟ₙₛ_)
 
 -------------------------------------------------------------------
 -- Contract preconditions.
@@ -188,7 +188,7 @@ infixl 2 _∣_∶-_
 -------------------------------------------------------------------
 -- Decidable equality, set modules.
 
-import Data.Set' as SET
+import Prelude.Set' as SET
 
 -- Sets of values
 module SETₙ = SET {A = Value} _≟_

@@ -2,7 +2,7 @@
 -- Examples of actions.
 ------------------------------------------------------------------------
 
-module Semantics.Actions.Examples where
+module BitML.Semantics.Actions.Examples where
 
 open import Function     using (_∋_)
 open import Data.Nat     using (ℕ; _≟_; _>_; _+_)
@@ -16,14 +16,14 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 --------------------------------------------------------------------------------
 
-open import Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
+open import BitML.Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
 
-open import Utilities.Lists
+open import Prelude.Lists
 
-open import Types                   Participant _≟ₚ_ Honest
-open import BitML.Types             Participant _≟ₚ_ Honest
-open import BitML.Examples
-open import Semantics.Actions.Types Participant _≟ₚ_ Honest
+open import BitML.BasicTypes              Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types         Participant _≟ₚ_ Honest
+open import BitML.Contracts.Examples
+open import BitML.Semantics.Actions.Types Participant _≟ₚ_ Honest
 
 --------------------------------------------------------------------------------
 
