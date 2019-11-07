@@ -21,13 +21,14 @@ open import Relation.Binary.PropositionalEquality using (_≡_; _≢_)
 open import Prelude.Lists
 import Prelude.Set' as SET
 
+open import BitML.BasicTypes
+
 module BitML.SymbolicModel.Strategy
   (Participant : Set)
   (_≟ₚ_ : Decidable {A = Participant} _≡_)
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
   where
 
-open import BitML.BasicTypes                       Participant _≟ₚ_ Honest
 open import BitML.Contracts.Types                  Participant _≟ₚ_ Honest
 open import BitML.Contracts.DecidableEquality      Participant _≟ₚ_ Honest
 open import BitML.Semantics.Actions.Types          Participant _≟ₚ_ Honest

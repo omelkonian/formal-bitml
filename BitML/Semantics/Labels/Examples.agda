@@ -13,7 +13,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import BitML.Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
 
-open import BitML.BasicTypes             Participant _≟ₚ_ Honest
+open import BitML.BasicTypes
 open import BitML.Contracts.Types        Participant _≟ₚ_ Honest
 open import BitML.Semantics.Labels.Types Participant _≟ₚ_ Honest
 

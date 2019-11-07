@@ -10,15 +10,16 @@ open import Data.List    using (List; length)
 open import Relation.Binary                       using (Decidable)
 open import Relation.Binary.PropositionalEquality using (_≡_)
 
+open import Prelude.Lists
+
+open import BitML.BasicTypes
+
 module BitML.Semantics.Labels.Types
   (Participant : Set)
   (_≟ₚ_ : Decidable {A = Participant} _≡_)
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
   where
 
-open import Prelude.Lists
-
-open import BitML.BasicTypes                       Participant _≟ₚ_ Honest
 open import BitML.Contracts.Types                  Participant _≟ₚ_ Honest
 open import BitML.Semantics.Actions.Types          Participant _≟ₚ_ Honest
 open import BitML.Semantics.Configurations.Helpers Participant _≟ₚ_ Honest

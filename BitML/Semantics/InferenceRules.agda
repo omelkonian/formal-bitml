@@ -22,6 +22,8 @@ open import Data.List.All using (All)
 open import Data.List.Properties using (++-identityʳ)
 open import Data.List.Relation.Permutation.Inductive using (_↭_)
 
+open import Data.Vec as V using (Vec)
+
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (⌊_⌋; True; False; toWitness; fromWitness)
 open import Relation.Nullary.Negation using (¬?)
@@ -32,13 +34,16 @@ open Eq using (_≡_; _≢_; decSetoid; refl; cong; sym)
 
 open import Prelude.Lists
 
+open import BitML.BasicTypes
+open import BitML.Predicate.Base hiding (`)
+open import BitML.Predicate.Semantics
+
 module BitML.Semantics.InferenceRules
   (Participant : Set)
   (_≟ₚ_ : Decidable {A = Participant} _≡_)
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
   where
 
-open import BitML.BasicTypes                       Participant _≟ₚ_ Honest
 open import BitML.Contracts.Types                  Participant _≟ₚ_ Honest
 open import BitML.Contracts.DecidableEquality      Participant _≟ₚ_ Honest
 open import BitML.Semantics.Actions.Types          Participant _≟ₚ_ Honest
@@ -415,36 +420,34 @@ data _—→[_]_ : Configuration cfi
   [C-PutRev] :
     ∀ {v vs″} {c : Contract Iᶜ[ v , vs″ ]}
       {v′ vs′} {c′ : Contracts Iᶜ[ v′ , vs′ ]}
-      {s s′ : Secrets} {p : Predicate s′}
+      {n : ℕ} {p : Predicate (Ctx n)}
       {vs : Values} {ds′ : Deposits}
-      {ss : List ValidSecret}
+      {Δ : Vec ValidSecret n}
+
+    → let ss = V.map (proj₁ ∘ proj₂) Δ in
 
       -- `put` command
-    → (pr : Put vs vs′ vs″
-          × v′ ≡ v + sum vs
-          × s′ SETₛ.⊆ s)
-    → c ≡ (put vs &reveal s if p ⇒ c′ ∶- pr)
-
-      -- revealed secrets
-    → map (proj₁ ∘ proj₂) ss ≡ s
+      (pr : Put vs vs′ vs″
+          × v′ ≡ v + sum vs)
+    → c ≡ (put vs &reveal ss if p ⇒ c′ ∶- pr)
 
       -- put deposits
     → map value ds′ ≡ vs
 
       -- predicate is true
-    → ⟦ p ⟧ᵇ ≡ true
+    → ⟦ p ⟧ ss ≡ true
 
       ------------------------------------------------------------
 
     → Configuration Iᶜᶠ[ ads , (Iᶜ[ v , vs″ ] , [ c ]) ∷ cs , ds′ ++ ds ] ∋
       (  ⟨ [ c ] ⟩ᶜ
-      ∣∣ (ds′ ∣∣ᵈˢ (ss ∣∣ˢˢ Γ))
+      ∣∣ (ds′ ∣∣ᵈˢ (V.toList Δ ∣∣ˢˢ Γ))
       ∶- refl & refl & refl & refl & refl & refl
       )
-      —→[ put[ vs , s ] ]
+      —→[ put[ vs , V.toList ss ] ]
       Configuration Iᶜᶠ[ ads , (Iᶜ[ v′ , vs′ ] , c′) ∷ cs , ds ] ∋
       (  ⟨ c′ ⟩ᶜ
-      ∣∣ (ss ∣∣ˢˢ Γ)
+      ∣∣ (V.toList Δ ∣∣ˢˢ Γ)
       ∶- refl & refl & refl & refl & refl & refl
       )
 

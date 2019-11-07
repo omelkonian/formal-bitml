@@ -6,23 +6,24 @@ open import Level        using (0ℓ)
 open import Function     using (_∘_)
 open import Data.Empty   using (⊥; ⊥-elim)
 open import Data.Unit    using (tt; ⊤)
+open import Data.Product using (_×_; _,_; proj₁; proj₂; ∃; ∃₂; ∃-syntax; Σ; Σ-syntax)
 open import Data.Bool    using (T; true; false)
   renaming (_≟_ to _≟ᵇ_)
-open import Data.List    using ( List; []; _∷_; [_]; _++_
-                               ; map; concatMap; length; filter
-                               )
-open import Data.Product using (_×_; _,_; proj₁; proj₂; ∃; ∃₂; ∃-syntax; Σ; Σ-syntax)
+open import Data.Nat     using (ℕ; zero; suc; _<_; _>_; _+_; _∸_; _≤_; z≤n; s≤s; _≤?_; _≥?_; _≟_)
+open import Data.List    using (List; []; _∷_; [_]; _++_; map; concatMap; length; filter)
 
-open import Data.List.Any using (Any; any; here; there)
+open import Data.String.Properties using ()
+  renaming (_≟_ to _≟ₛₜᵣ_)
+
+open import Data.List.Any            using (Any; any; here; there)
 open import Data.List.Any.Properties using (any⁺)
 
-open import Data.Nat using ( ℕ; zero; suc; _<_; _>_; _+_; _∸_
-                           ; _≤_; z≤n; s≤s; _≤?_; _≥?_; _≟_
-                           )
+open import Data.Vec.Relation.Binary.Equality.DecPropositional using (_≋?_; ≋⇒≡; ≡⇒≋)
 
-open import Relation.Nullary using (Dec; yes; no; ¬_)
-open import Relation.Nullary.Decidable using (⌊_⌋; toWitness; fromWitness; True)
-open import Relation.Binary  using (Decidable)
+
+open import Relation.Nullary           using (Dec; yes; no; ¬_)
+open import Relation.Nullary.Decidable using (⌊_⌋; toWitness; fromWitness; True; map′)
+open import Relation.Binary            using (Decidable)
 
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; sym; trans; cong; cong₂)
@@ -34,16 +35,48 @@ open RawFunctor {0ℓ} listFunctor using (_<$>_)
 import Prelude.Set' as SET
 open import Prelude.Lists
 
+open import BitML.BasicTypes
+open import BitML.Predicate.DecidableEquality
+
 module BitML.Contracts.DecidableEquality
   (Participant : Set)
   (_≟ₚ_ : Decidable {A = Participant} _≡_)
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
   where
 
-open import BitML.BasicTypes      Participant _≟ₚ_ Honest
 open import BitML.Contracts.Types Participant _≟ₚ_ Honest
 
 ------------------------------------------------------------------------
+
+import Prelude.Set' as SET
+
+-- Sets of deposits
+_≟ₑ_ : Decidable {A = Deposit} _≡_
+x ≟ₑ y with participant x ≟ₚ participant y
+          | value       x ≟  value       y
+... | no ¬p    | _        = no λ{refl → ¬p refl}
+... | _        | no ¬p    = no λ{refl → ¬p refl}
+... | yes refl | yes refl = yes refl
+
+module SETₑ = SET {A = Deposit} _≟ₑ_
+
+Set⟨Deposit⟩ : Set
+Set⟨Deposit⟩ = Set'
+  where open SETₑ
+
+-- Sets of deposit references
+_≟ₑᵣ_ : Decidable {A = DepositRef} _≡_
+x ≟ₑᵣ y with deposit    x ≟ₑ deposit    y
+           | persistent x ≟ᵇ persistent y
+... | no ¬p    | _        = no λ{refl → ¬p refl}
+... | _        | no ¬p    = no λ{refl → ¬p refl}
+... | yes refl | yes refl = yes refl
+
+module SETₑᵣ = SET {A = DepositRef} _≟ₑᵣ_
+
+Set⟨DepositRef⟩ : Set
+Set⟨DepositRef⟩ = Set'
+  where open SETₑᵣ
 
 -- Contracts.
 _≟ᶜˢ_ : Decidable {A = Contracts ci} _≡_
@@ -78,15 +111,15 @@ _∃s≟ᶜ_ : Decidable {A = List ∃Contract} _≡_
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl = yes refl
 
-put_&reveal_if_⇒_∶-_ {ss′ = sᵖ} {v′ = v} {vs′ = vss} vs ss p c _ ≟ᶜ
- put_&reveal_if_⇒_∶-_ {ss′ = sᵖ′} {v′ = v′} {vs′ = vss′} vs′ ss′ p′ c′ _
-               with vs SETₙ.≟ₗ vs′
+put_&reveal_if_⇒_∶-_ {n = n} {v′ = v} {vs′ = vss} vs ss p c _ ≟ᶜ
+ put_&reveal_if_⇒_∶-_ {n = n′} {v′ = v′} {vs′ = vss′} vs′ ss′ p′ c′ _
+               with n ≟ n′
 ... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with ss SETₛ.≟ₗ ss′
+... | yes refl with vs SETₙ.≟ₗ vs′
 ... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with sᵖ SETₛ.≟ₗ sᵖ′
+... | yes refl with map′ ≋⇒≡ ≡⇒≋ (_≋?_ _≟ₛₜᵣ_ ss ss′)
 ... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl with p ≟ₚᵣₑ p′
+... | yes refl with p ≟ᵖʳ p′
 ... | no ¬p    = no λ{refl → ¬p refl}
 ... | yes refl with v ≟ v′
 ... | no ¬p    = no λ{refl → ¬p refl}
@@ -161,6 +194,48 @@ c ∃≟ᶜ c′ with [ c ] ∃s≟ᶜ [ c′ ]
 module SETᶜ = SET _∃≟ᶜˢ_
 Set⟨Contracts⟩ : Set
 Set⟨Contracts⟩ = Set' where open SETᶜ
+
+-- Sets of preconditions.
+_≟ₚᵣ_ : Decidable {A = Precondition pi} _≡_
+(x :? v)      ≟ₚᵣ (x′ :? v′)      with x ≟ₚ x′
+... | no x≢x′                     = no λ{refl → x≢x′ refl}
+... | yes refl                    with v ≟ v′
+... | no v≢v′                     = no λ{refl → v≢v′ refl}
+... | yes refl                    = yes refl
+(_ :? _)      ≟ₚᵣ (_ ∣ _ ∶- _)    = no λ ()
+
+(x :! v)      ≟ₚᵣ (x′ :! v′)      with x ≟ₚ x′
+... | no x≢x′                     = no λ{refl → x≢x′ refl}
+... | yes refl                    with v ≟ v′
+... | no v≢v′                     = no λ{refl → v≢v′ refl}
+... | yes refl                    = yes refl
+(_ :! _)      ≟ₚᵣ (_ ∣ _ ∶- _)         = no λ ()
+
+(x :secret s) ≟ₚᵣ (x′ :secret s′) with x ≟ₚ x′
+... | no x≢x′                     = no λ{refl → x≢x′ refl}
+... | yes refl                    with s ≟ₛ s′
+... | no s≢s′                     = no λ{refl → s≢s′ refl}
+... | yes refl                    = yes refl
+(_ :secret _) ≟ₚᵣ (_ ∣ _ ∶- _)         = no λ ()
+
+(_∣_∶-_ {vsᵛₗ = vsᵛₗ} {vsᵖₗ = vsᵖₗ} {vsᵛᵣ = vsᵛᵣ} {vsᵖᵣ = vsᵖᵣ} p₁ p₂ _) ≟ₚᵣ
+  (_∣_∶-_ {vsᵛₗ = vsᵛₗ′} {vsᵖₗ = vsᵖₗ′} {vsᵛᵣ = vsᵛᵣ′} {vsᵖᵣ = vsᵖᵣ′} p₁′ p₂′ _)
+                                  with vsᵛₗ SETₙ.≟ₗ vsᵛₗ′
+... | no ¬p                       = no λ{refl → ¬p refl}
+... | yes refl                    with vsᵛᵣ SETₙ.≟ₗ vsᵛᵣ′
+... | no ¬p                       = no λ{refl → ¬p refl}
+... | yes refl                    with vsᵖₗ SETₙ.≟ₗ vsᵖₗ′
+... | no ¬p                       = no λ{refl → ¬p refl}
+... | yes refl                    with vsᵖᵣ SETₙ.≟ₗ vsᵖᵣ′
+... | no ¬p                       = no λ{refl → ¬p refl}
+... | yes refl                    with p₁ ≟ₚᵣ p₁′
+... | no ¬p                       = no λ{refl → ¬p refl}
+... | yes refl                    with p₂ ≟ₚᵣ p₂′
+... | no ¬p                       = no λ{refl → ¬p refl}
+... | yes refl                    = yes refl
+(_ ∣ _ ∶- _)  ≟ₚᵣ (_ :? _)        = no λ ()
+(_ ∣ _ ∶- _)  ≟ₚᵣ (_ :! _)        = no λ ()
+(_ ∣ _ ∶- _)  ≟ₚᵣ (_ :secret _)   = no λ ()
 
 -- Advertisements.
 _≟ₐ_ : Decidable {A = Advertisement ci pi} _≡_

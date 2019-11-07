@@ -19,6 +19,8 @@ open import Data.List.All        using (All)
   renaming ([] to All-[]; _∷_ to _All-∷_)
 open import Data.List.Properties using (++-identityʳ)
 
+import Data.Vec as V
+
 open import Relation.Nullary using (yes; no)
 open import Relation.Binary using (Decidable)
 
@@ -27,12 +29,13 @@ open Eq using (_≡_; refl)
 
 open import Prelude.Lists
 
+open import BitML.BasicTypes
+open import BitML.Predicate.Base hiding (`)
+
 -------------------------------------------------------------------------
 
 open import BitML.Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
 
-
-open import BitML.BasicTypes                                 Participant _≟ₚ_ Honest
 open import BitML.Contracts.Types                            Participant _≟ₚ_ Honest
 open import BitML.Contracts.DecidableEquality                Participant _≟ₚ_ Honest
 open import BitML.Semantics.Actions.Types                    Participant _≟ₚ_ Honest
@@ -64,8 +67,8 @@ tc : Advertisement Iᶜ[ 1 , [] ] Iᵖ[ [] , 1 ∷ 0 ∷ [] ]
 tc = ⟨ A :! 1
      ∣ A :secret a ∶- refl & refl
      ∣ B :! 0      ∶- refl & refl
-     ⟩ (put [] &reveal [ a ] if `True ⇒ [ withdraw A ]
-        ∶- sound-put {p = tt} & refl & (λ ()))
+     ⟩ (put [] &reveal V.[ a ] if `true ⇒ [ withdraw A ]
+        ∶- sound-put {p = tt} & refl)
      ⊕ (after t ∶ withdraw B)
      ∙
      ∶- sound-≾
@@ -313,11 +316,9 @@ tc-semantics =
     c₇
   —→⟨ [C-Control] {Γ = A♯} {i = 0ᶠ} ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
     c₈
-  —→⟨ [C-PutRev] {Γ = ∅ᶜ} {s = [ a ]} {ds′ = []} {ss = [ A , a , 9 , refl ]}
+  —→⟨ [C-PutRev] {Γ = ∅ᶜ} {n = 1} {ds′ = []} {Δ = V.[ A , a , 9 , refl ]}
       -- `put` command
-      (sound-put , refl , (λ ()))
-      refl
-      -- revealed secrets
+      (sound-put , refl)
       refl
       -- put deposits
       refl

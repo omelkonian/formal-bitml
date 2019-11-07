@@ -12,13 +12,14 @@ open import Relation.Binary            using (Decidable)
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
+open import BitML.BasicTypes
+
 module BitML.Semantics.Labels.DecidableEquality
   (Participant : Set)
   (_≟ₚ_ : Decidable {A = Participant} _≡_)
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
   where
 
-open import BitML.BasicTypes                  Participant _≟ₚ_ Honest
 open import BitML.Contracts.Types             Participant _≟ₚ_ Honest
 open import BitML.Contracts.DecidableEquality Participant _≟ₚ_ Honest
 open import BitML.Semantics.Labels.Types      Participant _≟ₚ_ Honest

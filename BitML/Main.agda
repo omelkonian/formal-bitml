@@ -2,6 +2,10 @@ module BitML.Main where
 
 open import BitML.BasicTypes
 
+open import BitML.Predicate.Base
+open import BitML.Predicate.DecidableEquality
+open import BitML.Predicate.Semantics
+
 open import BitML.Contracts.Types
 open import BitML.Contracts.DecidableEquality
 open import BitML.Contracts.Examples

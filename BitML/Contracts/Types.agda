@@ -7,16 +7,18 @@ open import Function using (_on_; const; _∘_; id; _∋_)
 
 open import Data.Empty   using (⊥; ⊥-elim)
 open import Data.Unit    using (tt; ⊤)
-open import Data.Bool    using (T; true; false)
+open import Data.Product using (_×_; _,_; proj₁; proj₂; ∃; ∃₂; ∃-syntax; Σ; Σ-syntax)
+open import Data.Bool    using (Bool; T; true; false)
   renaming (_≟_ to _≟ᵇ_)
 open import Data.List    using ( List; []; _∷_; [_]; _++_
                                ; map; concat; concatMap; length; sum; foldr; filter
                                )
-open import Data.Product using (_×_; _,_; proj₁; proj₂; ∃; ∃₂; ∃-syntax; Σ; Σ-syntax)
 
 open import Data.List.Any using (Any; any; here; there)
 open import Data.List.Any.Properties using (any⁺)
 import Data.List.Relation.Pointwise as PW
+
+open import Data.Vec as V using (Vec)
 
 open import Data.Nat using ( ℕ; zero; suc; _<_; _>_; _+_; _∸_
                            ; _≤_; z≤n; s≤s; _≤?_; _≥?_; _≟_
@@ -35,6 +37,10 @@ open import Data.List.Categorical renaming (functor to listFunctor)
 open RawFunctor {0ℓ} listFunctor using (_<$>_)
 
 open import Prelude.Lists
+import Prelude.Set' as SET
+
+open import BitML.BasicTypes
+open import BitML.Predicate.Base
 
 module BitML.Contracts.Types
   (Participant : Set)
@@ -42,7 +48,37 @@ module BitML.Contracts.Types
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
   where
 
-open import BitML.BasicTypes Participant _≟ₚ_ Honest
+Hon = proj₁ Honest
+
+variable
+  p p′ : Participant
+
+-- Sets of participants
+module SETₚ = SET {A = Participant} _≟ₚ_
+
+Set⟨Participant⟩ : Set
+Set⟨Participant⟩ = Set' where open SETₚ
+
+-------------------------------------------------------------------
+-- Deposits.
+
+infix 30 _has_
+record Deposit : Set where
+  constructor _has_
+  field
+    participant : Participant
+    value       : Value
+open Deposit public
+
+Deposits : Set
+Deposits = List Deposit
+
+record DepositRef : Set where
+  constructor _⟨_⟩
+  field
+    deposit    : Deposit
+    persistent : Bool
+open DepositRef public
 
 ------------------------------------------------------------------------
 -- Contracts
@@ -100,6 +136,14 @@ Put vs vs′ vs″ = Σ[ p ∈ vs ⊆ vs″ ] (vs′ ≡ complement-⊆ p)
 
 import Data.List.Relation.Binary.Sublist.DecPropositional {A = Value} _≟_ as SB
 
+-- Put? : Dec (Put vs vs′ vs″)
+-- Put? {vs = vs} {vs′ = vs′} {vs″ = vs″}
+--   with vs SB.⊆? vs″
+-- ... | no ¬vs⊆vs″ = no λ{ (vs⊆vs″ , _) → ¬vs⊆vs″ vs⊆vs″ }
+-- ... | yes vs⊆vs″ with vs′ SETₙ.≟ₗ complement-⊆ vs⊆vs″
+-- ... | no ¬p      = no λ{ (vs⊆vs″2 , p) → ¬p {!p!} }
+-- ... | yes refl   = yes (vs⊆vs″ , refl)
+
 put? : Values → Values → Values → Set
 put? vs vs′ vs″ with vs SB.⊆? vs″
 ... | no _      = ⊥
@@ -119,12 +163,11 @@ data Contract where
 
   -- collect deposits and secrets
   put_&reveal_if_⇒_∶-_ : (vs : Values)
-                       → (ss : Secrets)
-                       → Predicate ss′
+                       → Vec Secret n
+                       → Predicate (Ctx n)
                        → Contracts Iᶜ[ v′ , vs′ ]
                        → .( Put vs vs′ vs″
                           × (v′ ≡ v + sum vs)
-                          × (ss′ SETₛ.⊆ ss)
                           )
                        → Contract Iᶜ[ v , vs″ ]
 
@@ -148,16 +191,76 @@ split_ : (cs : ContractCases vs) → {p : True (v ≟ sum (map proj₁ cs))} →
 
 put_&reveal_if_⇒_ :
     (vs : Values)
-  → (ss : Secrets)
-  → Predicate ss′
+  → Vec Secret n
+  → Predicate (Ctx n)
   → Contracts Iᶜ[ v′ , vs′ ]
   → .{p₁ : put? vs vs′ vs″}
   → .{p₂ : True (v′ ≟ v + sum vs)}
-  → .{p₃ : ss′ SETₛ.⊆? ss}
   → Contract Iᶜ[ v , vs″ ]
-(put vs &reveal s if p ⇒ c) {p₁} {p₂} {p₃} =
+(put vs &reveal s if p ⇒ c) {p₁} {p₂} =
   put vs &reveal s if p ⇒ c
-  ∶- (sound-put {p = p₁} , toWitness p₂ , SETₛ.sound-⊆ {p = p₃})
+  ∶- (sound-put {p = p₁} , toWitness p₂)
+
+put_&reveal_⇒_ :
+    (vs : Values)
+  → Vec Secret n
+  → Contracts Iᶜ[ v′ , vs′ ]
+  → .{p₁ : put? vs vs′ vs″}
+  → .{p₂ : True (v′ ≟ v + sum vs)}
+  → Contract Iᶜ[ v , vs″ ]
+(put vs &reveal s ⇒ c) {p₁} {p₂} = (put vs &reveal s if `true ⇒ c) {p₁} {p₂}
+
+put_⇒_ :
+    (vs : Values)
+  → Contracts Iᶜ[ v′ , vs′ ]
+  → .{p₁ : put? vs vs′ vs″}
+  → .{p₂ : True (v′ ≟ v + sum vs)}
+  → Contract Iᶜ[ v , vs″ ]
+(put vs ⇒ c) {p₁} {p₂} = (put vs &reveal V.[] if `true ⇒ c) {p₁} {p₂}
+
+-------------------------------------------------------------------
+-- Contract preconditions.
+
+-- Indices for `Precondition`.
+record Preconditionⁱ : Set where
+  constructor Iᵖ[_,_]
+  field
+    volatileDeposits   : Values
+    persistentDeposits : Values
+open Preconditionⁱ public
+variable pi pi′ : Preconditionⁱ
+
+data Precondition : Preconditionⁱ → Set where
+
+  -- volatile deposit
+  _:?_ : Participant → (v : Value) → Precondition Iᵖ[ [ v ] , [] ]
+
+  -- persistent deposit
+  _:!_ : Participant → (v : Value) → Precondition Iᵖ[ [] , [ v ] ]
+
+  -- committed secret (random nonce) by <Participant>
+  _:secret_ : Participant → Secret → Precondition Iᵖ[ [] , [] ]
+
+  -- composition
+  _∣_∶-_ : Precondition Iᵖ[ vsᵛₗ , vsᵖₗ ]
+         → Precondition Iᵖ[ vsᵛᵣ , vsᵖᵣ ]
+         → .( (vsᵛ ≡ vsᵛₗ ++ vsᵛᵣ)
+            × (vsᵖ ≡ vsᵖₗ ++ vsᵖᵣ))
+         → Precondition Iᵖ[ vsᵛ , vsᵖ ]
+
+_∣_ : ∀ {vsᵛ vsᵖ vsᵛₗ vsᵖₗ vsᵛᵣ vsᵖᵣ}
+    → Precondition Iᵖ[ vsᵛₗ , vsᵖₗ ]
+    → Precondition Iᵖ[ vsᵛᵣ , vsᵖᵣ ]
+    → {_ : True (vsᵛ SETₙ.≟ₗ vsᵛₗ ++ vsᵛᵣ)}
+    → {_ : True (vsᵖ SETₙ.≟ₗ vsᵖₗ ++ vsᵖᵣ)}
+    → Precondition Iᵖ[ vsᵛ , vsᵖ ]
+(l ∣ r) {p₁} {p₂} = l ∣ r ∶- toWitness p₁ , toWitness p₂
+
+infix  5 _:?_
+infix  5 _:!_
+infix  5 _:secret_
+infixl 3 _∣_
+infixl 2 _∣_∶-_
 
 ------------------------------------------------------------------------
 -- Utilities.

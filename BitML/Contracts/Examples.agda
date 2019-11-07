@@ -14,9 +14,10 @@ import Data.List.Relation.Binary.Sublist.Heterogeneous as SB
 --------------------------------------------------------------------------------
 
 open import Prelude.Lists
+open import BitML.Predicate.Base
 
 open import BitML.Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
-open import BitML.BasicTypes      Participant _≟ₚ_ Honest
+open import BitML.BasicTypes
 open import BitML.Contracts.Types Participant _≟ₚ_ Honest
 
 --------------------------------------------------------------------------------
@@ -26,18 +27,18 @@ ex-contracts₁ = withdraw A ∙
 
 ex-contracts₂ : Contracts Iᶜ[ 5 , [] ]
 ex-contracts₂ = A ∶ withdraw {Iᶜ[ 5 , _ ]} A
-              ⊕ (put [] &reveal [] if `True ⇒ [ withdraw {Iᶜ[ 5 , _ ]} A ]) {p₁ = tt}
+              ⊕ (put [] ⇒ [ withdraw {Iᶜ[ 5 , _ ]} A ]) {p₁ = tt}
               ∙
 
 ex-contracts₃ : Contracts Iᶜ[ 5 , [ 100 ] ]
-ex-contracts₃ = (put [ 100 ] &reveal [] if `True ⇒ [ withdraw {Iᶜ[ 105 , _ ]} A ]) {p₁ = tt}
+ex-contracts₃ = (put [ 100 ] ⇒ [ withdraw {Iᶜ[ 105 , _ ]} A ]) {p₁ = tt}
                  ∙
 
 ex-contracts₄ : Contracts Iᶜ[ 5 , [ 10 ] ]
 ex-contracts₄ = (A ∶ withdraw {Iᶜ[ 5 , _ ]} B)
               ⊕ (B ∶ split ( (2 ⊸ withdraw {Iᶜ[ 2 , _ ]} A)
                            ⊕ (3 ⊸ after 100 ∶ withdraw {Iᶜ[ 3 , _ ]} B)
-                           ⊕ (0 ⊸ (put [ 10 ] &reveal [] if `True ⇒ [ A ∶ withdraw {Iᶜ[ 10 , _ ]} B ]) {p₁ = tt})
+                           ⊕ (0 ⊸ (put [ 10 ] ⇒ [ A ∶ withdraw {Iᶜ[ 10 , _ ]} B ]) {p₁ = tt})
                            ∙))
               ∙
 

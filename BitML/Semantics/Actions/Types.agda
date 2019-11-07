@@ -20,14 +20,16 @@ open RawFunctor {0ℓ} listFunctor using (_<$>_)
 
 open import Prelude.Lists
 
+open import BitML.BasicTypes
+
 module BitML.Semantics.Actions.Types
   (Participant : Set)
   (_≟ₚ_ : Decidable {A = Participant} _≡_)
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
   where
 
-open import BitML.BasicTypes      Participant _≟ₚ_ Honest
-open import BitML.Contracts.Types Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types             Participant _≟ₚ_ Honest
+open import BitML.Contracts.DecidableEquality Participant _≟ₚ_ Honest
 
 --------------------------------------------------------------------------------
 

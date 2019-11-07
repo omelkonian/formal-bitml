@@ -20,6 +20,8 @@ open import Data.List.Membership.Propositional using (_∈_; _∉_; mapWith∈)
 open import Data.List.Relation.Unary.All as All using (All)
 open import Data.List.Relation.Unary.Any using (Any)
 
+import Data.Vec as V
+
 open import Data.Maybe using (Maybe; just; nothing)
 open import Data.Maybe.Relation.Unary.All using () renaming (All to Allₘ)
 
@@ -29,13 +31,14 @@ open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; con
 open import Prelude.Lists
 import Prelude.Set' as SET
 
+open import BitML.BasicTypes
+
 module BitML.SymbolicModel.Properties
   (Participant : Set)
   (_≟ₚ_ : Decidable {A = Participant} _≡_)
   (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
   where
 
-open import BitML.BasicTypes                       Participant _≟ₚ_ Honest
 open import BitML.Contracts.Types                  Participant _≟ₚ_ Honest
 open import BitML.Contracts.DecidableEquality      Participant _≟ₚ_ Honest
 open import BitML.Semantics.Actions.Types          Participant _≟ₚ_ Honest
@@ -131,10 +134,10 @@ module _ (α≢₁ : ∀ A s      → α ≢ auth-rev[ A , s ])
         rewrite strip-cases {cs′ = casesToContracts cases} {Γ = Γ}
               = [C-Split] refl refl
 
-      strip-→ ([C-PutRev] {Γ = Γ} {ds′ = ds′} {ss = ss} pr x x₁ x₂ x₃)
-        rewrite strip-ds {ds′ = ds′} {Γ = ss ∣∣ˢˢ Γ}
-              | strip-ss {ss = ss} {Γ = Γ}
-              = [C-PutRev] {Γ = Γ ∗ᶜ} {ds′ = ds′} {ss = ss} pr x x₁ x₂ x₃
+      strip-→ ([C-PutRev] {Γ = Γ} {ds′ = ds′} {Δ = ss} pr x x₁ x₂)
+        rewrite strip-ds {ds′ = ds′} {Γ = V.toList ss ∣∣ˢˢ Γ}
+              | strip-ss {ss = V.toList ss} {Γ = Γ}
+              = [C-PutRev] {Γ = Γ ∗ᶜ} {ds′ = ds′} {Δ = ss} pr x x₁ x₂
 
       strip-→ ([C-Control] {contract = c} {i = i})
         rewrite strip-b {Γ = ⟨ c ⟩ᶜ} {ps = authDecorations (c ‼ i)} {i = 0ᶠ} {j = i}
