@@ -2,7 +2,7 @@
 -- Types of labels.
 ------------------------------------------------------------------------
 
-open import Data.Product using (Σ; Σ-syntax; proj₂)
+open import Data.Product using (Σ; Σ-syntax; proj₂; _×_)
 open import Data.Nat     using (ℕ; _>_)
 open import Data.Maybe   using (Maybe; just; nothing)
 open import Data.List    using (List; length)
@@ -22,72 +22,64 @@ module BitML.Semantics.Labels.Types
 
 open import BitML.Contracts.Types                  Participant _≟ₚ_ Honest
 open import BitML.Semantics.Actions.Types          Participant _≟ₚ_ Honest
-open import BitML.Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
 
 --------------------------------------------------------------------------------
 
-DepositIndex : Set
-DepositIndex = ℕ
-
 data Label : Set where
-
-  ---------------
-  -- empty label (some transitions do not emit anything)
-  empty : Label
 
   --------
   -- join
 
   -- A:x,y
-  auth-join[_,_↔_] : Participant → DepositIndex → DepositIndex → Label
+  auth-join[_,_↔_] : Participant → Id → Id → Label
   -- join(x,y)
-  join[_↔_] : DepositIndex → DepositIndex → Label
+  join[_↔_] : Id → Id → Label
 
   ----------
   -- divide
 
   -- A:x,v,v'
-  auth-divide[_,_▷_,_] : Participant → DepositIndex → Value → Value → Label
+  auth-divide[_,_▷_,_] : Participant → Id → Value → Value → Label
   -- divide(x,v,v')
-  divide[_▷_,_] : DepositIndex → Value → Value → Label
+  divide[_▷_,_] : Id → Value → Value → Label
 
   ----------
   -- donate
 
   -- A:x,B
-  auth-donate[_,_▷ᵈ_] : Participant → DepositIndex → Participant → Label
+  auth-donate[_,_▷ᵈ_] : Participant → Id → Participant → Label
   -- donate(x,B)
-  donate[_▷ᵈ_] : DepositIndex → Participant → Label
+  donate[_▷ᵈ_] : Id → Participant → Label
 
   -----------
   -- destroy
 
   -- A:x,j
-  auth-destroy[_,_] : Participant → DepositIndex → Label
+  auth-destroy[_,_,_] : Participant → (xs : Ids) → Index xs → Label
   -- destroy(x)
-  destroy[_] : DepositIndex → Label
+  destroy[_] : Ids → Label
 
   -------------
   -- advertise
 
   -- advertise({G}C)
-  advertise[_] : ∃Advertisement → Label
+  advertise[_] : Advertisement → Label
 
   --------
   -- init
 
   -- A:{G}C,Δ
-  auth-commit[_,_,_] : Participant → ∃Advertisement → List CommittedSecret → Label
+  auth-commit[_,_,_] : Participant → Advertisement → List (Secret × Maybe ℕ) → Label
   -- A:{G}C,x
-  auth-init[_,_,_] : Participant → ∃Advertisement → DepositIndex → Label
+  auth-init[_,_,_] : Participant → Advertisement → Id → Label
   -- init(G,C)
-  init[_] : ∃Advertisement → Label
+  init[_,_] : Precondition → Contracts → Label
 
   --------
   -- split
 
   -- split(y)
-  split : Label
+  split[_] : Id → Label
 
   --------------
   -- auth-reveal
@@ -99,19 +91,19 @@ data Label : Set where
   -- put-reveal
 
   -- put(x,a,y)
-  put[_,_] : Values → Secrets → Label
+  put[_,_,_] : Ids → Secrets → Id → Label
 
   ------------
   -- withdraw
 
   -- withdraw(A,v,y)
-  withdraw[_,_] : Participant → Value → Label
+  withdraw[_,_,_] : Participant → Value → Id → Label
 
   ---------------
   -- auth-control
 
   -- A:x,D
-  auth-control[_,_▷ᵇ_] : Participant → (c : ∃Contracts) → Index (proj₂ c) → Label
+  auth-control[_,_▷_] : Participant → Id → Contract → Label
 
   ---------
   -- delay
@@ -122,13 +114,24 @@ data Label : Set where
 Labels : Set
 Labels = List Label
 
-authDecoration : Label → Maybe Participant
-authDecoration auth-join[ p , _ ↔ _ ]       = just p
-authDecoration auth-divide[ p , _ ▷ _ , _ ] = just p
-authDecoration auth-donate[ p , _ ▷ᵈ _ ]    = just p
-authDecoration auth-destroy[ p , _ ]        = just p
-authDecoration auth-commit[ p , _ , _ ]     = just p
-authDecoration auth-init[ p , _ , _ ]       = just p
-authDecoration auth-rev[ p , _ ]            = just p
-authDecoration auth-control[ p , _ ▷ᵇ _ ]   = just p
-authDecoration _                            = nothing
+variable
+  α α′ α″ : Label
+  αs αs′ : Labels
+
+cv : Label → Maybe Id
+cv put[ _ , _ , y ]      = just y
+cv withdraw[ _ , _ , y ] = just y
+cv split[ y ]            = just y
+cv _                     = nothing
+
+
+-- authDecoration : Label → Maybe Participant
+-- authDecoration auth-join[ p , _ ↔ _ ]       = just p
+-- authDecoration auth-divide[ p , _ ▷ _ , _ ] = just p
+-- authDecoration auth-donate[ p , _ ▷ᵈ _ ]    = just p
+-- authDecoration auth-destroy[ p , _ , _ ]    = just p
+-- authDecoration auth-commit[ p , _ , _ ]     = just p
+-- authDecoration auth-init[ p , _ , _ ]       = just p
+-- authDecoration auth-rev[ p , _ ]            = just p
+-- authDecoration auth-control[ p , _ ▷ _ ]   = just p
+-- authDecoration _                            = nothing

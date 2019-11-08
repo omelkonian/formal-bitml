@@ -18,59 +18,38 @@ open import BitML.Predicate.Base
 
 open import BitML.Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
 open import BitML.BasicTypes
-open import BitML.Contracts.Types Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types Participant _≟ₚ_ Honest hiding (A; B)
 
 --------------------------------------------------------------------------------
 
-ex-contracts₁ : Contracts Iᶜ[ 1 , [] ]
+ex-contracts₁ : Contracts
 ex-contracts₁ = withdraw A ∙
 
-ex-contracts₂ : Contracts Iᶜ[ 5 , [] ]
-ex-contracts₂ = A ∶ withdraw {Iᶜ[ 5 , _ ]} A
-              ⊕ (put [] ⇒ [ withdraw {Iᶜ[ 5 , _ ]} A ]) {p₁ = tt}
+ex-contracts₂ : Contracts
+ex-contracts₂ = A ⇒ withdraw A
+              ⊕ put [] ⇒ (withdraw A ∙)
               ∙
 
-ex-contracts₃ : Contracts Iᶜ[ 5 , [ 100 ] ]
-ex-contracts₃ = (put [ 100 ] ⇒ [ withdraw {Iᶜ[ 105 , _ ]} A ]) {p₁ = tt}
-                 ∙
+ex-contracts₃ : Contracts
+ex-contracts₃ = put [ "x" ] ⇒ (withdraw A ∙)
+              ∙
 
-ex-contracts₄ : Contracts Iᶜ[ 5 , [ 10 ] ]
-ex-contracts₄ = (A ∶ withdraw {Iᶜ[ 5 , _ ]} B)
-              ⊕ (B ∶ split ( (2 ⊸ withdraw {Iᶜ[ 2 , _ ]} A)
-                           ⊕ (3 ⊸ after 100 ∶ withdraw {Iᶜ[ 3 , _ ]} B)
-                           ⊕ (0 ⊸ (put [ 10 ] ⇒ [ A ∶ withdraw {Iᶜ[ 10 , _ ]} B ]) {p₁ = tt})
-                           ∙))
+ex-contracts₄ : Contracts
+ex-contracts₄ = A ⇒ withdraw B
+              ⊕ B ⇒ split ( 2 ⊸ (withdraw A ∙)
+                          ⊕ 3 ⊸ (after 100 ⇒ withdraw B ∙)
+                          ⊕ 0 ⊸ (put [ "y" ] ⇒ (A ⇒ withdraw B ∙) ∙)
+                          ∙)
               ∙
 
 
 -- see BitML paper, Section 2
-pay-or-refund : Advertisement Iᶜ[ 1 , [] ] Iᵖ[ [] , 1 ∷ 0 ∷ [] ]
-pay-or-refund = ⟨ A :! 1 ∣ B :! 0 ⟩
-                  A ∶ withdraw B
-                ⊕ B ∶ withdraw A
-                ∙
-                ∶- sound-≾
-                 & (λ { (here px)                                          → here px
-                      ; (there (here px))                                  → there (here px)
-                      ; (there (there (here px)))                          → here px
-                      ; (there (there (there (here px))))                  → there (here px)
-                      ; (there (there (there (there (here px)))))          → there (here px)
-                      ; (there (there (there (there (there (here px))))))  → here px
-                      ; (there (there (there (there (there (there ()))))))
-                      })
-                 & refl
+pay-or-refund : Advertisement
+pay-or-refund = ⟨ A :! 1 at "x" ∣∣ B :! 0 at "y" ⟩
+                ( A ⇒ withdraw B
+                ⊕ B ⇒ withdraw A
+                ∙)
 
 
-ex-ad : Advertisement Iᶜ[ 5 , [ 100 ] ] Iᵖ[ [ 100 ] , 2 ∷ 3 ∷ [] ]
-ex-ad = ⟨ B :! 2
-        ∣ A :! 3   ∶- refl & refl
-        ∣ A :? 100 ∶- refl & refl
-        ⟩ ex-contracts₃
-        ∶- sound-≾
-         & (λ { (here px)                          → here px
-              ; (there (here px))                  → there (here px)
-              ; (there (there (here px)))          → there (here px)
-              ; (there (there (there (here px))))  → there (here px)
-              ; (there (there (there (there ()))))
-              })
-         & refl
+ex-ad : Advertisement
+ex-ad = ⟨ B :! 2 at "x" ∣∣ A :! 3 at "y" ∣∣ A :? 100 at "z" ⟩ ex-contracts₃

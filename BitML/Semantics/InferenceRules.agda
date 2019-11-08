@@ -1,42 +1,28 @@
 ------------------------------------------------------------------------
 -- Small-step semantics for the BitML calculus.
 ------------------------------------------------------------------------
-{-# OPTIONS --allow-unsolved-metas #-}
 
-open import Level        using (0ℓ)
-open import Function     using (_on_; const; _∘_; id; _∋_; _$_; case_of_)
-open import Data.Empty   using (⊥; ⊥-elim)
-open import Data.Unit    using (⊤; tt)
-open import Data.Bool    using (T; Bool; true; false; _∧_)
-open import Data.Maybe   using (Maybe; just; nothing; maybe′; Is-just)
-open import Data.Nat     using (ℕ; suc; _+_; _≤_; _>_; _≟_)
-open import Data.Product using (∃; ∃-syntax; Σ; Σ-syntax; _×_; _,_; proj₁; proj₂)
-open import Data.Fin     using (Fin; fromℕ; toℕ)
-  renaming (zero to 0ᶠ; suc to sucᶠ; _≟_ to _≟ᶠ_)
-open import Data.String  using ()
-  renaming (length to lengthₛ)
+open import Function using (_∘_)
 
-open import Data.List using ( List; []; _∷_; [_]; _++_; map; sum
-                            ; length; filter; boolFilter; zip )
-open import Data.List.All using (All)
-open import Data.List.Properties using (++-identityʳ)
+open import Data.Bool    using (true)
+open import Data.Product using (Σ-syntax; _×_; _,_; proj₁; proj₂)
+open import Data.Nat     using (ℕ; _>_; _+_; _≤_)
+open import Data.Maybe   using (Maybe; Is-just; just; nothing)
+open import Data.List    using (List; []; _∷_; [_]; _++_; map; length; zip; unzip)
+
+open import Data.List.Membership.Propositional       using (_∈_; _∉_)
+open import Data.List.Relation.Unary.All             using (All)
+open import Data.List.Relation.Unary.Any             using (Any)
 open import Data.List.Relation.Permutation.Inductive using (_↭_)
 
-open import Data.Vec as V using (Vec)
-
-open import Relation.Nullary using (Dec; yes; no)
-open import Relation.Nullary.Decidable using (⌊_⌋; True; False; toWitness; fromWitness)
-open import Relation.Nullary.Negation using (¬?)
+open import Relation.Nullary.Decidable using (True)
 open import Relation.Binary using (Decidable)
-
-import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; _≢_; decSetoid; refl; cong; sym)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Prelude.Lists
 
 open import BitML.BasicTypes
-open import BitML.Predicate.Base hiding (`)
-open import BitML.Predicate.Semantics
+open import BitML.Predicate.Base hiding (`; ∣_∣)
 
 module BitML.Semantics.InferenceRules
   (Participant : Set)
@@ -45,31 +31,22 @@ module BitML.Semantics.InferenceRules
   where
 
 open import BitML.Contracts.Types                  Participant _≟ₚ_ Honest
-open import BitML.Contracts.DecidableEquality      Participant _≟ₚ_ Honest
+open import BitML.Contracts.Helpers                Participant _≟ₚ_ Honest
+open import BitML.Contracts.Validity               Participant _≟ₚ_ Honest
 open import BitML.Semantics.Actions.Types          Participant _≟ₚ_ Honest
 open import BitML.Semantics.Configurations.Types   Participant _≟ₚ_ Honest
 open import BitML.Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
 open import BitML.Semantics.Labels.Types           Participant _≟ₚ_ Honest
+open import BitML.Semantics.Predicate              Participant _≟ₚ_ Honest
 
 --------------------------------------------------------------------------------
 -- Semantic rules for untimed configurations.
 
--- T0D0 generalize all Γ to Configuration′
-
-variable
-  A B : Participant
-  Γ Γ₀ : Configuration Iᶜᶠ[ ads , cs , ds ]
-  Γ′ : Configuration Iᶜᶠ[ ads′ , cs′ , ds′ ]
-  Γ″ : Configuration Iᶜᶠ[ ads″ , cs″ , ds″ ]
-  t t′ δ : Time
-  α : Label
-  αs : Labels
+-- T0D0 fresh variables can be arbitrarily picked out, maybe that is wrong?
+-- solve by requiring something like `fresh α ∉ fuv(Γ)`
 
 infix -1 _—→[_]_
-data _—→[_]_ : Configuration cfi
-             → Label
-             → Configuration cfi′
-             → Set where
+data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   ------------------------------
   -- i) Rules for deposits
@@ -78,171 +55,86 @@ data _—→[_]_ : Configuration cfi
 
       -----------------------------------------------------------
 
-      Configuration Iᶜᶠ[ ads , cs , A has v ∷ A has v′ ∷ ds ] ∋
-      (   (A has v ∷ A has v′ ∷ [])
-      ∣∣ᵈˢ Γ
-      )
-      —→[ auth-join[ A , 0 ↔ 1 ] ]
-      Configuration Iᶜᶠ[ ads , cs , A has (v + v′) ∷ ds ] ∋
-      (  ⟨ A , v ⟩ᵈ
-      ∣∣ ⟨ A , v′ ⟩ᵈ
-      ∶- refl & refl & refl & refl & refl & refl
-      ∣∣ A auth[ Action A Iᵃᶜ[ [] , [] , v ∷ v′ ∷ [] , [ A has (v + v′) ] ] ∋
-                 (0ᶠ ↔ sucᶠ 0ᶠ) {pr₂ = fromWitness refl}
-               ]∶- refl & refl & refl & refl & refl & refl
-      ∶- refl & refl & refl & refl & refl & refl
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & {!!} & {!!}
-      )
-
+      ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ Γ
+        —→[ auth-join[ A , x ↔ y ] ]
+      ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
 
   [DEP-Join] :
 
       ------------------------------------------------------------
 
-      Configuration Iᶜᶠ[ ads , cs , A has v ∷ A has v′ ∷ ds ] ∋
-      (  ⟨ A , v ⟩ᵈ
-      ∣∣ ⟨ A , v′ ⟩ᵈ
-      ∶- refl & refl & refl & refl & refl & refl
-      ∣∣ A auth[ Action A Iᵃᶜ[ [] , [] , v ∷ v′ ∷ [] , [ A has (v + v′) ] ] ∋
-                 (0ᶠ ↔ sucᶠ 0ᶠ) {pr₂ = fromWitness refl}
-               ]∶- refl & refl & refl & refl & refl & refl
-      ∶- refl & refl & refl & refl & refl & refl
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & {!!} & {!!}
-      )
-      —→[ join[ 0 ↔ 1 ] ]
-        ⟨ A , v + v′ ⟩ᵈ
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
+      ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
+        —→[ join[ x ↔ y ] ]
+      ⟨ A has (v + v′) ⟩at z ∣ Γ
 
 
   [DEP-AuthDivide] :
 
       --------------------------------------------------------------------------
 
-      Configuration Iᶜᶠ[ ads , cs , A has (v + v′) ∷ ds ] ∋
-      (  ⟨ A , v + v′ ⟩ᵈ
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
-      )
-      —→[ auth-divide[ A , 0 ▷ v , v′ ] ]
-      Configuration Iᶜᶠ[ ads , cs , A has v ∷ A has v′ ∷ ds ] ∋
-      (Configuration Iᶜᶠ[ [] , [] , A has v ∷ A has v′ ∷ [] ] ∋
-         ⟨ A , v + v′ ⟩ᵈ
-      ∣∣ A auth[ Action A Iᵃᶜ[ [] , [] , [ v + v′ ] , A has v ∷ A has v′ ∷ [] ] ∋
-                 (0ᶠ ▷ v , v′ ) {pr₁ = fromWitness refl} {pr₂ = fromWitness refl}
-               ]∶- refl & refl & refl & refl & refl & refl
-      ∶- refl & refl & refl & refl & {!!} & {!!}
-      )
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
+      ⟨ A has (v + v′) ⟩at x ∣ Γ
+        —→[ auth-divide[ A , x ▷ v , v′ ] ]
+      ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
+
 
 
   [DEP-Divide] :
 
       -------------------------------------------------------------------------
 
-      Configuration Iᶜᶠ[ ads , cs , A has v ∷ A has v′ ∷ ds ] ∋
-      ((Configuration Iᶜᶠ[ [] , [] , A has v ∷ A has v′ ∷ [] ] ∋
-         ⟨ A , v + v′ ⟩ᵈ
-      ∣∣ A auth[ Action A Iᵃᶜ[ [] , [] , [ v + v′ ] , A has v ∷ A has v′ ∷ [] ] ∋
-                 (0ᶠ ▷ v , v′) {pr₁ = fromWitness refl} {pr₂ = fromWitness refl}
-               ]∶- refl & refl & refl & refl & refl & refl
-      ∶- refl & refl & refl & refl & {!!} & {!!}
-      )
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
-      )
-      —→[ divide[ 0 ▷ v , v′ ] ]
-      Configuration Iᶜᶠ[ ads , cs , A has v ∷ A has v′ ∷ ds ] ∋
-        (A has v ∷ A has v′ ∷ []) ∣∣ᵈˢ Γ
+      ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
+        —→[ divide[ x ▷ v , v′ ] ]
+      ⟨ A has v ⟩at y ∣ ⟨ A has v′ ⟩at y′ ∣ Γ
 
 
   [DEP-AuthDonate] :
 
       ------------------------------------------------------------
 
-      Configuration Iᶜᶠ[ ads , cs , A has v ∷ ds ] ∋
-      (  ⟨ A , v ⟩ᵈ
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
-      )
-      —→[ auth-donate[ A , 0 ▷ᵈ B ] ]
-      Configuration Iᶜᶠ[ ads , cs , B has v ∷ ds ] ∋
-      (Configuration Iᶜᶠ[ [] , [] , [ B has v ] ] ∋
-         ⟨ A , v ⟩ᵈ
-      ∣∣ A auth[ Action A Iᵃᶜ[ [] , [] , [ v ] , [ B has v ] ] ∋
-                 (0ᶠ ▷ᵈ B) {pr = fromWitness refl}
-               ]∶- refl & refl & refl & refl & refl & refl
-      ∶- refl & refl & refl & refl & {!!} & {!!}
-      )
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & SETₑ.\\-left {[ B has v ]}
+      ⟨ A has v ⟩at x ∣ Γ
+        —→[ auth-donate[ A , x ▷ᵈ B ] ]
+      ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
+
 
 
   [DEP-Donate] :
 
       ---------------------------------------------------------------
 
-      Configuration Iᶜᶠ[ ads , cs , B has v ∷ ds ] ∋
-      (( Configuration Iᶜᶠ[ [] , [] , [ B has v ] ] ∋
-         ⟨ A , v ⟩ᵈ
-      ∣∣ A auth[ Action A Iᵃᶜ[ [] , [] , [ v ] , [ B has v ] ] ∋
-                 (0ᶠ ▷ᵈ B) {pr = fromWitness refl}
-               ]∶- refl & refl & refl & refl & refl & refl
-      ∶- refl & refl & refl & refl & {!!} & {!!}
-      )
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & SETₑ.\\-left {[ B has v ]}
-      )
-      —→[ donate[ 0 ▷ᵈ B ] ]
-      Configuration Iᶜᶠ[ ads , cs , B has v ∷ ds ] ∋
-      ( ⟨ B , v ⟩ᵈ
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & SETₑ.\\-left {[ B has v ]}
-      )
+      ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
+        —→[ donate[ x ▷ᵈ B ] ]
+      ⟨ B has v ⟩at y ∣ A auth[ x ▷ᵈ B ] ∣ Γ
 
 
-  -- T0D0 more deposits, sychronized amongst participants
   [DEP-AuthDestroy] :
+    ∀ {ds : List (Participant × Value × Id)} {j : Index ds}
+
+    → let xs = map (proj₂ ∘ proj₂) ds
+          Aj = proj₁ (ds ‼ j)
+          j′ = ‼-map′ {xs = ds} j
+          Δ  = || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi }) ds
+      in
 
       ----------------------------------------------------------------
 
-      Configuration Iᶜᶠ[ ads , cs , A has v ∷ ds ] ∋
-      (  ⟨ A , v ⟩ᵈ
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & SETₑ.\\-left {[ A has v ]}
-      )
-      —→[ auth-destroy[ A , 0 ] ]
-      Configuration Iᶜᶠ[ ads , cs , ds ] ∋
-      (Configuration Iᶜᶠ[ [] , [] , [] ] ∋
-         ⟨ A , v ⟩ᵈ
-      ∣∣ A auth[ Action A Iᵃᶜ[ [] , [] , [ v ] , [] ] ∋
-                 destroy 0ᶠ
-               ]∶- refl & refl & refl & refl & refl & refl
-      ∶- refl & refl & refl & refl & {!!} & {!!}
-      )
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
+      Δ ∣ Γ
+        —→[ auth-destroy[ Aj , xs , j′ ] ]
+      Δ ∣ Aj auth[ xs , j′ ▷ᵈˢ y ] ∣ Γ
+
 
 
   [DEP-Destroy] :
+    ∀ {ds : List (Participant × Value × Id)} {j : Index ds}
+
+    → let xs  = map (proj₂ ∘ proj₂) ds
+          Δ   = || map (λ{ (i , Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xs , ‼-map′ {xs = ds} i ▷ᵈˢ y ] })
+                       (enumerate ds)
+      in
 
       -----------------------------------------
 
-      Configuration Iᶜᶠ[ ads , cs , ds ] ∋
-      ((Configuration Iᶜᶠ[ [] , [] , [] ] ∋
-      (  ⟨ A , v ⟩ᵈ
-      ∣∣ A auth[ Action A Iᵃᶜ[ [] , [] , [ v ] , [] ] ∋
-                 destroy 0ᶠ
-               ]∶- refl & refl & refl & refl & refl & refl
-      ∶- refl & refl & refl & refl & {!!} & {!!}
-      ))
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
-      )
-      —→[ destroy[ 1 ] ]
+      Δ ∣ Γ
+        —→[ destroy[ xs ] ]
       Γ
 
   ------------------------------------------------------------
@@ -250,387 +142,185 @@ data _—→[_]_ : Configuration cfi
 
   [C-Advertise] :
 
-      ∃[ p ] (p SETₚ.∈ participantsᵍ (G ad) → p SETₚ.∈ Hon) -- T0D0 use Any
-    → (∀ d → d SETₑᵣ.∈ depositsᵃ ad → deposit d SETₑ.∈ depositsᶜ Γ)
+      ValidAdvertisement ad               -- the advertisement is valid
+    → Any (_∈ Hon) (participantsᵖ (G ad)) -- at least one honest participant
+    → All (_∈ depositsᶜ Γ) (depositsᵃ ad) -- all persistent deposits in place
 
       ------------------------------------------------------------------------
 
-    → Γ
-      —→[ advertise[ ci , pi , ad ] ]
-      Configuration Iᶜᶠ[ (ci , pi , ad) ∷ ads , cs , ds ] ∋
-      (  ` ad
-      ∣∣ Γ
-      ∶- refl & SETₐ.\\-left {[ ci , pi , ad ]} & refl & refl & refl & refl
-      )
+    → Γ —→[ advertise[ ad ] ] ` ad ∣ Γ
 
 
   [C-AuthCommit] :
-    ∀ {ci pi ad} {secrets : List CommittedSecret}
-      {Γ : Configuration′ Iᶜᶠ[ ads & rads , cs & [] , ds & [] ]}
-      {pr : map proj₁ secrets ≡ secretsᵖ A (G ad)}
+    ∀ {secrets : List (Secret × Maybe ℕ)}
 
-      -- rads are all satisfied
-    → rads SETₐ.⊆ [ ci , pi , ad ]
+    → let (as , ms) = unzip secrets
+          Δ         = || map (λ{ (ai , Ni) → ⟨ A ∶ ai ♯ Ni ⟩}) secrets
+      in
 
-      -- only dishonest participants are allowed to commit to invalid lengths
-    → (A SETₚ.∈ Hon → All (λ {(_ , m) → Is-just m }) secrets)
+      as ≡ secretsᵖ A (G ad)     -- a₁..aₖ secrets of A in G
+    → All (_∉ secretsᶜ A Γ) as   -- ∀i ∈ 1..k : ∄N : {A : aᵢ ♯ N} ∈ Γ
+    → (A ∈ Hon → All Is-just ms) -- honest participants commit to valid lengths
 
       -----------------------------------------------------------------------
 
-    → Configuration Iᶜᶠ[ (ci , pi , ad) ∷ ads ,  cs , ds ]  ∋
-      (  ` ad
-      ∣∣ Γ
-      ∶- refl & {!!} & refl & refl & refl & refl
-      )
-      —→[ auth-commit[ A , (ci , pi , ad) , secrets ] ]
-      Configuration Iᶜᶠ[ (ci , pi , ad) ∷ ads , cs , ds ] ∋
-      ((Configuration Iᶜᶠ[ (ci , pi , ad) ∷ ads , cs , ds ] ∋
-      (  ` ad
-      ∣∣ Γ
-      ∶- refl & {!!} & refl & refl & refl & refl
-      ∣∅ map (A ,_) secrets
-      ))
-      ∣∣ A auth[ ♯▷ ad ]∶- refl & refl & refl & refl & refl & refl
-      ∶- sym (++-identityʳ ((ci , pi , ad) ∷ ads))
-       & SETₐ.\\-head {ci , pi , ad} {ads}
-       & sym (++-identityʳ cs)
-       & SETᶜ.\\-left {cs}
-       & {!!}
-       & {!!}
-      )
+    → ` ad ∣ Γ
+        —→[ auth-commit[ A , ad , secrets ] ]
+      ` ad ∣ Γ ∣ Δ ∣ A auth[ ♯▷ ad ]
 
 
   [C-AuthInit] :
-    ∀ {ci pi ad}
-    → let vsᵖ = persistentDeposits pi in
-      {iᵖ : Index vsᵖ}
-      {Γ : Configuration′ Iᶜᶠ[ ads & rads , cs & [] , ds & [] ]}
-      {p : ds ≡ dsˡ ++ [ A has (vsᵖ ‼ iᵖ) ] ++ dsʳ}
 
-      -- rads are all satisfied
-    → rads SETₐ.⊆ [ ci , pi , ad ]
-
-      -- all participants have committed their secrets
-    → All (λ p → p SETₚ.∈ committedParticipants Γ ad) (participantsᵍ (G ad))
+      All (_∈ committedParticipants Γ ad) (participantsᵖ (G ad)) -- all participants have committed their secrets
+    → (A , v , x) ∈ persistentDepositsᵖ (G ad)                   -- G = A :! v @ x | ...
 
       ----------------------------------------------------------------------
 
-    → Configuration Iᶜᶠ[ (ci , pi , ad) ∷ ads , cs , ds ] ∋
-      (  ` ad
-      ∣∣ Γ
-      ∶- refl & {!!} & refl & refl & refl & refl
-      )
-      —→[ auth-init[ A , (ci , pi , ad) , toℕ iᵖ ] ]
-      Configuration Iᶜᶠ[ (ci , pi , ad) ∷ ads , cs , dsˡ ++ dsʳ ] ∋
-      ((Configuration Iᶜᶠ[ (ci , pi , ad) ∷ ads , cs , ds ] ∋
-         ` ad
-      ∣∣ Γ
-      ∶- refl & {!!} & refl & refl & refl & refl
-      )
-      ∣∣ A auth[ Action A Iᵃᶜ[ [ ci , pi , ad ] , [] , [ vsᵖ ‼ iᵖ ] , [] ] ∋
-                 (ad ▷ˢ iᵖ) {pr = fromWitness refl}
-               ]∶- refl & refl & refl & refl & refl & refl
-      ∶- sym (++-identityʳ ((ci , pi , ad) ∷ ads))
-       & SETₐ.\\-head {ci , pi , ad} {ads}
-       & sym (++-identityʳ cs)
-       & SETᶜ.\\-left {cs}
-       & {!!}
-       & {!!}
-      )
+    → ` ad ∣ Γ
+        —→[ auth-init[ A , ad , x ] ]
+      ` ad ∣ Γ ∣ A auth[ x ▷ˢ ad ]
 
 
   [C-Init] :
-    ∀ {Δ : Configuration′ Iᶜᶠ[ [] & rads , [] & [] , [] & [] ]}
 
-      -- rads are all satisfied
-    → rads SETₐ.⊆ [ ci , pi , ad ]
+      -- all participants have committed their secrets (guaranteed from [C-AuthInit]
 
-      -- all participants have committed their secrets
-    → All (λ p → p SETₚ.∈ committedParticipants Δ ad) (participantsᵍ (G ad))
-
-      -- all participants have spent the required (persistent) deposits for stipulation
-    → toStipulate (G ad) ≡ spentForStipulation Δ ad
+      let toSpend = persistentDepositsᵖ (G ad)
+          vs      = map (proj₁ ∘ proj₂) toSpend
+      in
 
       ----------------------------------------------------------------------
 
-    → Configuration Iᶜᶠ[ (ci , pi , ad) ∷ ads , cs , ds ] ∋
-      ((Configuration Iᶜᶠ[ (ci , pi , ad) ∷ ads , cs , ds ] ∋
-         ` ad
-      ∣∣ Γ
-      ∶- refl & SETₐ.\\-left {[ ci , pi , ad ]} & refl & refl & refl & refl
-      )
-      ∣∣ Δ
-      ∶- sym (++-identityʳ ((ci , pi , ad) ∷ ads))
-       & {!refl!}
-       & sym (++-identityʳ cs)
-       & SETᶜ.\\-left {cs}
-       & sym (++-identityʳ ds)
-       & SETₑ.\\-left {ds}
-      )
-      —→[ init[ ci , pi , ad ] ]
-      Configuration Iᶜᶠ[ ads , (ci , C ad) ∷ cs , ds ] ∋
-      (  ⟨ C ad ⟩ᶜ
-      ∣∣ Γ
-      ∶- refl & refl & refl & SETᶜ.\\-left {[ ci , C ad ]} & refl & refl
-      )
-
+      ` ad ∣ Γ ∣ || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xi ▷ˢ ad ] }) toSpend
+               ∣ || map (_auth[ ♯▷ ad ]) (participantsᵖ (G ad))
+        —→[ init[ G ad , C ad ] ]
+      ⟨ C ad , sum vs ⟩at x ∣ Γ
 
 
   ---------------------------------------------------
   -- iii) Rules for executing active contracts
 
   [C-Split] :
-    ∀ {c : Contract Iᶜ[ v , vs ]}
-      {cases : ContractCases vs}
+    ∀ {vcis : List (Value × Contracts × Id)}
 
-      -- `split` command
-    → (pr : v ≡ sum (map proj₁ cases))
-    → c ≡ split cases ∶- pr
+    → let (vs , cs , _) = unzip₃ vcis in
 
       ------------------------------------------------------------
 
-    → Configuration Iᶜᶠ[ ads , (Iᶜ[ v , vs ] , [ c ]) ∷ cs , ds ] ∋
-      (  ⟨ [ c ] ⟩ᶜ
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
-      )
-      —→[ split ]
-        casesToContracts cases
-      ∣∣ᶜˢ Γ
+      ⟨ [ split (zip vs cs) ] , sum vs ⟩at y ∣ Γ
+        —→[ split[ y ] ]
+      || map (λ{ (vi , ci , xi) → ⟨ ci , vi ⟩at xi }) vcis ∣ Γ
 
   [C-AuthRev] :
 
-      -- only valid lengths
-      (len_s : lengthₛ s ≡ n)
-
       -------------------------------------------------------------
 
-    → Configuration Iᶜᶠ[ ads , cs , ds ] ∋
-      (  (⟨ A ∶ s ♯ just n ⟩ {length→isValidSecret len_s})
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
-      )
-      —→[ auth-rev[ A , s ] ]
-      Configuration Iᶜᶠ[ ads , cs , ds ] ∋
-      (   [ A , s , n , len_s ]
-      ∣∣ˢˢ Γ
-      )
-
+      ⟨ A ∶ a ♯ just n ⟩ ∣ Γ
+        —→[ auth-rev[ A , a ] ]
+      A ∶ a ♯ n ∣ Γ
 
   [C-PutRev] :
-    ∀ {v vs″} {c : Contract Iᶜ[ v , vs″ ]}
-      {v′ vs′} {c′ : Contracts Iᶜ[ v′ , vs′ ]}
-      {n : ℕ} {p : Predicate (Ctx n)}
-      {vs : Values} {ds′ : Deposits}
-      {Δ : Vec ValidSecret n}
+    ∀ {ds : List (Participant × Value × Id)}
+      {ss : List (Participant × Secret × ℕ)}
 
-    → let ss = V.map (proj₁ ∘ proj₂) Δ in
+    → let (_ , vs , xs) = unzip₃ ds
+          (_ , as , _)  = unzip₃ ss
+          Γ = || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi }) ds
+          Δ = || map (λ{ (Bi , ai , Ni) → Bi ∶ ai ♯ Ni       }) ss
+      in
 
-      -- `put` command
-      (pr : Put vs vs′ vs″
-          × v′ ≡ v + sum vs)
-    → c ≡ (put vs &reveal ss if p ⇒ c′ ∶- pr)
-
-      -- put deposits
-    → map value ds′ ≡ vs
-
-      -- predicate is true
-    → ⟦ p ⟧ ss ≡ true
+      ⟦ p ⟧ Δ ≡ just true -- predicate is true
 
       ------------------------------------------------------------
 
-    → Configuration Iᶜᶠ[ ads , (Iᶜ[ v , vs″ ] , [ c ]) ∷ cs , ds′ ++ ds ] ∋
-      (  ⟨ [ c ] ⟩ᶜ
-      ∣∣ (ds′ ∣∣ᵈˢ (V.toList Δ ∣∣ˢˢ Γ))
-      ∶- refl & refl & refl & refl & refl & refl
-      )
-      —→[ put[ vs , V.toList ss ] ]
-      Configuration Iᶜᶠ[ ads , (Iᶜ[ v′ , vs′ ] , c′) ∷ cs , ds ] ∋
-      (  ⟨ c′ ⟩ᶜ
-      ∣∣ (V.toList Δ ∣∣ˢˢ Γ)
-      ∶- refl & refl & refl & refl & refl & refl
-      )
+    → ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ Γ ∣ Δ ∣ Γ′
+        —→[ put[ xs , as , y ] ]
+      ⟨ c , v + sum vs ⟩at z ∣ Δ ∣ Γ′
+
 
   [C-Withdraw] :
 
       -------------------------------------------------------
 
-      Configuration Iᶜᶠ[ ads , (Iᶜ[ v , [] ] , [ withdraw A ]) ∷ cs , ds ] ∋
-      (  ⟨ [ withdraw A ] ⟩ᶜ
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
-      )
-      —→[ withdraw[ A , v ] ]
-      Configuration Iᶜᶠ[ ads , cs , A has v ∷ ds ] ∋
-      (  ⟨ A , v ⟩ᵈ
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
-      )
+      ⟨ [ withdraw A ] , v ⟩at y ∣ Γ
+        —→[ withdraw[ A , v , y ] ]
+      ⟨ A has v ⟩at x ∣ Γ
 
 
   [C-AuthControl] :
-    ∀ {ci} {contract : Contracts ci} {i : Index contract}
+    ∀ {i : Index c}
 
-      -- `auth` decoration
-    → A SETₚ.∈ authDecorations (contract ‼ i)
+    → let d = c ‼ i in
+
+      A ∈ authDecorations d -- D ≡ A : D′
 
       ------------------------------------------------------------------
 
-    → Configuration Iᶜᶠ[ ads , (ci , contract) ∷ cs , ds ] ∋
-      (  ⟨ contract ⟩ᶜ
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
-      )
-      —→[ auth-control[ A , (ci , contract) ▷ᵇ i ] ]
-      Configuration Iᶜᶠ[ ads , (ci , contract) ∷ cs , ds ] ∋
-      (Configuration Iᶜᶠ[ [] , [ (ci , contract) ] , [] ] ∋
-         ⟨ contract ⟩ᶜ
-      ∣∣ A auth[ contract ▷ᵇ i  ]∶- refl & refl & refl & refl & refl & refl
-      ∶- refl & refl & refl & SETᶜ.\\-same {[ ci , contract ]} & refl & refl
-      )
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
+    → ⟨ c , v ⟩at x ∣ Γ
+        —→[ auth-control[ A , x ▷ d ] ]
+      ⟨ c , v ⟩at x ∣ A auth[ x ▷ d ] ∣ Γ
 
 
   [C-Control] :
-    ∀ {contract : Contracts ci} {i : Index contract}
+    ∀ {i : Index c}
+
+    → let d  = c ‼ i
+          d′ = removeTopDecorations d
+          As = authDecorations d
+      in
+
+      ⟨ [ d′ ] , v ⟩at x ∣ Γ ≈ L
+    → L —→[ α ] Γ′ -- T0D0 replace with _—↠_?
+    → cv α ≡ just x
 
       ------------------------------------------------------------------
 
-    → Configuration Iᶜᶠ[ ads , (ci , contract) ∷ cs , ds ] ∋
-      ((Configuration Iᶜᶠ[ [] , [ ci , contract ] , [] ] ∋
-          ⟨ contract ⟩ᶜ
-      ∣∣ᵇ (0ᶠ , i , authDecorations (contract ‼ i))
-      )
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
-      )
-      —→[ empty ]
-      Configuration Iᶜᶠ[ ads , (ci , [ contract ‼ i ]) ∷ cs , ds ] ∋
-      (  ⟨ [ contract ‼ i ] ⟩ᶜ
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
-      )
+    → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] As ∣ Γ
+        —→[ α ]
+      Γ′
+
 
 -----------------------------------------------------------------------------------
 -- Semantic rules for timed configurations.
 
 infix 3 _≈ₜ_
-_≈ₜ_ : TimedConfiguration cfi → TimedConfiguration cfi → Set
+_≈ₜ_ : TimedConfiguration → TimedConfiguration → Set
 c ≈ₜ c′ = (time c ≡ time c′) × (cfg c ≈ cfg c′)
 
 infix -1 _—→ₜ[_]_
-data _—→ₜ[_]_ : TimedConfiguration cfi
-              → Label
-              → TimedConfiguration cfi′
-              → Set where
+data _—→ₜ[_]_ : TimedConfiguration → Label → TimedConfiguration → Set where
 
   -- iv) Rules for handling time
   [Action] :
 
       Γ —→[ α ] Γ′
+    → cv α ≡ nothing
+
       -----------------------
+
     → Γ at t —→ₜ[ α ] Γ′ at t
 
   [Delay] :
 
+      δ > 0
+
       -------------------------------------
-      Γ at t —→ₜ[ delay[ δ ] ] Γ at (t + δ)
+
+    → Γ at t —→ₜ[ delay[ δ ] ] Γ at (t + δ)
 
   [Timeout] :
-    ∀ {contract : Contracts ci} {i : Index contract}
+    ∀ {i : Index c}
 
-      -- all time constraints are satisfied
-    → All (_≤ t) (timeDecorations (contract ‼ i))
+    → let d         = c ‼ i
+          d′        = removeTopDecorations d
+          (As , ts) = decorations d
+      in
 
-      -- resulting state if we pick branch `i`
-    → Configuration Iᶜᶠ[ ads , (ci , [ contract ‼ i ]) ∷ cs , ds ] ∋
-         ⟨ [ contract ‼ i ] ⟩ᶜ
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
-      —→[ α ]
-      Γ′
+      As ≡ []                           -- no authorizations required to pick branch
+    → All (_≤ t) ts                     -- all time constraints are satisfied
+    → ⟨ [ d′ ] , v ⟩at x ∣ Γ —→[ α ] Γ′ -- resulting state if we pick branch
+    → cv α ≡ just x
 
       ---------------------------------------------------------
 
-    → TimedConfiguration Iᶜᶠ[ ads , (ci , contract) ∷ cs , ds ] ∋
-      (  ⟨ contract ⟩ᶜ
-      ∣∣ Γ
-      ∶- refl & refl & refl & refl & refl & refl
-      ) at t
-      —→ₜ[ α ]
-      Γ′ at t
-
------------------------------------------------------------------------------------
--- Reflexive transitive closure for —→.
-
-infix  -1 _—↠[_]_
-infix  -2 start_
-infixr -1 _—→⟨_⟩_⊢_
-infix  0 _∎∎
-
-data _—↠[_]_ : Configuration cfi
-             → Labels
-             → Configuration cfi′
-             → Set where
-
-  _∎∎ : ∀ (M : Configuration cfi)
-
-      ------------
-    → M —↠[ [] ] M
-
-  _—→⟨_⟩_⊢_ : ∀ (L    : Configuration cfi)
-                {L′   : Configuration cfi}
-                {M M′ : Configuration cfi′}
-                {N    : Configuration cfi″}
-
-    → L′ —→[ α ] M′
-    → (L ≈ L′) × (M ≈ M′)
-    → M —↠[ αs ]  N
-      -------------------
-    → L —↠[ α ∷ αs ] N
-
-start_ : ∀ {M : Configuration cfi} {N : Configuration cfi′}
-
-  → M —↠[ αs ] N
-    ------------
-  → M —↠[ αs ] N
-
-start M—↠N = M—↠N
-
------------------------------------------------------------------------------------
--- Reflexive transitive closure for —→ₜ.
-
-infix  -1 _—↠ₜ[_]_
-infix  -2 startₜ_
-infixr -1 _—→ₜ⟨_⟩_⊢_
-infix  0 _∎∎ₜ
-
-data _—↠ₜ[_]_ : TimedConfiguration cfi
-              → Labels
-              → TimedConfiguration cfi′
-              → Set where
-
-  _∎∎ₜ : ∀ (M : TimedConfiguration cfi)
-
-      -------------
-    → M —↠ₜ[ [] ] M
-
-  _—→ₜ⟨_⟩_⊢_ : ∀ (L    : TimedConfiguration cfi)
-                 {L′   : TimedConfiguration cfi}
-                 {M M′ : TimedConfiguration cfi′}
-                 {N    : TimedConfiguration cfi″}
-
-    → L′ —→ₜ[ α ] M′
-    → (L ≈ₜ L′) × (M ≈ₜ M′)
-    → M —↠ₜ[ αs ] N
-      ---------------------
-    → L —↠ₜ[ α ∷ αs ] N
-
-startₜ_ : ∀ {M : TimedConfiguration cfi} {N : TimedConfiguration cfi′}
-
-  → M —↠ₜ[ αs ] N
-    -------------
-  → M —↠ₜ[ αs ] N
-
-startₜ M—↠N = M—↠N
+    → (⟨ c , v ⟩at x ∣ Γ) at t —→ₜ[ α ] Γ′ at t

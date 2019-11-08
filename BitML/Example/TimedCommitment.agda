@@ -7,325 +7,97 @@ open import Data.Unit    using (⊤; tt)
 open import Data.Maybe   using (Maybe; just; Is-just)
 open import Data.Maybe.Relation.Unary.Any renaming (just to mjust)
 open import Data.Bool    using (T; Bool; true; false; _∧_)
-open import Data.Nat     using (ℕ; _≤_; _>_; z≤n; s≤s)
-open import Data.Nat.Properties using (≤-refl)
-open import Data.Product using (∃; ∃-syntax; Σ; Σ-syntax; _×_; _,_; proj₁; proj₂)
-open import Data.Fin     using (Fin)
-  renaming (zero to 0ᶠ; suc to sucᶠ)
+open import Data.Nat     using (ℕ; _>_; _+_)
+open import Data.Product using (Σ-syntax; _×_; _,_)
+open import Data.Fin     using (0F)
 
-open import Data.List            using (List; []; _∷_; [_]; length; map; zip)
-open import Data.List.Any        using (Any; any; here; there)
-open import Data.List.All        using (All)
-  renaming ([] to All-[]; _∷_ to _All-∷_)
-open import Data.List.Properties using (++-identityʳ)
+open import Data.List     using (List; []; _∷_; [_]; length; map; zip)
+open import Data.List.Any using (Any; any; here; there)
+open import Data.List.All using (All; []; _∷_)
+open import Data.List.Relation.Unary.AllPairs using ([]; _∷_)
 
-import Data.Vec as V
-
-open import Relation.Nullary using (yes; no)
-open import Relation.Binary using (Decidable)
-
-import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl)
+open import Relation.Nullary.Decidable            using (fromWitness; toWitness)
+open import Relation.Binary                       using (Decidable)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Prelude.Lists
 
-open import BitML.BasicTypes
-open import BitML.Predicate.Base hiding (`)
+open import BitML.BasicTypes hiding (a; x; y; t)
+open import BitML.Predicate.Base hiding (`; ∣_∣)
 
 -------------------------------------------------------------------------
 
 open import BitML.Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
 
-open import BitML.Contracts.Types                            Participant _≟ₚ_ Honest
-open import BitML.Contracts.DecidableEquality                Participant _≟ₚ_ Honest
-open import BitML.Semantics.Actions.Types                    Participant _≟ₚ_ Honest
-open import BitML.Semantics.Labels.Types                     Participant _≟ₚ_ Honest
-open import BitML.Semantics.Configurations.Types             Participant _≟ₚ_ Honest
-open import BitML.Semantics.Configurations.Helpers           Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types                  Participant _≟ₚ_ Honest hiding (A; B)
+open import BitML.Contracts.Helpers                Participant _≟ₚ_ Honest
+open import BitML.Contracts.Validity               Participant _≟ₚ_ Honest
+open import BitML.Semantics.Actions.Types          Participant _≟ₚ_ Honest
+open import BitML.Semantics.Labels.Types           Participant _≟ₚ_ Honest
+open import BitML.Semantics.Configurations.Types   Participant _≟ₚ_ Honest
+open import BitML.Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
 open import BitML.Semantics.Configurations.DecidableEquality Participant _≟ₚ_ Honest
-open import BitML.Semantics.InferenceRules                   Participant _≟ₚ_ Honest hiding (A; B; t)
+open import BitML.Semantics.InferenceRules         Participant _≟ₚ_ Honest
+open import BitML.Semantics.Reasoning              Participant _≟ₚ_ Honest
+open import BitML.Semantics.DecidableInference     Participant _≟ₚ_ Honest
 
 -------------------------------------------------------------------------
 
-1ᶠ : Fin 2
-1ᶠ = sucᶠ 0ᶠ
+-- Do not postulate constants, in order for computation to go through
+a = "CHANGE_ME" ; N = 9 ; t = 42 ; x = "x" ; y = "y" ; x₁ = "x₁" ; x₂ = "x₂" ; x₃ = "x₃"
 
-infix 8 [_-_]
-[_-_] : ∀ {ℓ} {A : Set ℓ} → A → A → List A
-[ x - y ] = x ∷ y ∷ []
-
-open import Relation.Nullary.Decidable using (True; False; toWitness; fromWitness)
-open import Data.List using (_++_; filter)
-
-a : Secret
-a = "CHANGE_ME"
-
-t : Time
-t = 42
-
-tc : Advertisement Iᶜ[ 1 , [] ] Iᵖ[ [] , 1 ∷ 0 ∷ [] ]
-tc = ⟨ A :! 1
-     ∣ A :secret a ∶- refl & refl
-     ∣ B :! 0      ∶- refl & refl
-     ⟩ (put [] &reveal V.[ a ] if `true ⇒ [ withdraw A ]
-        ∶- sound-put {p = tt} & refl)
-     ⊕ (after t ∶ withdraw B)
+tc : Advertisement
+tc = ⟨ A :! 1 at x ∣∣ A :secret a ∣∣ B :! 0 at y ⟩
+       reveal [ a ] ⇒ [ withdraw A ]
+     ⊕ after t ⇒ withdraw B
      ∙
-     ∶- sound-≾
-      & (λ{ (here px)                                 → here px
-          ; (there (here px))                         → here px
-          ; (there (there (here px)))                 → there (here px)
-          ; (there (there (there (here px))))         → here px
-          ; (there (there (there (there (here px))))) → there (here px)
-          ; (there (there (there (there (there ())))))
-          })
-      & refl
 
-tc∃ : ∃Advertisement
-tc∃ = Iᶜ[ 1 , [] ] , Iᵖ[ [] , 1 ∷ 0 ∷ [] ] , tc
-
-tC : Contracts Iᶜ[ 1 , [] ]
-tC = C tc
-
-c∃ : ∃Contracts
-c∃ = Iᶜ[ 1 , [] ] , tC
-
-c₁∃ : ∃Contracts
-c₁∃ = Iᶜ[ 1 , [] ] , [ tC ‼ 0ᶠ ]
-
-c₂∃ : ∃Contracts
-c₂∃ = Iᶜ[ 1 , [] ] , [ withdraw A ]
-
-⟨A♯⟩ : Configuration Iᶜᶠ[ [] , [] , [] ]
-⟨A♯⟩ = ⟨ A ∶ a ♯ just 9 ⟩
-
-A♯ : Configuration Iᶜᶠ[ [] , [] , [] ]
-A♯ = A ∶ a ♯ 9
-
-A♯9 : Participant × Secret × Maybe ℕ
-A♯9 = A , a , just 9
-
-Aauth♯ : Configuration′ Iᶜᶠ[ [] & [ tc∃ ] , [] & [] , [] & [] ]
-Aauth♯ = A auth[ ♯▷ tc ]∶- refl & refl & refl & refl & refl & refl
-
-Bauth♯ : Configuration′ Iᶜᶠ[ [] & [ tc∃ ] , [] & [] , [] & [] ]
-Bauth♯ = B auth[ ♯▷ tc ]∶- refl & refl & refl & refl & refl & refl
-
-Aauth▷ : Configuration′ Iᶜᶠ[ [] & [ tc∃ ] , [] & [] , [] & [ A has 1 ] ]
-Aauth▷ = A auth[ Action A Iᵃᶜ[ [ tc∃ ] , [] , [ 1 ] , [] ] ∋
-                 (tc ▷ˢ 0ᶠ) {pr = fromWitness {0ℓ}
-                            {P = [ 1 ] ≡ [ [ 1 ] ‼ 0ᶠ ] }
-                            {Q = [ 1 ] SETₙ.≟ₗ [ [ 1 ] ‼ 0ᶠ ]}
-                            refl}
-               ]∶- refl & refl & refl & refl & refl & refl
-
-Bauth▷ : Configuration′ Iᶜᶠ[ [] & [ tc∃ ] , [] & [] , [] & [ B has 0 ] ]
-Bauth▷ = B auth[ Action B Iᵃᶜ[ [ tc∃ ] , [] , [ 0 ] , [] ] ∋
-                 (tc ▷ˢ 1ᶠ) {pr = fromWitness {0ℓ}
-                            {P = [ 0 ] ≡ [ (1 ∷ [ 0 ]) ‼ 1ᶠ ] }
-                            {Q = [ 0 ] SETₙ.≟ₗ [ (1 ∷ [ 0 ]) ‼ 1ᶠ ]}
-                            refl}
-               ]∶- refl & refl & refl & refl & refl & refl
-
-c₀ : Configuration Iᶜᶠ[ [] , [] , [ A has 1 - B has 0 ] ]
-c₀ = ⟨ A , 1 ⟩ᵈ
-  ∣∣ ⟨ B , 0 ⟩ᵈ
-  ∶- refl & refl & refl & refl & refl & refl
-
---> [C-Advertise]
-c₁ : Configuration Iᶜᶠ[ [ tc∃ ] , [] , [ A has 1 - B has 0 ] ]
-c₁ = ` tc
-  ∣∣ c₀
-  ∶- refl & refl & refl & refl & refl & refl
-
---> [C-AuthCommit]
-c₂ : Configuration Iᶜᶠ[ [ tc∃ ] , [] , [ A has 1 - B has 0 ] ]
-c₂ = c₁
-  ∣∣ ⟨A♯⟩
-  ∶- refl & refl & refl & refl & refl & refl
-  ∣∣ Aauth♯
-  ∶- refl & refl & refl & refl & refl & refl
-
-c₂′ : Configuration′ Iᶜᶠ[ [] & [ tc∃ ] , [] & [] , [ A has 1 - B has 0 ] & [] ]
-c₂′ = c₀
-   ∣∣ ⟨A♯⟩
-   ∶- refl & refl & refl & refl & refl & refl
-   ∣∣ Aauth♯
-   ∶- refl & refl & refl & refl & refl & refl
-
---> [C-AuthCommit]
-c₃ : Configuration Iᶜᶠ[ [ tc∃ ] , [] , [ A has 1 - B has 0 ] ]
-c₃ = c₂
-  ∣∣ Bauth♯
-  ∶- refl & refl & refl & refl & refl & refl
-
-c₃′ : Configuration′ Iᶜᶠ[ [] & (tc∃ ∷ [ tc∃ ]) , [] & [] , [ A has 1 - B has 0 ] & [] ]
-c₃′ = c₀
-   ∣∣ ⟨A♯⟩
-   ∶- refl & refl & refl & refl & refl & refl
-   ∣∣ Aauth♯
-   ∶- refl & refl & refl & refl & refl & refl
-   ∣∣ Bauth♯
-   ∶- refl & refl & refl & refl & refl & refl
-
---> [C-AuthInit]
-c₄ : Configuration Iᶜᶠ[ [ tc∃ ] , [] , [ B has 0 ] ]
-c₄ = c₃
-  ∣∣ Aauth▷
-  ∶- refl & refl & refl & refl & refl & refl
-
-c₄′ : Configuration′ Iᶜᶠ[ [] & (tc∃ ∷ tc∃ ∷ [ tc∃ ]) , [] & [] , [ B has 0 ] & [] ]
-c₄′ = c₀
-   ∣∣ ⟨A♯⟩
-   ∶- refl & refl & refl & refl & refl & refl
-   ∣∣ Aauth♯
-   ∶- refl & refl & refl & refl & refl & refl
-   ∣∣ Bauth♯
-   ∶- refl & refl & refl & refl & refl & refl
-   ∣∣ Aauth▷
-   ∶- refl & refl & refl & refl & refl & refl
-
---> [C-AuthInit]
-c₅ : Configuration Iᶜᶠ[ [ tc∃ ] , [] , [] ]
-c₅ = c₄
-  ∣∣ Bauth▷
-  ∶- refl & refl & refl & refl & refl & refl
-
-c₅′ : Configuration′ Iᶜᶠ[ [] & (tc∃ ∷ tc∃ ∷ tc∃ ∷ [ tc∃ ]) , [] & [] , [] & [] ]
-c₅′ = c₀
-   ∣∣ Aauth♯
-   ∶- refl & refl & refl & refl & refl & refl
-   ∣∣ Bauth♯
-   ∶- refl & refl & refl & refl & refl & refl
-   ∣∣ Aauth▷
-   ∶- refl & refl & refl & refl & refl & refl
-   ∣∣ Bauth▷
-   ∶- refl & refl & refl & refl & refl & refl
-
---> [C-Init]
-c₆ : Configuration Iᶜᶠ[ [] , [ c∃ ] , [] ]
-c₆ = ⟨ tC ⟩ᶜ
-  ∣∣ ⟨A♯⟩
-  ∶- refl & refl & refl & refl & refl & refl
-
---> [C-AuthRev]
-c₇ : Configuration Iᶜᶠ[ [] , [ c∃ ] , [] ]
-c₇ = A♯
-  ∣∣ ⟨ tC ⟩ᶜ
-  ∶- refl & refl & refl & refl & refl & refl
-
---> [C-Control]
-c₈ : Configuration Iᶜᶠ[ [] , [ c₁∃ ] , [] ]
-c₈ = ⟨ [ tC ‼ 0ᶠ ] ⟩ᶜ
-  ∣∣ A♯
-  ∶- refl & refl & refl & refl & refl & refl
-
---> [C-PutRev]
-c₉ : Configuration Iᶜᶠ[ [] , [ c₂∃ ] , [] ]
-c₉ = ⟨ [ withdraw A ] ⟩ᶜ
-  ∣∣ A♯
-  ∶- refl & refl & refl & refl & refl & refl
-
---> [C-Withdraw]
-c₁₀ : Configuration Iᶜᶠ[ [] , [] , [ A has 1 ] ]
-c₁₀ = ⟨ A , 1 ⟩ᵈ
-   ∣∣ A♯
-   ∶- refl & refl & refl & refl & refl & refl
-
-tc-semantics :
-  c₀ —↠[
-    advertise[ tc∃ ]
-  ∷ auth-commit[ A , tc∃ , [ a , just (9 , refl) ] ]
-  ∷ auth-commit[ B , tc∃ , [] ]
-  ∷ auth-init[ A , tc∃ , 0 ]
-  ∷ auth-init[ B , tc∃ , 1 ]
-  ∷ init[ tc∃ ]
-  ∷ auth-rev[ A , a ]
-  ∷ empty
-  ∷ put[ [] , [ a ] ]
-  ∷ withdraw[ A , 1 ]
-  ∷ []
-  ] c₁₀
-tc-semantics =
-  start
-    c₀
-  —→⟨ [C-Advertise] {Γ = c₀}
-      -- 1. at least one honest participant
-      (A , (λ x → here refl))
-      -- 2. all deposits in G actually exist
-      (λ{ .((A has 1) ⟨ true ⟩) (here refl) → here refl
-        ; .((B has 0) ⟨ true ⟩) (there (here refl)) → there (here refl)
-        ; d (there (there ()))
-        })
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
-    c₁
-  —→⟨ [C-AuthCommit] {A = A} {secrets = [ a , just (9 , refl) ]} {Γ = c₀} {pr = refl}
-      -- satisfy rads (none in this case)
-      (λ ())
-      -- honest participants have not committed to ⊥
-      (λ _ → mjust tt All-∷ All-[])
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
-    c₂
-  —→⟨ [C-AuthCommit] {A = B} {secrets = []} {Γ = c₂′} {pr = refl}
-      -- satisfy rads
-      (λ {x} z → z)
-      -- honest participants have not committed to ⊥
-      (λ _ → All-[])
-      --  All-[]
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
-    c₃
-  —→⟨ [C-AuthInit] {dsˡ = []} {dsʳ = [ B has 0 ]} {Γ = c₃′} {p = refl}
-      -- satisfy rads
-      (λ { (here refl) → here refl
-         ; (there (here refl)) → here refl
-         ; (there (there ()))
-         })
-      -- all participants have committed their secrets
-      ((here refl) All-∷ ((here refl) All-∷ ((there (here refl)) All-∷ All-[])))
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
-    c₄
-  —→⟨ [C-AuthInit] {dsˡ = []} {dsʳ = []} {Γ = c₄′} {p = refl}
-      -- satisfy rads (none in this case)
-      (λ { (here refl) → here refl
-         ; (there (here refl)) → here refl
-         ; (there (there (here refl))) → here refl
-         ; (there (there (there ())))
-         })
-      -- all participants have committed their secrets
-      ((here refl) All-∷ ((here refl) All-∷ ((there (here refl)) All-∷ All-[])))
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
-    c₅
-  —→⟨ [C-Init] {Γ = ⟨A♯⟩} {Δ = c₅′}
-      -- satisfy rads (none in this case)
-      (λ { (here refl) → here refl
-         ; (there (here refl)) → here refl
-         ; (there (there (here refl))) → here refl
-         ; (there (there (there (here refl)))) → here refl
-         ; (there (there (there (there ()))))
-         })
-      -- all participants have committed their secrets
-      ((here refl) All-∷ ((here refl) All-∷ ((there (here refl)) All-∷ All-[])))
-      -- all participants have spent the required (persistent) deposits for stipulation
-      refl
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
-    c₆
-  —→⟨ [C-AuthRev] {s = a} {n = 9} {Γ = ⟨ tC ⟩ᶜ}
-      -- valid length given
-      refl
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
-    c₇
-  —→⟨ [C-Control] {Γ = A♯} {i = 0ᶠ} ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
-    c₈
-  —→⟨ [C-PutRev] {Γ = ∅ᶜ} {n = 1} {ds′ = []} {Δ = V.[ A , a , 9 , refl ]}
-      -- `put` command
-      (sound-put , refl)
-      refl
-      -- put deposits
-      refl
-      -- predicate evaluates to `true`
-      refl
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
-    c₉
-  —→⟨ [C-Withdraw] {Γ = A♯} ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
-    c₁₀
-  ∎∎
+tc-steps :
+  ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
+    —↠[ advertise[ tc ]
+      ∷ auth-commit[ A , tc , [ a , just N ] ]
+      ∷ auth-commit[ B , tc , [] ]
+      ∷ auth-init[ A , tc , x ]
+      ∷ auth-init[ B , tc , y ]
+      ∷ init[ G tc , C tc ]
+      ∷ auth-rev[ A , a ]
+      ∷ put[ [] , [ a ] , x₁ ]
+      ∷ withdraw[ A , 1 , x₂ ]
+      ∷ []
+      ]
+  ⟨ A has 1 ⟩at x₃ ∣ A ∶ a ♯ N
+tc-steps =
+  begin
+    ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
+  —→⟨ C-Advertise {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} ⟩
+    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
+  —→⟨ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} {secrets = [ a , just N ]} ⟩
+    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]
+  —→⟨ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]} {secrets = []} ⟩
+    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]
+  —→⟨ C-AuthInit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]}
+                 {v = 1} ⟩
+    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]
+         ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ]
+  —→⟨ C-AuthInit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
+                    ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ]}
+                 {v = 0} ⟩
+    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]
+         ∣ A auth[ x ▷ˢ tc ] ∣ B auth[ y ▷ˢ tc ]
+  —→⟨ [C-Init] {Γ = ⟨ A ∶ a ♯ just 9 ⟩} {x = x₁} ⟩
+    ⟨ C tc , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just 9 ⟩
+  —→⟨ [C-AuthRev] {n = 9} {Γ = ⟨ C tc , 1 ⟩at x₁} ⟩
+    ⟨ C tc , 1 ⟩at x₁ ∣ A ∶ a ♯ 9
+  —→⟨ [C-Control] {c = C tc}
+                  {Γ = A ∶ a ♯ 9}
+                  {Γ′ = ⟨ [ withdraw A ] , 1 ⟩at x₂ ∣ A ∶ a ♯ 9 ∣ ∅ᶜ}
+                  {i = 0F}
+        (toWitness {Q = ⟨ [ reveal [ a ] ⇒ [ withdraw A ] ] , 1 ⟩at x₁ ∣ A ∶ a ♯ 9
+                     ≈? ⟨ [ reveal [ a ] ⇒ [ withdraw A ] ] , 1 ⟩at x₁ ∣ ∅ᶜ ∣ A ∶ a ♯ 9 ∣ ∅ᶜ} tt)
+        ([C-PutRev] {ds = []} {ss = [ A , a , 9 ]} refl)
+        refl
+    ⟩
+    ⟨ [ withdraw A ] , 1 ⟩at x₂ ∣ A ∶ a ♯ 9
+  —→⟨ [C-Withdraw] {Γ = A ∶ a ♯ 9} {x = x₃} ⟩
+    ⟨ A has 1 ⟩at x₃ ∣ A ∶ a ♯ N
+  ∎

@@ -14,43 +14,38 @@ open import Relation.Binary.PropositionalEquality using (_≡_)
 
 import Prelude.Set' as SET
 
--------------------------------------------------------------------
--- Basic types.
-
-Value : Set
-Value = ℕ
-
-Values : Set
+Value  = ℕ
 Values = List Value
 
-Secret : Set
-Secret = String
-
-Secrets : Set
+Secret  = String
 Secrets = List Secret
 
-Time : Set
+Id  = String
+Ids = List String
+
 Time = ℕ
 
 variable
   n : ℕ
 
-  v v′ v″ : Value
-  vs vs′ vs″ vsᶜ vsᵛ vsᵖ vsᵛₗ vsᵖₗ vsᵛᵣ vsᵖᵣ : Values
+  v v′ : Value
+  vs vs′ : Values
 
-  s s′ s″ : Secret
+  a a′ : Secret
+  as as′ : Secrets
+
+  x y z x′ y′ z′ : Id
+  xs xs′ : Ids
+
+  t t′ δ : Time
 
 -- Sets of values
 module SETₙ = SET {A = Value} _≟ℕ_
-
-Set⟨Value⟩ : Set
 Set⟨Value⟩ = Set' where open SETₙ
 
 -- Sets of secrets
-_≟ₛ_ : Decidable {A = Secret} _≡_
+_≟ₛ_ : Decidable {A = String} _≡_
 _≟ₛ_ = _≟ₛ′_
-
-module SETₛ = SET {A = Secret} _≟ₛ_
-
-Set⟨Secret⟩ : Set
+module SETₛ = SET {A = String} _≟ₛ_
 Set⟨Secret⟩ = Set' where open SETₛ
+Set⟨Id⟩ = Set' where open SETₛ

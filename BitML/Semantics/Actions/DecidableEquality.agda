@@ -2,22 +2,17 @@
 -- Decidable equality for actions
 ------------------------------------------------------------------------
 
-open import Level        using (0ℓ)
-open import Data.Nat     using (ℕ; _≟_; _>_; _+_)
-open import Data.Product using (∃; ∃-syntax; Σ; Σ-syntax; _,_)
-open import Data.List    using (List; []; _∷_; [_]; _++_; map; length)
+open import Data.Nat     using (ℕ; _>_)
+  renaming (_≟_ to _≟ℕ_)
+open import Data.Product using (Σ-syntax)
+open import Data.List    using (List; length)
 open import Data.Fin     using ()
-  renaming (zero to 0ᶠ; suc to sucᶠ; _≟_ to _≟ᶠ_)
+  renaming (_≟_ to _≟ᶠ_)
 
 open import Relation.Nullary           using (yes; no)
-open import Relation.Nullary.Decidable using (True; False; fromWitness)
 open import Relation.Binary            using (Decidable)
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-
-open import Category.Functor using (RawFunctor)
-open import Data.List.Categorical renaming (functor to listFunctor)
-open RawFunctor {0ℓ} listFunctor using (_<$>_)
 
 import Prelude.Set' as SET
 open import Prelude.Lists
@@ -37,85 +32,117 @@ open import BitML.Semantics.Actions.Types     Participant _≟ₚ_ Honest
 ------------------------------------------------------------------------
 
 -- Actions.
-_≟ᵃᶜ_ : Decidable {A = Action p aci} _≡_
+_≟ᵃᶜ_ : Decidable {A = Action} _≡_
+(♯▷ x) ≟ᵃᶜ (♯▷ x₁)
+  with x ≟ₐ x₁
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl = yes refl
+(♯▷ x) ≟ᵃᶜ (x₁ ▷ˢ x₂) = no (λ ())
+(♯▷ x) ≟ᵃᶜ (x₁ ▷ x₂) = no (λ ())
+(♯▷ x) ≟ᵃᶜ (x₁ ↔ x₂ ▷⟨ x₃ , _ ⟩) = no (λ ())
+(♯▷ x) ≟ᵃᶜ (x₁ ▷⟨ A , v , v₂ ⟩) = no (λ ())
+(♯▷ x) ≟ᵃᶜ (x₁ ▷ᵈ x₂) = no (λ ())
+(♯▷ x) ≟ᵃᶜ (xs , i ▷ᵈˢ x₁) = no (λ ())
 
-(♯▷ ad) ≟ᵃᶜ (♯▷ .ad)   = yes refl
-(♯▷ ad) ≟ᵃᶜ (.ad ▷ˢ i) = no λ ()
+(x ▷ˢ x₁) ≟ᵃᶜ (♯▷ x₂) = no (λ ())
+(x ▷ˢ x₁) ≟ᵃᶜ (x₂ ▷ˢ x₃)
+  with x ≟ₛ x₂
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl
+  with x₁ ≟ₐ x₃
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl = yes refl
+(x ▷ˢ x₁) ≟ᵃᶜ (x₂ ▷ x₃) = no (λ ())
+(x ▷ˢ x₁) ≟ᵃᶜ (x₂ ↔ x₃ ▷⟨ x₄ , _ ⟩) = no (λ ())
+(x ▷ˢ x₁) ≟ᵃᶜ (x₂ ▷⟨ A , v , v₂ ⟩) = no (λ ())
+(x ▷ˢ x₁) ≟ᵃᶜ (x₂ ▷ᵈ x₃) = no (λ ())
+(x ▷ˢ x₁) ≟ᵃᶜ (xs , i ▷ᵈˢ x₂) = no (λ ())
 
-(ad ▷ˢ i) ≟ᵃᶜ (♯▷ .ad) = no λ ()
-(ad ▷ˢ i) ≟ᵃᶜ (.ad ▷ˢ i′) with i ≟ᶠ i′
-... | no ¬p    = no λ{refl → ¬p refl}
+(x ▷ x₁) ≟ᵃᶜ (♯▷ x₂) = no (λ ())
+(x ▷ x₁) ≟ᵃᶜ (x₂ ▷ˢ x₃) = no (λ ())
+(x ▷ x₁) ≟ᵃᶜ (x₂ ▷ x₃)
+  with x ≟ₛ x₂
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl
+  with x₁ ≟ᶜ x₃
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl = yes refl
+(x ▷ x₁) ≟ᵃᶜ (x₂ ↔ x₃ ▷⟨ x₄ , _ ⟩) = no (λ ())
+(x ▷ x₁) ≟ᵃᶜ (x₂ ▷⟨ A , v , v₂ ⟩) = no (λ ())
+(x ▷ x₁) ≟ᵃᶜ (x₂ ▷ᵈ x₃) = no (λ ())
+(x ▷ x₁) ≟ᵃᶜ (xs , i ▷ᵈˢ x₂) = no (λ ())
+
+(x ↔ x₁ ▷⟨ x₂ , _ ⟩) ≟ᵃᶜ (♯▷ x₃) = no (λ ())
+(x ↔ x₁ ▷⟨ x₂ , _ ⟩) ≟ᵃᶜ (x₃ ▷ˢ x₄) = no (λ ())
+(x ↔ x₁ ▷⟨ x₂ , _ ⟩) ≟ᵃᶜ (x₃ ▷ x₄) = no (λ ())
+(x ↔ x₁ ▷⟨ x₂ , v ⟩) ≟ᵃᶜ (x₃ ↔ x₄ ▷⟨ x₅ , v′ ⟩)
+  with x ≟ₛ x₃
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl
+  with x₁ ≟ₛ x₄
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl
+  with x₂ ≟ₚ x₅
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl
+  with v ≟ℕ v′
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl = yes refl
+(x ↔ x₁ ▷⟨ x₂ , _ ⟩) ≟ᵃᶜ (x₃ ▷⟨ A , v , v₂ ⟩) = no (λ ())
+(x ↔ x₁ ▷⟨ x₂ , _ ⟩) ≟ᵃᶜ (x₃ ▷ᵈ x₄) = no (λ ())
+(x ↔ x₁ ▷⟨ x₂ , _ ⟩) ≟ᵃᶜ (xs , i ▷ᵈˢ x₃) = no (λ ())
+
+(x ▷⟨ A , v , v₂ ⟩) ≟ᵃᶜ (♯▷ x₃) = no (λ ())
+(x ▷⟨ A , v , v₂ ⟩) ≟ᵃᶜ (x₃ ▷ˢ x₄) = no (λ ())
+(x ▷⟨ A , v , v₂ ⟩) ≟ᵃᶜ (x₃ ▷ x₄) = no (λ ())
+(x ▷⟨ A , v , v₂ ⟩) ≟ᵃᶜ (x₃ ↔ x₄ ▷⟨ x₅ , _ ⟩) = no (λ ())
+(x ▷⟨ A , v , v′ ⟩) ≟ᵃᶜ (x₃ ▷⟨ A′ , w , w′ ⟩)
+  with x ≟ₛ x₃
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl
+  with A ≟ₚ A′
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl
+  with v ≟ℕ w
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl
+  with v′ ≟ℕ w′
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl = yes refl
+(x ▷⟨ A , v , v₂ ⟩) ≟ᵃᶜ (x₃ ▷ᵈ x₄) = no (λ ())
+(x ▷⟨ A , v , v₂ ⟩) ≟ᵃᶜ (xs , i ▷ᵈˢ x₃) = no (λ ())
+
+(x ▷ᵈ x₁) ≟ᵃᶜ (♯▷ x₂) = no (λ ())
+(x ▷ᵈ x₁) ≟ᵃᶜ (x₂ ▷ˢ x₃) = no (λ ())
+(x ▷ᵈ x₁) ≟ᵃᶜ (x₂ ▷ x₃) = no (λ ())
+(x ▷ᵈ x₁) ≟ᵃᶜ (x₂ ↔ x₃ ▷⟨ x₄ , _ ⟩) = no (λ ())
+(x ▷ᵈ x₁) ≟ᵃᶜ (x₂ ▷⟨ A , v , v₂ ⟩) = no (λ ())
+(x ▷ᵈ A) ≟ᵃᶜ (x₂ ▷ᵈ A′)
+  with x ≟ₛ x₂
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl
+  with A ≟ₚ A′
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl = yes refl
+(x ▷ᵈ x₁) ≟ᵃᶜ (xs , i ▷ᵈˢ x₂) = no (λ ())
+
+(xs , i ▷ᵈˢ x) ≟ᵃᶜ (♯▷ x₁) = no (λ ())
+(xs , i ▷ᵈˢ x) ≟ᵃᶜ (x₁ ▷ˢ x₂) = no (λ ())
+(xs , i ▷ᵈˢ x) ≟ᵃᶜ (x₁ ▷ x₂) = no (λ ())
+(xs , i ▷ᵈˢ x) ≟ᵃᶜ (x₁ ↔ x₂ ▷⟨ x₃ , _ ⟩) = no (λ ())
+(xs , i ▷ᵈˢ x) ≟ᵃᶜ (x₁ ▷⟨ A , v , v₂ ⟩) = no (λ ())
+(xs , i ▷ᵈˢ x) ≟ᵃᶜ (x₁ ▷ᵈ x₂) = no (λ ())
+(xs , i ▷ᵈˢ x) ≟ᵃᶜ (xs₁ , i₁ ▷ᵈˢ x₁)
+  with xs SETₛ.≟ₗ xs₁
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl
+  with i ≟ᶠ i₁
+... | no ¬p    = no λ{ refl → ¬p refl }
+... | yes refl
+  with x ≟ₛ x₁
+... | no ¬p    = no λ{ refl → ¬p refl }
 ... | yes refl = yes refl
 
-(c ▷ᵇ i) ≟ᵃᶜ (.c ▷ᵇ i′) with i ≟ᶠ i′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-
-(x ↔ y) ≟ᵃᶜ (x′ ↔ y′)
-  with x ≟ᶠ x′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl
-  with y ≟ᶠ y′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-(x ↔ y) ≟ᵃᶜ (i ▷ v₁ , v₂) = no λ ()
-(x ↔ y) ≟ᵃᶜ (i ▷ᵈ p′)     = no λ ()
-(x ↔ y) ≟ᵃᶜ destroy i     = no λ ()
-
-(i ▷ v₁ , v₂) ≟ᵃᶜ (i′ ▷ v₁′ , v₂′)
-  with i ≟ᶠ i′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl
-  with v₁ SETₙ.≣ v₁′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl
-  with v₂ SETₙ.≣ v₂′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-(i ▷ v₁ , v₂) ≟ᵃᶜ (x ↔ y)    = no λ ()
-(i ▷ v₁ , v₂) ≟ᵃᶜ (i₁ ▷ᵈ p′) = no λ ()
-(i ▷ v₁ , v₂) ≟ᵃᶜ destroy i₁ = no λ ()
-
-(i ▷ᵈ a) ≟ᵃᶜ (i′ ▷ᵈ b)
-  with i ≟ᶠ i′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl
-  with a SETₚ.≣ b
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-(i ▷ᵈ p′) ≟ᵃᶜ (x ↔ y)        = no λ ()
-(i ▷ᵈ p′) ≟ᵃᶜ (i₁ ▷ v₁ , v₂) = no λ ()
-(i ▷ᵈ p′) ≟ᵃᶜ destroy i₁     = no λ ()
-
-destroy i ≟ᵃᶜ destroy i′
-  with i ≟ᶠ i′
-... | no ¬p    = no λ{refl → ¬p refl}
-... | yes refl = yes refl
-destroy i ≟ᵃᶜ (x ↔ y)        = no λ ()
-destroy i ≟ᵃᶜ (i₁ ▷ v₁ , v₂) = no λ ()
-destroy i ≟ᵃᶜ (i₁ ▷ᵈ p′)     = no λ ()
-
-_∃≟ᵃᶜ_ : Decidable {A = ∃Action} _≡_
-(p , Iᵃᶜ[ ads , cs , vs , ds ] , a) ∃≟ᵃᶜ (p′ , Iᵃᶜ[ ads′ , cs′ , vs′ , ds′ ] , a′)
-  with p ≟ₚ p′
-... | no ¬p = no λ{ refl → ¬p refl}
-... | yes refl
-  with ads SETₐ.≟ₗ ads′
-... | no ¬p = no λ{ refl → ¬p refl}
-... | yes refl
-  with cs SETᶜ.≟ₗ cs′
-... | no ¬p = no λ{ refl → ¬p refl}
-... | yes refl
-  with vs SETₙ.≟ₗ vs′
-... | no ¬p = no λ{ refl → ¬p refl}
-... | yes refl
-  with ds SETₑ.≟ₗ ds′
-... | no ¬p = no λ{ refl → ¬p refl}
-... | yes refl
-  with a ≟ᵃᶜ a′
-... | no ¬p = no λ{ refl → ¬p refl}
-... | yes refl = yes refl
-
-module SETᵃᶜ = SET _∃≟ᵃᶜ_
+module SETᵃᶜ = SET _≟ᵃᶜ_
 Set⟨Action⟩ : Set
 Set⟨Action⟩ = Set' where open SETᵃᶜ
