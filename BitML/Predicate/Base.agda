@@ -39,16 +39,21 @@ _ : Predicate
 _ = ∣ "change_me" ∣ `= ∣ "change_me" ∣
  `∧ ` (+ 5) `= (` (+ 3) `+ ` (+ 2))
 
-secretsᵖʳ : Predicate → Secrets
 secretsᵃʳ : Arith → Secrets
+secretsᵃʳ = {-SETₛ.nub ∘-} go
+  where
+    go : Arith → Secrets
+    go (` _)    = []
+    go ∣ a ∣    = [ a ]
+    go (x `+ y) = go x ++ go y
+    go (x `- y) = go x ++ go y
 
-secretsᵖʳ `true = []
-secretsᵖʳ (x `∧ y) = secretsᵖʳ x ++ secretsᵖʳ y
-secretsᵖʳ (`¬ x)   = secretsᵖʳ x
-secretsᵖʳ (x `= y) = secretsᵃʳ x ++ secretsᵃʳ y
-secretsᵖʳ (x `< y) = secretsᵃʳ x ++ secretsᵃʳ y
-
-secretsᵃʳ (` _)    = []
-secretsᵃʳ ∣ a ∣    = [ a ]
-secretsᵃʳ (x `+ y) = secretsᵃʳ x ++ secretsᵃʳ y
-secretsᵃʳ (x `- y) = secretsᵃʳ x ++ secretsᵃʳ y
+secretsᵖʳ : Predicate → Secrets
+secretsᵖʳ = {-SETₛ.nub ∘-} go
+  where
+    go : Predicate → Secrets
+    go `true = []
+    go (x `∧ y) = go x ++ go y
+    go (`¬ x)   = go x
+    go (x `= y) = secretsᵃʳ x ++ secretsᵃʳ y
+    go (x `< y) = secretsᵃʳ x ++ secretsᵃʳ y

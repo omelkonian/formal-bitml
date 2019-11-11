@@ -6,7 +6,7 @@ open import Function using (_∘_)
 
 open import Data.Product using (_×_; _,_; Σ-syntax)
 open import Data.Nat     using (_>_)
--- open import Data.List    using (List; []; _∷_; [_]; length; _++_; map; concatMap; filter)
+open import Data.List    using (List; length; _++_)
 
 open import Data.List.Relation.Unary.All                   using (All; all)
 open import Data.List.Relation.Unary.Unique.Propositional  using (Unique)

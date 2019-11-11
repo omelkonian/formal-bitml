@@ -23,6 +23,9 @@ Secrets = List Secret
 Id  = String
 Ids = List String
 
+Name  = String
+Names = List String
+
 Time = ℕ
 
 variable
@@ -39,11 +42,11 @@ variable
 
   t t′ δ : Time
 
--- Sets of values
+-- Sets of (time) values
 module SETₙ = SET {A = Value} _≟ℕ_
 Set⟨Value⟩ = Set' where open SETₙ
 
--- Sets of secrets
+-- Sets of secrets/ids/names
 _≟ₛ_ : Decidable {A = String} _≡_
 _≟ₛ_ = _≟ₛ′_
 module SETₛ = SET {A = String} _≟ₛ_

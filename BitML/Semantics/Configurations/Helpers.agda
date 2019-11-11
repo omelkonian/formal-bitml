@@ -62,23 +62,23 @@ _≈?_ : Decidable {A = Configuration} _≈_
 -- _≈?_ : Configuration → Configuration → Set
 c ≈? c′ = cfgToList c SETᶜᶠ.↭? cfgToList c′
 
-depositsᶜ : Configuration → List DepositRef
-depositsᶜ = SETₑ.nub ∘ go
+depositsᶜᶠ : Configuration → List DepositRef
+depositsᶜᶠ = {-SETₑ.nub ∘-} go
   where
     go : Configuration → List DepositRef
     go (⟨ A has v ⟩at x) = [ A , v , x ]
-    go (l ∣ r)           = depositsᶜ l ++ depositsᶜ r
+    go (l ∣ r)           = go l ++ go r
     go _                 = []
 
-secretsᶜ : Participant → Configuration → Secrets
-secretsᶜ A = SETₛ.nub ∘ go
+secretsOfᶜᶠ : Participant → Configuration → Secrets
+secretsOfᶜᶠ A = {-SETₛ.nub ∘-} go
   where
     go : Configuration → Secrets
     go (⟨ B ∶ a ♯ _ ⟩) with A ≟ₚ B
-    ... | yes _ = [ a ]
-    ... | no  _ = []
-    go (l ∣ r)       = secretsᶜ A l ++ secretsᶜ A r
-    go _             = []
+    ... | yes _        = [ a ]
+    ... | no  _        = []
+    go (l ∣ r)         = go l ++ go r
+    go _               = []
 
 committedParticipants : Configuration → Advertisement → List Participant
 committedParticipants (p auth[ (♯▷ ad′) ]) ad

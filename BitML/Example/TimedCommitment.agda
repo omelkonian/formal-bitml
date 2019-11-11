@@ -82,8 +82,8 @@ tc-steps =
   —→⟨ C-AuthInit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
                     ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ]}
                  {v = 0} ⟩
-    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]
-         ∣ A auth[ x ▷ˢ tc ] ∣ B auth[ y ▷ˢ tc ]
+    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]
+         ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ] ∣ B auth[ y ▷ˢ tc ]
   —→⟨ [C-Init] {Γ = ⟨ A ∶ a ♯ just 9 ⟩} {x = x₁} ⟩
     ⟨ C tc , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just 9 ⟩
   —→⟨ [C-AuthRev] {n = 9} {Γ = ⟨ C tc , 1 ⟩at x₁} ⟩

@@ -27,20 +27,13 @@ module BitML.Contracts.Helpers
 open import BitML.Contracts.Types             Participant _≟ₚ_ Honest
 open import BitML.Contracts.DecidableEquality Participant _≟ₚ_ Honest
 
--- T0D0 use Set'.nub on all results
+-- T0D0 use Set'.nub on all results? or only on use-sites
 
-namesᵖ : Precondition → Ids
-namesᵖ = SETₛ.nub ∘ go
-  where
-    go : Precondition → Ids
-    go (_ :? _ at x) = [ x ]
-    go (_ :! _ at x) = [ x ]
-    go (_ :secret _) = []
-    go (p₁ ∣∣ p₂)     = namesᵖ p₁ ++ namesᵖ p₂
+-- Names
 
-namesᶜ   : Contract                 → Ids
-namesᶜˢ  : Contracts                → Ids
-namesᵛᶜˢ : List (Value × Contracts) → Ids
+namesᶜ   : Contract                 → Names
+namesᶜˢ  : Contracts                → Names
+namesᵛᶜˢ : List (Value × Contracts) → Names
 
 namesᶜˢ []       = []
 namesᶜˢ (c ∷ cs) = namesᶜ c ++ namesᶜˢ cs
@@ -48,11 +41,58 @@ namesᶜˢ (c ∷ cs) = namesᶜ c ++ namesᶜˢ cs
 namesᵛᶜˢ []               = []
 namesᵛᶜˢ ((_ , cs) ∷ vcs) = namesᶜˢ cs ++ namesᵛᶜˢ vcs
 
-namesᶜ (put xs &reveal _ if _ ⇒ cs) = xs ++ namesᶜˢ cs
+namesᶜ (put xs &reveal as if _ ⇒ cs) = xs ++ as ++ namesᶜˢ cs
 namesᶜ (withdraw _)                 = []
 namesᶜ (split vcs)                  = namesᵛᶜˢ vcs
 namesᶜ (_ ⇒ c)                      = namesᶜ c
 namesᶜ (after _ ⇒ c)                = namesᶜ c
+
+namesᵖ : Precondition → Names
+namesᵖ = {-SETₛ.nub ∘-} go
+  where
+    go : Precondition → Names
+    go (_ :? _ at x) = [ x ]
+    go (_ :! _ at x) = [ x ]
+    go (_ :secret a) = [ a ]
+    go (p₁ ∣∣ p₂)     = go p₁ ++ go p₂
+
+-- Secrets
+
+secretsᶜ   : Contract                 → Secrets
+secretsᶜˢ  : Contracts                → Secrets
+secretsᵛᶜˢ : List (Value × Contracts) → Secrets
+
+secretsᶜˢ []       = []
+secretsᶜˢ (c ∷ cs) = secretsᶜ c ++ secretsᶜˢ cs
+
+secretsᵛᶜˢ []               = []
+secretsᵛᶜˢ ((_ , cs) ∷ vcs) = secretsᶜˢ cs ++ secretsᵛᶜˢ vcs
+
+secretsᶜ (put _ &reveal as if _ ⇒ cs) = as ++ secretsᶜˢ cs
+secretsᶜ (withdraw _)                 = []
+secretsᶜ (split vcs)                  = secretsᵛᶜˢ vcs
+secretsᶜ (_ ⇒ c)                      = secretsᶜ c
+secretsᶜ (after _ ⇒ c)                = secretsᶜ c
+
+secretsᵖ : Precondition → Secrets
+secretsᵖ = {-SETₛ.nub ∘-} go
+  where
+    go : Precondition → Secrets
+    go (_ :secret s) = [ s ]
+    go (l ∣∣ r )     = go l ++ go r
+    go _             = []
+
+secretsOfᵖ : Participant → Precondition → Secrets
+secretsOfᵖ A = {-SETₛ.nub ∘-} go
+  where
+    go : Precondition → Secrets
+    go (B :secret s) with A ≟ₚ B
+    ... | yes _ = [ s ]
+    ... | no  _ = []
+    go (l ∣∣ r )     = go l ++ go r
+    go _             = []
+
+-- Participants
 
 participantsᶜ   : Contract                 → List Participant
 participantsᶜˢ  : Contracts                → List Participant
@@ -71,13 +111,15 @@ participantsᶜ (p ⇒ c)                     = p ∷ participantsᶜ c
 participantsᶜ (after _ ⇒ c)               = participantsᶜ c
 
 participantsᵖ : Precondition → List Participant
-participantsᵖ = SETₚ.nub ∘ go
+participantsᵖ = {-SETₚ.nub ∘-} go
   where
     go : Precondition → List Participant
     go (p :? _ at _) = [ p ]
     go (p :! _ at _) = [ p ]
     go (p :secret _) = [ p ]
-    go (p₁ ∣∣ p₂)    = participantsᵖ p₁ ++ participantsᵖ p₂
+    go (p₁ ∣∣ p₂)    = go p₁ ++ go p₂
+
+-- Put components
 
 putComponentsᶜ   : Contract                 → List (Ids × Secrets × Predicate)
 putComponentsᶜˢ  : Contracts                → List (Ids × Secrets × Predicate)
@@ -95,43 +137,37 @@ putComponentsᶜ (split vcs)                   = putComponentsᵛᶜˢ vcs
 putComponentsᶜ (_ ⇒ c)                       = putComponentsᶜ c
 putComponentsᶜ (after _ ⇒ c)                 = putComponentsᶜ c
 
+-- Deposits
+
 depositsᵖ : Precondition → List DepositRef
-depositsᵖ = SETₑ.nub ∘ go
+depositsᵖ = {-SETₑ.nub ∘-} go
   where
     go : Precondition → List DepositRef
     go (a :! v at x) = [ a , v , x ]
     go (a :? v at x) = [ a , v , x ]
     go (_ :secret _) = []
-    go (p₁ ∣∣ p₂)    = depositsᵖ p₁ ++ depositsᵖ p₂
+    go (p₁ ∣∣ p₂)    = go p₁ ++ go p₂
 
 persistentDepositsᵖ : Precondition → List DepositRef
-persistentDepositsᵖ = SETₑ.nub ∘ go
+persistentDepositsᵖ = {-SETₑ.nub ∘-} go
   where
     go : Precondition → List DepositRef
     go (a :! v at x) = [ a , v , x ]
-    go (p₁ ∣∣ p₂)    = persistentDepositsᵖ p₁ ++ persistentDepositsᵖ p₂
+    go (p₁ ∣∣ p₂)    = go p₁ ++ go p₂
     go _             = []
 
 persistentParticipantsᵖ : Precondition → List Participant
-persistentParticipantsᵖ = SETₚ.nub ∘ go
+persistentParticipantsᵖ = {-SETₚ.nub ∘-} go
   where
     go : Precondition → List Participant
     go (A :! _ at _) = [ A ]
-    go (p ∣∣ p₁)     = persistentParticipantsᵖ p ++ persistentParticipantsᵖ p₁
-    go _             = []
-
-secretsᵖ : Participant → Precondition → Secrets
-secretsᵖ A = SETₛ.nub ∘ go
-  where
-    go : Precondition → Secrets
-    go (B :secret s) with A ≟ₚ B
-    ... | yes _ = [ s ]
-    ... | no  _ = []
-    go (l ∣∣ r )     = secretsᵖ A l ++ secretsᵖ A r
+    go (p ∣∣ p₁)     = go p ++ go p₁
     go _             = []
 
 depositsᵃ : Advertisement → List DepositRef
 depositsᵃ = depositsᵖ ∘ G
+
+-- Decorations
 
 decorations⊎ : Contract → List (Participant ⊎ Time)
 decorations⊎ (A       ⇒ d) = inj₁ A ∷ decorations⊎ d
@@ -140,7 +176,7 @@ decorations⊎ _             = []
 
 decorations : Contract → List Participant × List Time
 decorations c with partitionSums (decorations⊎ c)
-... | (ps , ts) = SETₚ.nub ps , SETₙ.nub ts
+... | (ps , ts) = {-SETₚ.nub-} ps , {-SETₙ.nub-} ts
 
 authDecorations : Contract → List Participant
 authDecorations = proj₁ ∘ decorations

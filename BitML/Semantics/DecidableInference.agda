@@ -11,7 +11,7 @@ open import Data.Bool    using (true)
 open import Data.Product using (Σ-syntax; _×_; _,_; proj₁; proj₂)
 open import Data.Nat     using (ℕ; _>_; _+_; _≤_)
 open import Data.Maybe   using (Maybe; Is-just; just; nothing)
-open import Data.List    using (List; []; _∷_; [_]; _++_; map; length; zip; unzip)
+open import Data.List    using (List; []; _∷_; [_]; _++_; map; length; zip; unzip; sum)
 
 open import Data.Maybe.Properties         using (≡-dec)
 open import Data.Maybe.Relation.Unary.Any using ()
@@ -52,7 +52,7 @@ open import BitML.Semantics.InferenceRules         Participant _≟ₚ_ Honest
 C-Advertise :
   ∀ {p₁ : True (validAd? ad)}
     {p₂ : True (any (SETₚ._∈? Hon) (participantsᵖ (G ad)))}
-    {p₃ : True (all (SETₑ._∈? depositsᶜ Γ) (depositsᵃ ad))}
+    {p₃ : True (all (SETₑ._∈? depositsᶜᶠ Γ) (depositsᵃ ad))}
   → Γ —→[ advertise[ ad ] ] ` ad ∣ Γ
 C-Advertise {p₁ = p₁} {p₂} {p₃} = [C-Advertise] (toWitness p₁) (toWitness p₂) (toWitness p₃)
 
@@ -93,8 +93,8 @@ C-AuthCommit :
   → let (as , ms) = unzip secrets
         Δ         = || map (λ{ (ai , Ni) → ⟨ A ∶ ai ♯ Ni ⟩}) secrets
     in
-    {p₁ : True (as SETₛ.≟ₗ secretsᵖ A (G ad))}
-  → {p₂ : True (all (SETₛ._∉? secretsᶜ A Γ) as)}
+    {p₁ : True (as SETₛ.≟ₗ secretsOfᵖ A (G ad))}
+  → {p₂ : True (all (SETₛ._∉? secretsOfᶜᶠ A Γ) as)}
   → {p₃ : True ((A SETₚ.∈? Hon) →? all (anyₘ λ _ → yes tt) ms)}
   → ` ad ∣ Γ —→[ auth-commit[ A , ad , secrets ] ] ` ad ∣ Γ ∣ Δ ∣ A auth[ ♯▷ ad ]
 C-AuthCommit {p₁ = p₁} {p₂} {p₃} = [C-AuthCommit] (toWitness p₁) (toWitness p₂) (toWitness p₃)
@@ -113,5 +113,5 @@ C-Control :
     {p₁ : True (⟨ [ d′ ] , v ⟩at x ∣ Γ ≈? L)}
   → L —→[ α ] Γ′
   → {p₂ : True (≡-dec _≟ₛ_ (cv α) (just x))}
-  → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] As ∣ Γ —→[ α ] Γ′
+  → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (SETₚ.nub (authDecorations d)) ∣ Γ —→[ α ] Γ′
 C-Control {p₁ = p₁} L—→Γ′ {p₂} = [C-Control] (toWitness p₁) L—→Γ′ (toWitness p₂)

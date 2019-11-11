@@ -8,7 +8,7 @@ open import Data.Bool    using (true)
 open import Data.Product using (Σ-syntax; _×_; _,_; proj₁; proj₂)
 open import Data.Nat     using (ℕ; _>_; _+_; _≤_)
 open import Data.Maybe   using (Maybe; Is-just; just; nothing)
-open import Data.List    using (List; []; _∷_; [_]; _++_; map; length; zip; unzip)
+open import Data.List    using (List; []; _∷_; [_]; _++_; map; length; zip; unzip; sum)
 
 open import Data.List.Membership.Propositional       using (_∈_; _∉_)
 open import Data.List.Relation.Unary.All             using (All)
@@ -142,9 +142,9 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [C-Advertise] :
 
-      ValidAdvertisement ad               -- the advertisement is valid
-    → Any (_∈ Hon) (participantsᵖ (G ad)) -- at least one honest participant
-    → All (_∈ depositsᶜ Γ) (depositsᵃ ad) -- all persistent deposits in place
+      ValidAdvertisement ad                -- the advertisement is valid
+    → Any (_∈ Hon) (participantsᵖ (G ad))  -- at least one honest participant
+    → All (_∈ depositsᶜᶠ Γ) (depositsᵃ ad) -- all persistent deposits in place
 
       ------------------------------------------------------------------------
 
@@ -158,9 +158,9 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
           Δ         = || map (λ{ (ai , Ni) → ⟨ A ∶ ai ♯ Ni ⟩}) secrets
       in
 
-      as ≡ secretsᵖ A (G ad)     -- a₁..aₖ secrets of A in G
-    → All (_∉ secretsᶜ A Γ) as   -- ∀i ∈ 1..k : ∄N : {A : aᵢ ♯ N} ∈ Γ
-    → (A ∈ Hon → All Is-just ms) -- honest participants commit to valid lengths
+      as ≡ secretsOfᵖ A (G ad)    -- a₁..aₖ secrets of A in G
+    → All (_∉ secretsOfᶜᶠ A Γ) as -- ∀i ∈ 1..k : ∄N : {A : aᵢ ♯ N} ∈ Γ
+    → (A ∈ Hon → All Is-just ms)  -- honest participants commit to valid lengths
 
       -----------------------------------------------------------------------
 
@@ -192,7 +192,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
       ----------------------------------------------------------------------
 
       ` ad ∣ Γ ∣ || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xi ▷ˢ ad ] }) toSpend
-               ∣ || map (_auth[ ♯▷ ad ]) (participantsᵖ (G ad))
+               ∣ || map (_auth[ ♯▷ ad ]) (SETₚ.nub (participantsᵖ (G ad)))
         —→[ init[ G ad , C ad ] ]
       ⟨ C ad , sum vs ⟩at x ∣ Γ
 
@@ -266,7 +266,6 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
     → let d  = c ‼ i
           d′ = removeTopDecorations d
-          As = authDecorations d
       in
 
       ⟨ [ d′ ] , v ⟩at x ∣ Γ ≈ L
@@ -275,7 +274,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
       ------------------------------------------------------------------
 
-    → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] As ∣ Γ
+    → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (SETₚ.nub (authDecorations d)) ∣ Γ
         —→[ α ]
       Γ′
 

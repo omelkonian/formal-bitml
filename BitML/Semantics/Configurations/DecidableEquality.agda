@@ -3,7 +3,8 @@
 ------------------------------------------------------------------------
 
 open import Data.Product using (Σ-syntax)
-open import Data.Nat     using (ℕ; suc; _+_; _≤_; _>_)
+open import Data.List    using (List; length)
+open import Data.Nat     using (ℕ; _>_)
   renaming (_≟_ to _≟ℕ_)
 open import Data.Maybe.Properties using (≡-dec)
 
