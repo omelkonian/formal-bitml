@@ -9,6 +9,10 @@ open import Data.Sum     using (_⊎_; inj₁; inj₂)
 open import Data.Nat     using (_>_)
 open import Data.List    using (List; []; _∷_; [_]; length; _++_; map; partitionSums)
 
+open import Data.List.Membership.Propositional            using (_∈_)
+open import Data.List.Membership.Propositional.Properties using (∈-++⁻; ∈-++⁺ˡ; ∈-++⁺ʳ)
+open import Data.List.Relation.Unary.Any                  using (Any; here; there)
+
 open import Relation.Nullary                      using (yes; no)
 open import Relation.Binary                       using (Decidable)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
@@ -41,7 +45,7 @@ namesᶜˢ (c ∷ cs) = namesᶜ c ++ namesᶜˢ cs
 namesᵛᶜˢ []               = []
 namesᵛᶜˢ ((_ , cs) ∷ vcs) = namesᶜˢ cs ++ namesᵛᶜˢ vcs
 
-namesᶜ (put xs &reveal as if _ ⇒ cs) = xs ++ as ++ namesᶜˢ cs
+namesᶜ (put xs &reveal as if _ ⇒ cs) = map inj₂ xs ++ map inj₁ as ++ namesᶜˢ cs
 namesᶜ (withdraw _)                 = []
 namesᶜ (split vcs)                  = namesᵛᶜˢ vcs
 namesᶜ (_ ⇒ c)                      = namesᶜ c
@@ -51,9 +55,9 @@ namesᵖ : Precondition → Names
 namesᵖ = {-SETₛ.nub ∘-} go
   where
     go : Precondition → Names
-    go (_ :? _ at x) = [ x ]
-    go (_ :! _ at x) = [ x ]
-    go (_ :secret a) = [ a ]
+    go (_ :? _ at x) = [ inj₂ x ]
+    go (_ :! _ at x) = [ inj₂ x ]
+    go (_ :secret a) = [ inj₁ a ]
     go (p₁ ∣∣ p₂)     = go p₁ ++ go p₂
 
 -- Secrets
@@ -61,26 +65,12 @@ namesᵖ = {-SETₛ.nub ∘-} go
 secretsᶜ   : Contract                 → Secrets
 secretsᶜˢ  : Contracts                → Secrets
 secretsᵛᶜˢ : List (Value × Contracts) → Secrets
-
-secretsᶜˢ []       = []
-secretsᶜˢ (c ∷ cs) = secretsᶜ c ++ secretsᶜˢ cs
-
-secretsᵛᶜˢ []               = []
-secretsᵛᶜˢ ((_ , cs) ∷ vcs) = secretsᶜˢ cs ++ secretsᵛᶜˢ vcs
-
-secretsᶜ (put _ &reveal as if _ ⇒ cs) = as ++ secretsᶜˢ cs
-secretsᶜ (withdraw _)                 = []
-secretsᶜ (split vcs)                  = secretsᵛᶜˢ vcs
-secretsᶜ (_ ⇒ c)                      = secretsᶜ c
-secretsᶜ (after _ ⇒ c)                = secretsᶜ c
+secretsᶜ   = filter₁ ∘ namesᶜ
+secretsᶜˢ  = filter₁ ∘ namesᶜˢ
+secretsᵛᶜˢ = filter₁ ∘ namesᵛᶜˢ
 
 secretsᵖ : Precondition → Secrets
-secretsᵖ = {-SETₛ.nub ∘-} go
-  where
-    go : Precondition → Secrets
-    go (_ :secret s) = [ s ]
-    go (l ∣∣ r )     = go l ++ go r
-    go _             = []
+secretsᵖ = filter₁ ∘ namesᵖ
 
 secretsOfᵖ : Participant → Precondition → Secrets
 secretsOfᵖ A = {-SETₛ.nub ∘-} go
@@ -167,6 +157,25 @@ persistentParticipantsᵖ = {-SETₚ.nub ∘-} go
 depositsᵃ : Advertisement → List DepositRef
 depositsᵃ = depositsᵖ ∘ G
 
+getDeposit : ∀ {x g} → inj₂ x ∈ namesᵖ g → DepositRef
+getDeposit {g = A :? v at x} (here refl) = A , v , x
+getDeposit {g = A :! v at x} (here refl) = A , v , x
+getDeposit {g = _ :secret _} (here ())
+getDeposit {g = _ :secret _} (there ())
+getDeposit {g = l ∣∣ r}      x∈
+  with ∈-++⁻ (namesᵖ l) x∈
+... | inj₁ x∈l = getDeposit {g = l} x∈l
+... | inj₂ x∈r = getDeposit {g = r} x∈r
+
+getName : (A , v , x) ∈ persistentDepositsᵖ g
+        → inj₂ x ∈ namesᵖ g
+getName {g = _ :! _ at _} (here refl) = here refl
+getName {g = _ :! _ at _} (there ())
+getName {g = l ∣∣ r}      d∈
+  with ∈-++⁻ (persistentDepositsᵖ l) d∈
+... | inj₁ d∈l = ∈-++⁺ˡ (getName {g = l} d∈l)
+... | inj₂ d∈r = ∈-++⁺ʳ _ (getName {g = r} d∈r)
+
 -- Decorations
 
 decorations⊎ : Contract → List (Participant ⊎ Time)
@@ -176,7 +185,7 @@ decorations⊎ _             = []
 
 decorations : Contract → List Participant × List Time
 decorations c with partitionSums (decorations⊎ c)
-... | (ps , ts) = {-SETₚ.nub-} ps , {-SETₙ.nub-} ts
+... | (ps , ts) = {-SETₚ.nub-} ps , {-SETᵥ.nub-} ts
 
 authDecorations : Contract → List Participant
 authDecorations = proj₁ ∘ decorations
@@ -188,3 +197,17 @@ removeTopDecorations : Contract → Contract
 removeTopDecorations (_       ⇒ d) = removeTopDecorations d
 removeTopDecorations (after _ ⇒ d) = removeTopDecorations d
 removeTopDecorations d             = d
+
+remove-putComponents : (putComponentsᶜ d) ≡ putComponentsᶜ (removeTopDecorations d)
+remove-putComponents {_       ⇒ d} rewrite remove-putComponents {d} = refl
+remove-putComponents {after _ ⇒ d} rewrite remove-putComponents {d} = refl
+remove-putComponents {put _ &reveal _ if _ ⇒ _} = refl
+remove-putComponents {withdraw _}               = refl
+remove-putComponents {split _}                  = refl
+
+remove-names : namesᶜ d ≡ namesᶜ (removeTopDecorations d)
+remove-names {_       ⇒ d} rewrite remove-names {d} = refl
+remove-names {after _ ⇒ d} rewrite remove-names {d} = refl
+remove-names {put _ &reveal _ if _ ⇒ _} = refl
+remove-names {withdraw _}               = refl
+remove-names {split _}                  = refl

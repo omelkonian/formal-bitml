@@ -58,7 +58,8 @@ data Contract where
 
 variable
   d d′ : Contract
-  c c′ : Contracts
+  ds ds′ c c′ : Contracts
+  vcs vcs′ : List (Value × Contracts)
 
 _⊕_ : ∀ {A : Set} → A → List A → List A
 _⊕_ = _∷_
@@ -96,6 +97,8 @@ data Precondition : Set where
   -- composition
   _∣∣_ : Precondition → Precondition → Precondition
 
+variable
+  g g′ : Precondition
 
 ------------------------------------------------------------------------
 -- Advertisements.
