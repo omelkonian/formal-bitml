@@ -70,15 +70,9 @@ _∙ = [_]
 _⊸_ : Value → Contracts → Value × Contracts
 _⊸_ = _,_
 
-put_&reveal_⇒_ : Ids → Secrets → Contracts → Contract
-put xs &reveal as ⇒ c = put xs &reveal as if `true ⇒ c
-
-put_⇒_ : Ids → Contracts → Contract
-put xs ⇒ c = put xs &reveal [] ⇒ c
-
-reveal_⇒_ : Secrets → Contracts → Contract
-reveal as ⇒ c = put [] &reveal as ⇒ c
-
+pattern put_&reveal_⇒_ xs as c = put xs &reveal as if `true ⇒ c
+pattern put_⇒_ xs c            = put xs &reveal [] ⇒ c
+pattern reveal_⇒_ as c         = put [] &reveal as ⇒ c
 
 -------------------------------------------------------------------
 -- Contract preconditions.
