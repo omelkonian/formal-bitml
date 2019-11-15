@@ -67,8 +67,12 @@ record TimedConfiguration : Set where
     time : Time
 open TimedConfiguration public
 
+variable
+  Γₜ Γₜ′ Γₜ″ : TimedConfiguration
+
 infix  9 ⟨_,_⟩at_
 infix  8 ⟨_has_⟩at_
 infix  6 _auth[_]
 infix  5 ||_
 infixl 4 _∣_
+infix  3 _at_

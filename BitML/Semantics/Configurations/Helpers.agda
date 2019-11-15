@@ -88,83 +88,10 @@ committedParticipants (p auth[ (♯▷ ad′) ]) ad
 committedParticipants (l ∣ r) ad = committedParticipants l ad ++ committedParticipants r ad
 committedParticipants _       _  = []
 
-{-
-casesToContracts : ∀ {vs : Values} → ContractCases vs → ActiveContracts
-casesToContracts {vs} = map (λ{ (v , c) → Iᶜ[ v , vs ] , [ c ] })
+isInitial : Configuration → Bool
+isInitial (⟨ _ has _ ⟩at _) = true
+isInitial (l ∣ r)           = isInitial l ∧ isInitial r
+isInitial _                 = false
 
-isInitial : Configuration′ cf′i → Bool
-isInitial (⟨ _ , _ ⟩ᵈ)    = true
-isInitial (c₁ ∣ c₂ ∶- _) = isInitial c₁ ∧ isInitial c₂
-isInitial _               = false
-
-Initial : Configuration′ cf′i → Set
+Initial : Configuration → Set
 Initial = T ∘ isInitial
-
-committedSecrets : Configuration′ cf′i → List (Participant × Secret × Maybe ℕ)
-committedSecrets ⟨ x ∶ s ♯ n ⟩ =  [  x , s , n ]
-committedSecrets (l ∣ r ∶- _) = committedSecrets l ++ committedSecrets r
-committedSecrets _ = []
-
-spentForStipulation : Configuration′ cf′i → Advertisement ci pi → List (Participant × Value)
-spentForStipulation {ci = ci} {pi = pi} (p auth[ (_▷ˢ_ {ci = ci′} {vsᵛ = vsᵛ} {vsᵖ = vsᵖ} ad′ iᵖ) ]∶- _) ad
-  with (ci , pi , ad) ∃≟ₐ (ci′ , Iᵖ[ vsᵛ , vsᵖ ] , ad′)
-... | yes _ = [ p , (vsᵖ ‼ iᵖ) ]
-... | no  _ = []
-spentForStipulation (l ∣ r ∶- _) ad = spentForStipulation l ad
-                                    ++ spentForStipulation r ad
-spentForStipulation _ _ = []
-
-ValidSecret : Set
-ValidSecret = Participant × ∃[ s ] ∃[ n ] (lengthₛ s ≡ n)
-
-infixl 4 _∣ˢˢ_
-_∣ˢˢ_ : (ss : List ValidSecret) → Configuration cfi → Configuration cfi
-[]                      ∣ˢˢ Γ = Γ
-((p , s , n , pr) ∷ ss) ∣ˢˢ Γ =
-     (p ∶ s ♯ n) {fromWitness pr}
-  ∣ (ss ∣ˢˢ Γ)
-  ∶- refl & refl & refl & refl & refl & refl
-
-infixl 4 _∣ᵇ_
-_∣ᵇ_ : Configuration Iᶜᶠ[ ads , cs , ds ]
-      → Σ[ i ∈ Index cs ] (Index (proj₂ (cs ‼ i)) × List Participant)
-      → Configuration Iᶜᶠ[ ads , cs , ds ]
-_∣ᵇ_ {ads} {cs} {ds} Γ (i , j , [])     = Γ
-_∣ᵇ_ {ads} {cs} {ds} Γ (i , j , p ∷ ps) =
-  (  Γ
-  ∣ p auth[ proj₂ (cs ‼ i) ▷ᵇ j ]∶- refl & refl & refl & refl & refl & refl
-  ∶- ++-idʳ & SETₐ.\\-left {ads}
-   & ++-idʳ & SETᶜ.\\-‼ {cs} {i}
-   & ++-idʳ & SETₑ.\\-left {ds}
-  )
-  ∣ᵇ (i , j , ps)
-
-CommittedSecret : Set
-CommittedSecret = Σ[ s ∈ Secret ] Maybe (Σ[ n ∈ ℕ ] (lengthₛ s ≡ n))
-
-length→isValidSecret : ∀ {s n} → lengthₛ s ≡ n → isValidSecret s (just n)
-length→isValidSecret {s} {n} eq with lengthₛ s ≟ n
-... | no ¬p = ⊥-elim (¬p eq)
-... | yes p = tt
-
-infixl 4 _∣∅_
-_∣∅_ : Configuration Iᶜᶠ[ ads , cs , ds ]
-     → List (Participant × CommittedSecret)
-     → Configuration Iᶜᶠ[ ads , cs , ds ]
-_∣∅_ {ads} {cs} {ds} Γ []       = Γ
-_∣∅_ {ads} {cs} {ds} Γ ((p , s , nothing) ∷ ss) =
-     Γ
-  ∣ ⟨ p ∶ s ♯ nothing ⟩
-  ∶- ++-idʳ & (SETₐ.\\-left {ads})
-   & ++-idʳ & (SETᶜ.\\-left {cs})
-   & ++-idʳ & (SETₑ.\\-left {ds})
-  ∣∅ ss
-_∣∅_ {ads} {cs} {ds} Γ ((p , s , just (n , n≡)) ∷ ss) =
-     Γ
-  ∣ (⟨ p ∶ s ♯ just n ⟩ {length→isValidSecret n≡})
-  ∶- ++-idʳ & (SETₐ.\\-left {ads})
-   & ++-idʳ & (SETᶜ.\\-left {cs})
-   & ++-idʳ & (SETₑ.\\-left {ds})
-  ∣∅ ss
-
--}
