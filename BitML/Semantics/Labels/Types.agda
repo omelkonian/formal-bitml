@@ -125,13 +125,13 @@ cv split[ y ]            = just y
 cv _                     = nothing
 
 
--- authDecoration : Label → Maybe Participant
--- authDecoration auth-join[ p , _ ↔ _ ]       = just p
--- authDecoration auth-divide[ p , _ ▷ _ , _ ] = just p
--- authDecoration auth-donate[ p , _ ▷ᵈ _ ]    = just p
--- authDecoration auth-destroy[ p , _ , _ ]    = just p
--- authDecoration auth-commit[ p , _ , _ ]     = just p
--- authDecoration auth-init[ p , _ , _ ]       = just p
--- authDecoration auth-rev[ p , _ ]            = just p
--- authDecoration auth-control[ p , _ ▷ _ ]   = just p
--- authDecoration _                            = nothing
+authDecoration : Label → Maybe Participant
+authDecoration auth-join[ p , _ ↔ _ ]       = just p
+authDecoration auth-divide[ p , _ ▷ _ , _ ] = just p
+authDecoration auth-donate[ p , _ ▷ᵈ _ ]    = just p
+authDecoration auth-destroy[ p , _ , _ ]    = just p
+authDecoration auth-commit[ p , _ , _ ]     = just p
+authDecoration auth-init[ p , _ , _ ]       = just p
+authDecoration auth-rev[ p , _ ]            = just p
+authDecoration auth-control[ p , _ ▷ _ ]   = just p
+authDecoration _                            = nothing

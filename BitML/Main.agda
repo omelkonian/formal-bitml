@@ -31,7 +31,3 @@ open import BitML.Semantics.DecidableInference
 open import BitML.Semantics.Reasoning
 
 open import BitML.Example.TimedCommitment
-
--- open import BitML.SymbolicModel.Strategy
--- open import BitML.SymbolicModel.Helpers
--- open import BitML.SymbolicModel.Properties
