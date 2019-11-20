@@ -15,7 +15,7 @@ open import Data.Bool          using (Bool; true; false; _∧_; _∨_; not)
 open import Relation.Nullary                      using (Dec; yes; no)
 open import Relation.Nullary.Decidable            using (True; fromWitness; toWitness)
 open import Relation.Binary                       using (Decidable)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
 
 module BitML.BasicTypes
   (Participant : Set)
@@ -53,6 +53,11 @@ variable
 
   s s′ s″ : Secret
   ss ss′ ssₗ ssᵣ : Secrets
+
+++-idʳ : ∀ {A : Set} {xs : List A}
+       → xs ≡ xs ++ []
+++-idʳ {_} {[]}     = refl
+++-idʳ {_} {x ∷ xs} = cong (x ∷_) ++-idʳ
 
 ------------------------------------------------------------------------
 -- Arithmetic expressions.

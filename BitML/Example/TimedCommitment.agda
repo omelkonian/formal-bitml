@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 module BitML.Example.TimedCommitment where -- (see BitML paper, Section 2)
 
 open import Level        using (0ℓ)
@@ -254,14 +255,14 @@ tc-semantics =
         ; .((B has 0) ⟨ true ⟩) (there (here refl)) → there (here refl)
         ; d (there (there ()))
         })
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
+    ⟩ ({!!} , {!!}) ⊢
     c₁
   —→⟨ [C-AuthCommit] {A = A} {secrets = [ a , just (9 , refl) ]} {Γ = c₀} {pr = refl}
       -- satisfy rads (none in this case)
       (λ ())
       -- honest participants have not committed to ⊥
       (λ _ → mjust tt All-∷ All-[])
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
+    ⟩ ({!!} , {!!}) ⊢
     c₂
   —→⟨ [C-AuthCommit] {A = B} {secrets = []} {Γ = c₂′} {pr = refl}
       -- satisfy rads
@@ -269,7 +270,7 @@ tc-semantics =
       -- honest participants have not committed to ⊥
       (λ _ → All-[])
       --  All-[]
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
+    ⟩ ({!!} , {!!}) ⊢
     c₃
   —→⟨ [C-AuthInit] {dsˡ = []} {dsʳ = [ B has 0 ]} {Γ = c₃′} {p = refl}
       -- satisfy rads
@@ -279,7 +280,7 @@ tc-semantics =
          })
       -- all participants have committed their secrets
       ((here refl) All-∷ ((here refl) All-∷ ((there (here refl)) All-∷ All-[])))
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
+    ⟩ ({!!} , {!!}) ⊢
     c₄
   —→⟨ [C-AuthInit] {dsˡ = []} {dsʳ = []} {Γ = c₄′} {p = refl}
       -- satisfy rads (none in this case)
@@ -290,7 +291,7 @@ tc-semantics =
          })
       -- all participants have committed their secrets
       ((here refl) All-∷ ((here refl) All-∷ ((there (here refl)) All-∷ All-[])))
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
+    ⟩ ({!!} , {!!}) ⊢
     c₅
   —→⟨ [C-Init] {Γ = ⟨A♯⟩} {Δ = c₅′}
       -- satisfy rads (none in this case)
@@ -304,14 +305,14 @@ tc-semantics =
       ((here refl) All-∷ ((here refl) All-∷ ((there (here refl)) All-∷ All-[])))
       -- all participants have spent the required (persistent) deposits for stipulation
       refl
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
+    ⟩ ({!!} , {!!}) ⊢
     c₆
   —→⟨ [C-AuthRev] {s = a} {n = 9} {Γ = ⟨ tC ⟩ᶜ}
       -- valid length given
       refl
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
+    ⟩ ({!!} , {!!}) ⊢
     c₇
-  —→⟨ [C-Control] {Γ = A♯} {i = 0ᶠ} ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
+  —→⟨ [C-Control] {Γ = A♯} {i = 0ᶠ} ⟩ ({!!} , {!!}) ⊢
     c₈
   —→⟨ [C-PutRev] {Γ = ∅ᶜ} {s = [ a ]} {ds′ = []} {ss = [ A , a , 9 , refl ]}
       -- `put` command
@@ -323,8 +324,8 @@ tc-semantics =
       refl
       -- predicate evaluates to `true`
       refl
-    ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
+    ⟩ ({!!} , {!!}) ⊢
     c₉
-  —→⟨ [C-Withdraw] {Γ = A♯} ⟩ (SETᶜᶠ.sound-↭ , SETᶜᶠ.sound-↭) ⊢
+  —→⟨ [C-Withdraw] {Γ = A♯} ⟩ ({!!} , {!!}) ⊢
     c₁₀
   ∎∎

@@ -483,7 +483,7 @@ data _—→[_]_ : Configuration cfi
       (Configuration Iᶜᶠ[ [] , [ (ci , contract) ] , [] ] ∋
          ⟨ contract ⟩ᶜ
       ∣∣ A auth[ contract ▷ᵇ i  ]∶- refl & refl & refl & refl & refl & refl
-      ∶- refl & refl & refl & SETᶜ.\\-same {[ ci , contract ]} & refl & refl
+      ∶- refl & refl & refl & {!!} & refl & refl
       )
       ∣∣ Γ
       ∶- refl & refl & refl & refl & refl & refl

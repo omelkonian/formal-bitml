@@ -93,7 +93,12 @@ _⊸_ : (v : Value)
     → ∃[ v ] Contract Iᶜ[ v , vs ]
 _⊸_ v c = v , c
 
-open import Data.List.Relation.Binary.Sublist.Propositional using (_⊆_)
+open import Data.List.Relation.Binary.Sublist.Propositional using (_⊆_; []; _∷_; _∷ʳ_)
+
+complement-⊆ : ∀ {A : Set} {xs ys : List A} → xs ⊆ ys → List A
+complement-⊆ []       = []
+complement-⊆ (_ ∷  p) = complement-⊆ p
+complement-⊆ (y ∷ʳ p) = y ∷ complement-⊆ p
 
 Put : Values → Values → Values → Set
 Put vs vs′ vs″ = Σ[ p ∈ vs ⊆ vs″ ] (vs′ ≡ complement-⊆ p)
@@ -153,11 +158,11 @@ put_&reveal_if_⇒_ :
   → Contracts Iᶜ[ v′ , vs′ ]
   → .{p₁ : put? vs vs′ vs″}
   → .{p₂ : True (v′ ≟ v + sum vs)}
-  → .{p₃ : ss′ SETₛ.⊆? ss}
+  → .{p₃ : True (ss′ SETₛ.⊆? ss)}
   → Contract Iᶜ[ v , vs″ ]
 (put vs &reveal s if p ⇒ c) {p₁} {p₂} {p₃} =
   put vs &reveal s if p ⇒ c
-  ∶- (sound-put {p = p₁} , toWitness p₂ , SETₛ.sound-⊆ {p = p₃})
+  ∶- (sound-put {p = p₁} , toWitness p₂ , toWitness p₃)
 
 ------------------------------------------------------------------------
 -- Utilities.
@@ -211,6 +216,30 @@ toStipulate _            = []
 
 ------------------------------------------------------------------------
 -- Advertisements.
+
+-- Less-than relation for lists (on lengths).
+infix 3 _≾_
+data _≾_ {ℓ} {A : Set ℓ} : List A → List A → Set where
+
+  base-≾ : ∀ {xs : List A}
+    → -------
+      [] ≾ xs
+
+  step-≾ : ∀ {x y : A} {xs ys : List A}
+    → xs ≾ ys
+      ---------------
+    → x ∷ xs ≾ y ∷ ys
+
+infix 3 _≾?_
+_≾?_ : ∀ {ℓ} {A : Set ℓ} → List A → List A → Set
+[]     ≾? _      = ⊤
+_ ∷ _  ≾? []     = ⊥
+_ ∷ xs ≾? _ ∷ ys = xs ≾? ys
+
+sound-≾ : ∀ {ℓ} {A : Set ℓ} {xs ys : List A} → {p : xs ≾? ys} → xs ≾ ys
+sound-≾ {_} {_} {[]}     {ys}     {tt} = base-≾
+sound-≾ {_} {_} {x ∷ xs} {[]}     {()}
+sound-≾ {_} {_} {_ ∷ xs} {_ ∷ ys} {pp} = step-≾ (sound-≾ {p = pp})
 
 infix 2 ⟨_⟩_∶-_
 record Advertisement (ci : Contractⁱ) (pi : Preconditionⁱ) : Set where
