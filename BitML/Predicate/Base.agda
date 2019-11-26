@@ -2,11 +2,11 @@
 -- Datatype for predicates used in contracts.
 ------------------------------------------------------------------------
 
-open import Data.Nat           using (ℕ)
-open import Data.Integer       using (ℤ; +_)
-open import Data.Fin           using (Fin; 0F; 1F)
-open import Data.Product       using (∃-syntax)
-open import Data.List          using ([]; [_]; _++_)
+open import Data.Nat     using (ℕ)
+open import Data.Integer using (ℤ; +_)
+open import Data.Fin     using (Fin)
+open import Data.Product using (∃-syntax)
+open import Data.List    using ([]; [_]; _++_)
 
 open import BitML.BasicTypes
 

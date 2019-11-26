@@ -19,7 +19,6 @@ open import BitML.Semantics.Actions.Examples
 open import BitML.Semantics.Configurations.Types
 open import BitML.Semantics.Configurations.Helpers
 open import BitML.Semantics.Configurations.DecidableEquality
--- open import BitML.Semantics.Configurations.Examples
 
 open import BitML.Semantics.Labels.Types
 open import BitML.Semantics.Labels.DecidableEquality

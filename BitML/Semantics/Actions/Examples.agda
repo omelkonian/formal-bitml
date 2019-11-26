@@ -4,9 +4,9 @@
 
 module BitML.Semantics.Actions.Examples where
 
-open import Data.Product using (_,_)
-open import Data.List    using ([]; _∷_)
-open import Data.Fin     using (1F)
+open import Data.Product      using (_,_)
+open import Data.List         using ([]; _∷_)
+open import Data.Fin.Patterns using (1F)
 
 --------------------------------------------------------------------------------
 
