@@ -111,7 +111,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
     → let xs = map (proj₂ ∘ proj₂) ds
           Aj = proj₁ (ds ‼ j)
-          j′ = ‼-map′ {xs = ds} j
+          j′ = ‼-map {xs = ds} j
           Δ  = || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi }) ds
       in
 
@@ -127,7 +127,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
     ∀ {ds : List (Participant × Value × Id)} {j : Index ds}
 
     → let xs  = map (proj₂ ∘ proj₂) ds
-          Δ   = || map (λ{ (i , Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xs , ‼-map′ {xs = ds} i ▷ᵈˢ y ] })
+          Δ   = || map (λ{ (i , Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ] })
                        (enumerate ds)
       in
 
