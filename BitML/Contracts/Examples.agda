@@ -4,9 +4,9 @@
 
 module BitML.Contracts.Examples where
 
-open import Data.Unit     using (tt)
-open import Data.List     using (List; []; _∷_; [_])
-open import Data.List.Any using (here; there)
+open import Data.Unit using (tt)
+open import Data.List using (List; []; _∷_; [_])
+open import Data.List.Relation.Unary.Any using (here; there)
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 import Data.List.Relation.Binary.Sublist.Heterogeneous as SB

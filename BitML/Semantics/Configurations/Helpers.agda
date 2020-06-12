@@ -15,7 +15,7 @@ open import Data.String  using ()
 
 open import Data.List using (List; []; _∷_; [_]; _++_; map; length)
 open import Data.List.Properties using (++-identityʳ)
-open import Data.List.Relation.Permutation.Inductive using (_↭_)
+open import Data.List.Relation.Binary.Permutation.Propositional using (_↭_)
 
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (⌊_⌋; True; False; toWitness; fromWitness)

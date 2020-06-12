@@ -12,9 +12,9 @@ open import Data.Fin.Patterns using (0F)
 
 open import Data.Maybe.Relation.Unary.Any renaming (just to mjust)
 
-open import Data.List     using (List; []; _∷_; [_]; length; map; zip)
-open import Data.List.Any using (Any; any; here; there)
-open import Data.List.All using (All; []; _∷_)
+open import Data.List using (List; []; _∷_; [_]; length; map; zip)
+open import Data.List.Relation.Unary.Any using (Any; any; here; there)
+open import Data.List.Relation.Unary.All using (All; []; _∷_)
 open import Data.List.Relation.Unary.AllPairs using ([]; _∷_)
 
 open import Relation.Nullary.Decidable            using (fromWitness; toWitness)
