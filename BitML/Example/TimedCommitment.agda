@@ -12,7 +12,7 @@ open import Data.Fin.Patterns using (0F)
 
 open import Data.Maybe.Relation.Unary.Any renaming (just to mjust)
 
-open import Data.List using (List; []; _∷_; [_]; length; map; zip)
+open import Data.List using (map; zip)
 open import Data.List.Relation.Unary.Any using (Any; any; here; there)
 open import Data.List.Relation.Unary.All using (All; []; _∷_)
 open import Data.List.Relation.Unary.AllPairs using ([]; _∷_)
@@ -21,26 +21,26 @@ open import Relation.Nullary.Decidable            using (fromWitness; toWitness)
 open import Relation.Binary                       using (Decidable)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-open import Prelude.Lists
+open import Prelude.Lists hiding (⟦_⟧)
+open import Prelude.DecEq
 
 open import BitML.BasicTypes hiding (a; x; y; t)
-open import BitML.Predicate.Base hiding (`; ∣_∣)
+open import BitML.Predicate hiding (`; ∣_∣)
 
 -------------------------------------------------------------------------
 
-open import BitML.Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
+open import BitML.Example.Setup using (Participant; Honest; A; B)
 
-open import BitML.Contracts.Types                  Participant _≟ₚ_ Honest hiding (A; B)
-open import BitML.Contracts.Helpers                Participant _≟ₚ_ Honest
-open import BitML.Contracts.Validity               Participant _≟ₚ_ Honest
-open import BitML.Semantics.Actions.Types          Participant _≟ₚ_ Honest
-open import BitML.Semantics.Labels.Types           Participant _≟ₚ_ Honest
-open import BitML.Semantics.Configurations.Types   Participant _≟ₚ_ Honest
-open import BitML.Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
-open import BitML.Semantics.Configurations.DecidableEquality Participant _≟ₚ_ Honest
-open import BitML.Semantics.InferenceRules         Participant _≟ₚ_ Honest
-open import BitML.Semantics.Reasoning              Participant _≟ₚ_ Honest
-open import BitML.Semantics.DecidableInference     Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types Participant Honest hiding (A; B)
+open import BitML.Contracts.Helpers Participant Honest
+open import BitML.Contracts.Validity Participant Honest
+open import BitML.Semantics.Action Participant Honest
+open import BitML.Semantics.Label Participant Honest
+open import BitML.Semantics.Configurations.Types Participant Honest
+open import BitML.Semantics.Configurations.Helpers Participant Honest
+open import BitML.Semantics.InferenceRules Participant Honest
+open import BitML.Semantics.Reasoning Participant Honest
+open import BitML.Semantics.DecidableInference Participant Honest
 
 -------------------------------------------------------------------------
 

@@ -2,25 +2,26 @@
 -- Types of actions.
 ------------------------------------------------------------------------
 
-open import Data.Nat     using (_>_)
-open import Data.Product using (Σ-syntax)
-open import Data.List    using (List; length)
+open import Data.Nat using (_>_)
+open import Data.Fin using (#_)
+open import Data.Product using (Σ-syntax; _,_)
 
 open import Relation.Binary                       using (Decidable)
 open import Relation.Binary.PropositionalEquality using (_≡_)
 
 open import Prelude.Lists
+open import Prelude.DecEq
 
 open import BitML.BasicTypes
 
-module BitML.Semantics.Actions.Types
+module BitML.Semantics.Action
   (Participant : Set)
-  (_≟ₚ_ : Decidable {A = Participant} _≡_)
-  (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
+  {{_ : DecEq Participant}}
+  (Honest : List⁺ Participant)
   where
 
-open import BitML.Contracts.Types   Participant _≟ₚ_ Honest
-open import BitML.Contracts.Helpers Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types Participant Honest hiding (A; B)
+open import BitML.Contracts.Helpers Participant Honest
 
 --------------------------------------------------------------------------------
 
@@ -46,3 +47,5 @@ data Action : Set where
 
   -- destroy i-th deposit in xs through y
   _,_▷ᵈˢ_ : (xs : Ids) → Index xs → Id → Action
+
+unquoteDecl DecEq-Action = DERIVE DecEq [ quote Action , DecEq-Action ]

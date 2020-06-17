@@ -4,24 +4,25 @@
 
 open import Data.Maybe   using (Maybe)
 open import Data.Nat     using (ℕ; _>_)
-open import Data.Product using (Σ-syntax)
-open import Data.List    using (List; length; foldl; []; _∷_)
+open import Data.Product using (Σ-syntax; _,_)
+open import Data.List    using (foldl)
 
 open import Relation.Binary using (Decidable)
 open import Relation.Binary.PropositionalEquality using (_≡_)
 
 open import Prelude.Lists
+open import Prelude.DecEq
 
 open import BitML.BasicTypes
 
 module BitML.Semantics.Configurations.Types
   (Participant : Set)
-  (_≟ₚ_ : Decidable {A = Participant} _≡_)
-  (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
+  {{_ : DecEq Participant}}
+  (Honest : List⁺ Participant)
   where
 
-open import BitML.Contracts.Types                     Participant _≟ₚ_ Honest
-open import BitML.Semantics.Actions.Types             Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types Participant Honest
+open import BitML.Semantics.Action Participant Honest
 
 -------------------------------------------------------------------
 
@@ -51,6 +52,8 @@ data Configuration : Set where
   -- parallel composition
   _∣_ : Configuration → Configuration → Configuration
 
+unquoteDecl DecEqᶜᶠ = DERIVE DecEq [ quote Configuration , DecEqᶜᶠ ]
+
 variable
   Γ Γ′ Δ Δ′ L L′ M M′ : Configuration
 
@@ -66,6 +69,8 @@ record TimedConfiguration : Set where
     cfg  : Configuration
     time : Time
 open TimedConfiguration public
+
+unquoteDecl DecEqᵗᶜᶠ = DERIVE DecEq [ quote TimedConfiguration , DecEqᵗᶜᶠ ]
 
 variable
   Γₜ Γₜ′ Γₜ″ : TimedConfiguration

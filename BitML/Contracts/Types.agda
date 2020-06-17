@@ -1,34 +1,27 @@
 ------------------------------------------------------------------------
 -- BitML datatypes: Contracts & Advertisements
 ------------------------------------------------------------------------
-
 open import Data.Product using (_×_; _,_; Σ-syntax; proj₁; proj₂)
 open import Data.Nat     using (ℕ; _>_)
-open import Data.List    using (List; []; _∷_; [_]; length; _++_; map; concatMap)
+import Data.List.NonEmpty as NE
 
 open import Relation.Binary using (Decidable)
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
+open import Prelude.DecEq
 open import Prelude.Lists
-import Prelude.Set' as SET
 
 open import BitML.BasicTypes
-open import BitML.Predicate.Base
+open import BitML.Predicate
 
 module BitML.Contracts.Types
   (Participant : Set)
-  (_≟ₚ_ : Decidable {A = Participant} _≡_)
-  (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
+  {{_ : DecEq Participant}}
+  (Honest : List⁺ Participant)
   where
 
-Hon = proj₁ Honest
-
--- Sets of participants
-module SETₚ = SET {A = Participant} _≟ₚ_
-
-Set⟨Participant⟩ : Set
-Set⟨Participant⟩ = Set' where open SETₚ
+Hon = NE.toList Honest
 
 variable
   A B : Participant
@@ -38,6 +31,7 @@ variable
 
 data Contract : Set
 Contracts = List Contract
+VContracts = List (Value × Contracts)
 
 data Contract where
 
@@ -48,7 +42,7 @@ data Contract where
   withdraw : Participant → Contract
 
   -- split the balance
-  split : List (Value × Contracts) → Contract
+  split : VContracts → Contract
 
   -- wait for participant's authorization
   _⇒_ : Participant → Contract → Contract
@@ -56,10 +50,13 @@ data Contract where
   -- wait of a period of time
   after_⇒_ : Time → Contract → Contract
 
+{-# TERMINATING #-}
+unquoteDecl DecEq-Contract = DERIVE DecEq [ quote Contract , DecEq-Contract ]
+
 variable
   d d′ : Contract
   ds ds′ c c′ : Contracts
-  vcs vcs′ : List (Value × Contracts)
+  vcs vcs′ : VContracts
 
 _⊕_ : ∀ {A : Set} → A → List A → List A
 _⊕_ = _∷_
@@ -91,6 +88,8 @@ data Precondition : Set where
   -- composition
   _∣∣_ : Precondition → Precondition → Precondition
 
+unquoteDecl DecEq-Precondition = DERIVE DecEq [ quote Precondition , DecEq-Precondition ]
+
 variable
   g g′ : Precondition
 
@@ -99,13 +98,14 @@ variable
 
 record Advertisement : Set where
   constructor ⟨_⟩_
-
   field
     G : Precondition
     C : Contracts
-
 open Advertisement public
-variable ad ad′ : Advertisement
+unquoteDecl DecEq-Advertisement = DERIVE DecEq [ quote Advertisement , DecEq-Advertisement ]
+
+variable
+  ad ad′ : Advertisement
 
 infix  2 ⟨_⟩_
 

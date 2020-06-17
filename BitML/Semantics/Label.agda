@@ -1,27 +1,27 @@
-------------------------------------------------------------------------
+-----------------------------------------------------------------------
 -- Types of labels.
 ------------------------------------------------------------------------
 
-open import Data.Product using (Σ; Σ-syntax; proj₂; _×_)
+open import Data.Product using (Σ; Σ-syntax; proj₂; _×_; _,_)
 open import Data.Nat     using (ℕ; _>_)
 open import Data.Maybe   using (Maybe; just; nothing)
-open import Data.List    using (List; length)
 
 open import Relation.Binary                       using (Decidable)
 open import Relation.Binary.PropositionalEquality using (_≡_)
 
 open import Prelude.Lists
+open import Prelude.DecEq
 
 open import BitML.BasicTypes
 
-module BitML.Semantics.Labels.Types
+module BitML.Semantics.Label
   (Participant : Set)
-  (_≟ₚ_ : Decidable {A = Participant} _≡_)
-  (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
+  {{_ : DecEq Participant}}
+  (Honest : List⁺ Participant)
   where
 
-open import BitML.Contracts.Types                  Participant _≟ₚ_ Honest
-open import BitML.Semantics.Actions.Types          Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types Participant Honest
+open import BitML.Semantics.Action Participant Honest
 
 --------------------------------------------------------------------------------
 
@@ -110,6 +110,8 @@ data Label : Set where
 
   -- δ
   delay[_] : Time → Label
+
+unquoteDecl DecEq-Label = DERIVE DecEq [ quote Label , DecEq-Label ]
 
 Labels : Set
 Labels = List Label

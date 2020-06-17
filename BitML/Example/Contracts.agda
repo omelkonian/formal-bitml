@@ -2,7 +2,7 @@
 -- Examples of BitML contracts/advertisements.
 ------------------------------------------------------------------------
 
-module BitML.Contracts.Examples where
+module BitML.Example.Contracts where
 
 open import Data.Unit using (tt)
 open import Data.List using (List; []; _∷_; [_])
@@ -14,11 +14,12 @@ import Data.List.Relation.Binary.Sublist.Heterogeneous as SB
 --------------------------------------------------------------------------------
 
 open import Prelude.Lists
-open import BitML.Predicate.Base
 
-open import BitML.Example.Setup using (Participant; _≟ₚ_; Honest; A; B)
+open import BitML.Example.Setup
+
 open import BitML.BasicTypes
-open import BitML.Contracts.Types Participant _≟ₚ_ Honest hiding (A; B)
+open import BitML.Predicate
+open import BitML.Contracts.Types Participant Honest hiding (A; B)
 
 --------------------------------------------------------------------------------
 

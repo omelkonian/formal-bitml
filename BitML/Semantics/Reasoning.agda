@@ -7,24 +7,23 @@ open import Data.Nat     using (_>_)
 open import Data.List    using (List; []; _∷_; length)
 
 open import Relation.Nullary.Decidable using (True; toWitness)
-open import Relation.Binary using (Decidable)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Prelude.Lists
+open import Prelude.DecEq
 
 open import BitML.BasicTypes
 
 module BitML.Semantics.Reasoning
   (Participant : Set)
-  (_≟ₚ_ : Decidable {A = Participant} _≡_)
-  (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
+  {{_ : DecEq Participant}}
+  (Honest : List⁺ Participant)
   where
 
-open import BitML.Semantics.Configurations.Types   Participant _≟ₚ_ Honest
-open import BitML.Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
-open import BitML.Semantics.Configurations.DecidableEquality Participant _≟ₚ_ Honest
-open import BitML.Semantics.Labels.Types           Participant _≟ₚ_ Honest
-open import BitML.Semantics.InferenceRules         Participant _≟ₚ_ Honest
+open import BitML.Semantics.Configurations.Types Participant Honest
+open import BitML.Semantics.Configurations.Helpers Participant Honest
+open import BitML.Semantics.Label Participant Honest
+open import BitML.Semantics.InferenceRules Participant Honest
 
 -----------------------------------------------------------------------------------
 -- Reflexive transitive closure for —→.

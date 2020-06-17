@@ -15,29 +15,29 @@ open import Data.List.Relation.Unary.All       using (All)
 open import Data.List.Relation.Unary.Any       using (Any)
 open import Data.List.Relation.Binary.Permutation.Propositional using (_↭_)
 
-open import Relation.Nullary.Decidable using (True)
-open import Relation.Binary using (Decidable)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-open import Prelude.Lists
+open import Prelude.Lists hiding (⟦_⟧)
+open import Prelude.DecEq
+open import Prelude.Set'
 
 open import BitML.BasicTypes
-open import BitML.Predicate.Base hiding (`; ∣_∣)
+open import BitML.Predicate hiding (`; ∣_∣)
 
 module BitML.Semantics.InferenceRules
   (Participant : Set)
-  (_≟ₚ_ : Decidable {A = Participant} _≡_)
-  (Honest : Σ[ ps ∈ List Participant ] (length ps > 0))
+  {{_ : DecEq Participant}}
+  (Honest : List⁺ Participant)
   where
 
-open import BitML.Contracts.Types                  Participant _≟ₚ_ Honest
-open import BitML.Contracts.Helpers                Participant _≟ₚ_ Honest
-open import BitML.Contracts.Validity               Participant _≟ₚ_ Honest
-open import BitML.Semantics.Actions.Types          Participant _≟ₚ_ Honest
-open import BitML.Semantics.Configurations.Types   Participant _≟ₚ_ Honest
-open import BitML.Semantics.Configurations.Helpers Participant _≟ₚ_ Honest
-open import BitML.Semantics.Labels.Types           Participant _≟ₚ_ Honest
-open import BitML.Semantics.Predicate              Participant _≟ₚ_ Honest
+open import BitML.Contracts.Types Participant Honest
+open import BitML.Contracts.Helpers Participant Honest
+open import BitML.Contracts.Validity Participant Honest
+open import BitML.Semantics.Action Participant Honest
+open import BitML.Semantics.Configurations.Types Participant Honest
+open import BitML.Semantics.Configurations.Helpers Participant Honest
+open import BitML.Semantics.Label Participant Honest
+open import BitML.Semantics.Predicate Participant Honest
 
 --------------------------------------------------------------------------------
 -- Semantic rules for untimed configurations.
@@ -143,8 +143,8 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
   [C-Advertise] :
 
       ValidAdvertisement ad                -- the advertisement is valid
-    → Any (_∈ Hon) (participantsᵖ (G ad))  -- at least one honest participant
-    → All (_∈ depositsᶜᶠ Γ) (depositsᵃ ad) -- all persistent deposits in place
+    → Any (_∈ Hon) (participants (G ad))  -- at least one honest participant
+    → All (_∈ deposits Γ) (deposits ad) -- all persistent deposits in place
 
       ------------------------------------------------------------------------
 
@@ -171,8 +171,8 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [C-AuthInit] :
 
-      All (_∈ committedParticipants Γ ad) (participantsᵖ (G ad)) -- all participants have committed their secrets
-    → (A , v , x) ∈ persistentDepositsᵖ (G ad)                   -- G = A :! v @ x | ...
+      All (_∈ committedParticipants Γ ad) (participants (G ad)) -- all participants have committed their secrets
+    → (A , v , x) ∈ persistentDeposits (G ad)                   -- G = A :! v @ x | ...
 
       ----------------------------------------------------------------------
 
@@ -185,14 +185,14 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
       -- all participants have committed their secrets (guaranteed from [C-AuthInit]
 
-      let toSpend = persistentDepositsᵖ (G ad)
+      let toSpend = persistentDeposits (G ad)
           vs      = map (proj₁ ∘ proj₂) toSpend
       in
 
       ----------------------------------------------------------------------
 
       ` ad ∣ Γ ∣ || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xi ▷ˢ ad ] }) toSpend
-               ∣ || map (_auth[ ♯▷ ad ]) (SETₚ.nub (participantsᵖ (G ad)))
+               ∣ || map (_auth[ ♯▷ ad ]) (nub (participants (G ad)))
         —→[ init[ G ad , C ad ] ]
       ⟨ C ad , sum vs ⟩at x ∣ Γ
 
@@ -274,7 +274,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
       ------------------------------------------------------------------
 
-    → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (SETₚ.nub (authDecorations d)) ∣ Γ
+    → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub (authDecorations d)) ∣ Γ
         —→[ α ]
       Γ′
 
