@@ -31,6 +31,7 @@ open RawFunctor {0ℓ} listFunctor using (_<$>_)
 open import Prelude.Lists
 open import Prelude.DecEq
 open import Prelude.Set'
+open import Prelude.Collections
 
 open import BitML.BasicTypes
 

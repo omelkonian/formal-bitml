@@ -2,14 +2,13 @@
 -- Validity of advertisements.
 ------------------------------------------------------------------------
 {-# OPTIONS --allow-unsolved-metas #-}
-{-# OPTIONS --postfix-projections #-}
 
 open import Level    using (Level; 0ℓ)
 open import Function using (_∘_; _$_; id; const)
 
 open import Data.Product using (_×_; _,_; Σ-syntax; ∃; ∃-syntax; proj₁; proj₂)
 open import Data.Sum     using (_⊎_; inj₁; inj₂)
-open import Data.Nat     using (ℕ; suc; _+_; _<_; _>_)
+open import Data.Nat
 open import Data.Nat.Properties using (<-trans)
 
 open import Data.List using (List; []; _∷_; [_]; length; _++_; map; concat; concatMap; sum)
@@ -27,10 +26,12 @@ open import Relation.Nullary.Product   using (_×-dec_)
 open import Relation.Binary            using (Decidable; Transitive; Rel)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
+open import Prelude.General
 open import Prelude.Lists
 open import Prelude.DecEq
 open import Prelude.Set'
 open import Prelude.Measurable
+open import Prelude.Collections
 
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (∣_∣)
@@ -45,7 +46,6 @@ module BitML.Contracts.Validity
 
 open import BitML.Contracts.Types Participant Honest hiding (B)
 open import BitML.Contracts.Helpers Participant Honest
-open import BitML.Contracts.Induction Participant Honest
 
 ValidAdvertisement : Advertisement → Set
 ValidAdvertisement (⟨ G ⟩ C) =
@@ -69,10 +69,8 @@ validAd? (⟨ G ⟩ C) =
   ×-dec all (λ{ (xs , as , p) → unique? xs ×-dec (secrets p ⊆? as)}) (putComponents C)
   ×-dec participants G ++ participants C ⊆? persistentParticipants G
 
-----------
-
-
--- Mapping while preserving validity.
+------------------------------------------
+-- *** Mapping while preserving validity.
 
 private
   variable
@@ -87,6 +85,12 @@ record CC-like (A : Set) : Set where
 open CC-like {{...}} public
 
 instance
+  HCᶜ : Contract has Contract
+  HCᶜ = record {collect = [_]}
+
+  CCᶜ : CC-like Contract
+  CCᶜ = record {hc = record {collect = collect}; hp = record {collect = collect}; hn = record {collect = collect}}
+
   CC-× : ∀ {V A : Set} {{_ : CC-like A}} → CC-like (V × A)
   CC-× = record { hc = record {collect = collect ∘ proj₂}
                 ; hp = record {collect = collect ∘ proj₂}
@@ -99,39 +103,6 @@ instance
                  ; hp = record {collect = collect {{H-List {{hp}}}}}
                  ; hn = record {collect = collect {{H-List {{hn}}}}}
                  }
-
-len : ∀ {{_ : C₁ has Contract}} → C₁ → ℕ
-len x = ∣ contracts x ∣
-
-len>0 : ∀ {{_ : C₁ has Contract}} (x : C₁)
-  → len x > 0
-len>0 x with contracts x
-... | []    = Data.Nat.s≤s Data.Nat.z≤n
-... | _ ∷ _ = {!!}
-
-postulate
-  +-helper : ∀ {x y z} → x ≡ y + z → y > 0 → z > 0 → (y < x) × (z < x)
-
-CC : Set _
-CC = Σ[ A ∈ Set ] (CC-like A) × A
-
-toCC : ∀ {{_ : CC-like C₁}} → C₁ → CC
-toCC {C₁} {{CC-C₁}} x = C₁ , CC-C₁ , x
-
-instance
-  Measurable-CC : Measurable CC
-  Measurable-CC .∣_∣ (_ , record {hc = hc} , x) = len {{hc}} x
-
--- ∣_∣ : ∀ {{_ : CC-like C₁}} → C₁ → ℕ
--- ∣_∣ = sum ∘ map ∣_∣ᶜ ∘ contracts
-
-len-∷ : ∀ {{_ : CC-like C₁}} (x : C₁) (xs : List C₁)
-  → len (x ∷ xs) ≡ len x + len xs
-len-∷ = {!!}
-
-∈⇒≺ : ∀ {{_ : CC-like C₁}} {x : C₁} {xs : List C₁} → x ∈ xs → toCC x ≺ toCC xs
-∈⇒≺ {x}{xs} (here  {_}{xs′} refl) = proj₁ $ +-helper (len-∷ xs xs′) (len>0 xs) (len>0 xs′)
-∈⇒≺ {x}{xs} (there {x′}{xs′} x∈)  = <-trans (∈⇒≺ x∈) (proj₂ $ +-helper (len-∷ x′ xs′) (len>0 x′) (len>0 xs′))
 
 --
 
@@ -193,29 +164,16 @@ names-∷ {x = x}{xs} rewrite contracts-∷ {x = x}{xs}
         r : names xs ⊆ names (x′ ∷ xs)
         r rewrite names-∷ {x = x′}{xs} = ∈-++⁺ʳ _
 
-map∈-⊆≺ : ∀ {{_ : CC-like C₁}} {{_ : CC-like C₂}} {z : C₂}
+map∈-⊆ : ∀ {{_ : CC-like C₁}} {{_ : CC-like C₂}} {z : C₂}
   → (xs : List C₁)
   → xs ⊆ᶜ z
-  → (∀ {x : C₁} → x ∈ xs → x ⊆ᶜ z → toCC x ≺ toCC xs → B)
+  → (∀ {x : C₁} → x ∈ xs → x ⊆ᶜ z → B)
   → List B
-map∈-⊆≺ xs xs⊆z f = mapWith∈ xs λ {x} x∈ → f x∈ (⊆ᶜ-trans (∈⇒⊆ᶜ x∈) xs⊆z) (∈⇒≺ x∈)
-
-map-⊆≺ : ∀ {{_ : CC-like C₁}} {{_ : CC-like C₂}} {z : C₂}
-  → (xs : List C₁)
-  → xs ⊆ᶜ z
-  → (∀ (x : C₁) → x ⊆ᶜ z → toCC x ≺ toCC xs → B)
-  → List B
-map-⊆≺ xs xs⊆ᶜz f = map∈-⊆≺ xs xs⊆ᶜz (λ {x} _ → f x)
+map∈-⊆ xs xs⊆z f = mapWith∈ xs λ {x} x∈ → f x∈ (⊆ᶜ-trans (∈⇒⊆ᶜ x∈) xs⊆z)
 
 map-⊆ : ∀ {{_ : CC-like C₁}} {{_ : CC-like C₂}} {z : C₂}
   → (xs : List C₁)
   → xs ⊆ᶜ z
   → (∀ (x : C₁) → x ⊆ᶜ z → B)
   → List B
-map-⊆ xs xs⊆ᶜz f = map-⊆≺ xs xs⊆ᶜz (λ x x⊆ _ → f x x⊆)
-
-map-≺ : ∀ {{_ : CC-like C₁}} {{_ : CC-like C₂}} {z : C₂}
-  → (xs : List C₁)
-  → (∀ (x : C₁) → toCC x ≺ toCC xs → B)
-  → List B
-map-≺ xs f = map-⊆≺ xs (⊆ᶜ-refl xs) (λ x _ x≺ → f x x≺)
+map-⊆ xs xs⊆ᶜz f = map∈-⊆ xs xs⊆ᶜz (λ {x} _ → f x)
