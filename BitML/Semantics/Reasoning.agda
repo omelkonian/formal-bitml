@@ -1,14 +1,7 @@
 ------------------------------------------------------------------------
 -- Chain reasoning for BitML's small-step semantics.
 ------------------------------------------------------------------------
-
-open import Data.Product using (Σ-syntax; _×_; _,_)
-open import Data.Nat     using (_>_)
-open import Data.List    using (List; []; _∷_; length)
-
-open import Relation.Nullary.Decidable using (True; toWitness)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-
+open import Prelude.Init
 open import Prelude.Lists
 open import Prelude.DecEq
 

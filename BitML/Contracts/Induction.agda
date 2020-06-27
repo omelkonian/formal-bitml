@@ -1,18 +1,7 @@
-open import Level
-open import Function
 open import Induction
 open import Induction.WellFounded
 
-open import Data.Empty
-open import Data.Product hiding (map)
-open import Data.List
-open import Data.List.Membership.Propositional
-open import Data.List.Relation.Unary.Any using (Any; here; there)
-
-open import Relation.Binary using (Rel)
-open import Relation.Binary.PropositionalEquality
-  hiding ([_])
-
+open import Prelude.Init
 open import Prelude.Lists
 open import Prelude.DecEq
 

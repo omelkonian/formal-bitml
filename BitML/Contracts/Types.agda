@@ -1,14 +1,9 @@
 ------------------------------------------------------------------------
 -- BitML datatypes: Contracts & Advertisements
 ------------------------------------------------------------------------
-open import Data.Product using (_×_; _,_; Σ-syntax; proj₁; proj₂)
-open import Data.Nat     using (ℕ; _>_)
 import Data.List.NonEmpty as NE
 
-open import Relation.Binary using (Decidable)
-
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-
+open import Prelude.Init
 open import Prelude.DecEq
 open import Prelude.Lists
 

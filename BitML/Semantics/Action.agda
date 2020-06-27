@@ -1,14 +1,7 @@
 ------------------------------------------------------------------------
 -- Types of actions.
 ------------------------------------------------------------------------
-
-open import Data.Nat using (_>_)
-open import Data.Fin using (#_)
-open import Data.Product using (Σ-syntax; _,_)
-
-open import Relation.Binary                       using (Decidable)
-open import Relation.Binary.PropositionalEquality using (_≡_)
-
+open import Prelude.Init
 open import Prelude.Lists
 open import Prelude.DecEq
 

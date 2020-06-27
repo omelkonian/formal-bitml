@@ -1,14 +1,7 @@
 -----------------------------------------------------------------------
 -- Types of labels.
 ------------------------------------------------------------------------
-
-open import Data.Product using (Σ; Σ-syntax; proj₂; _×_; _,_)
-open import Data.Nat     using (ℕ; _>_)
-open import Data.Maybe   using (Maybe; just; nothing)
-
-open import Relation.Binary                       using (Decidable)
-open import Relation.Binary.PropositionalEquality using (_≡_)
-
+open import Prelude.Init
 open import Prelude.Lists
 open import Prelude.DecEq
 

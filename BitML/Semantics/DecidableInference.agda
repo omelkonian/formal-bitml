@@ -1,30 +1,7 @@
 ------------------------------------------------------------------------
 -- Decision procedure for BitML's small-step semantics.
 ------------------------------------------------------------------------
-
-open import Function using (_∘_)
-
-open import Data.Empty   using (⊥-elim)
-open import Data.Unit    using (⊤; tt)
-open import Data.Bool    using (true)
-open import Data.Product using (Σ-syntax; _×_; _,_; proj₁; proj₂)
-open import Data.Nat     using (ℕ; _>_; _+_; _≤_)
-open import Data.Maybe   using (Maybe; Is-just; just; nothing)
-open import Data.List    using (List; []; _∷_; [_]; _++_; map; length; zip; unzip; sum)
-
-open import Data.Maybe.Properties         using (≡-dec)
-open import Data.Maybe.Relation.Unary.Any using ()
-  renaming (dec to anyₘ)
-
-open import Data.List.Membership.Propositional using (_∈_; _∉_)
-open import Data.List.Relation.Unary.All       using (All; all)
-open import Data.List.Relation.Unary.Any       using (Any; any)
-open import Data.List.Relation.Binary.Permutation.Propositional using (_↭_)
-
-open import Relation.Nullary                      using (Dec; yes; no)
-open import Relation.Nullary.Decidable            using (True; toWitness)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-
+open import Prelude.Init
 open import Prelude.Lists hiding (⟦_⟧)
 open import Prelude.DecEq
 open import Prelude.Set'
@@ -50,13 +27,13 @@ open import BitML.Semantics.InferenceRules Participant Honest
 
 C-Advertise :
   ∀ {p₁ : True (validAd? ad)}
-    {p₂ : True (any (_∈? Hon) (participants (G ad)))}
-    {p₃ : True (all (_∈? deposits Γ) (deposits ad))}
+    {p₂ : True (any? (_∈? Hon) (participants (G ad)))}
+    {p₃ : True (all? (_∈? deposits Γ) (deposits ad))}
   → Γ —→[ advertise[ ad ] ] ` ad ∣ Γ
 C-Advertise {p₁ = p₁} {p₂} {p₃} = [C-Advertise] (toWitness p₁) (toWitness p₂) (toWitness p₃)
 
 C-AuthInit :
-  ∀ {p₁ : True (all (_∈? committedParticipants Γ ad) (participants (G ad)))}
+  ∀ {p₁ : True (all? (_∈? committedParticipants Γ ad) (participants (G ad)))}
     {p₂ : True ((A , v , x) ∈? persistentDeposits (G ad))}
   → ` ad ∣ Γ —→[ auth-init[ A , ad , x ] ] ` ad ∣ Γ ∣ A auth[ x ▷ˢ ad ]
 C-AuthInit {p₁ = p₁} {p₂} = [C-AuthInit] (toWitness p₁) (toWitness p₂)
@@ -93,8 +70,8 @@ C-AuthCommit :
         Δ         = || map (λ{ (ai , Ni) → ⟨ A ∶ ai ♯ Ni ⟩}) secrets
     in
     {p₁ : True (as ≟ secretsOfᵖ A (G ad))}
-  → {p₂ : True (all (_∉? secretsOfᶜᶠ A Γ) as)}
-  → {p₃ : True ((A ∈? Hon) →? all (anyₘ λ _ → yes tt) ms)}
+  → {p₂ : True (all? (_∉? secretsOfᶜᶠ A Γ) as)}
+  → {p₃ : True ((A ∈? Hon) →? all? (M.Any.dec λ _ → yes tt) ms)}
   → ` ad ∣ Γ —→[ auth-commit[ A , ad , secrets ] ] ` ad ∣ Γ ∣ Δ ∣ A auth[ ♯▷ ad ]
 C-AuthCommit {p₁ = p₁} {p₂} {p₃} = [C-AuthCommit] (toWitness p₁) (toWitness p₂) (toWitness p₃)
 

@@ -1,26 +1,6 @@
 module BitML.Example.TimedCommitment where -- (see BitML paper, Section 2)
 
-open import Level             using (0ℓ)
-open import Function          using (_∋_; _∘_)
-open import Data.Empty        using (⊥; ⊥-elim)
-open import Data.Unit         using (⊤; tt)
-open import Data.Maybe        using (Maybe; just; Is-just)
-open import Data.Bool         using (T; Bool; true; false; _∧_)
-open import Data.Nat          using (ℕ; _>_; _+_)
-open import Data.Product      using (Σ-syntax; _×_; _,_)
-open import Data.Fin.Patterns using (0F)
-
-open import Data.Maybe.Relation.Unary.Any renaming (just to mjust)
-
-open import Data.List using (map; zip)
-open import Data.List.Relation.Unary.Any using (Any; any; here; there)
-open import Data.List.Relation.Unary.All using (All; []; _∷_)
-open import Data.List.Relation.Unary.AllPairs using ([]; _∷_)
-
-open import Relation.Nullary.Decidable            using (fromWitness; toWitness)
-open import Relation.Binary                       using (Decidable)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-
+open import Prelude.Init
 open import Prelude.Lists hiding (⟦_⟧)
 open import Prelude.DecEq
 

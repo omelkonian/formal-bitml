@@ -3,10 +3,7 @@
 ------------------------------------------------------------------------
 module BitML.BasicTypes where
 
-open import Data.Nat    using (ℕ)
-open import Data.String using (String)
-open import Data.List   using (List)
-open import Data.Sum    using (_⊎_)
+open import Prelude.Init
 
 Value  = ℕ
 Values = List Value

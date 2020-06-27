@@ -1,31 +1,12 @@
 ------------------------------------------------------------------------
 -- Validity of advertisements.
 ------------------------------------------------------------------------
-{-# OPTIONS --allow-unsolved-metas #-}
+open import Function using (id)
 
-open import Level    using (Level; 0ℓ)
-open import Function using (_∘_; _$_; id; const)
-
-open import Data.Product using (_×_; _,_; Σ-syntax; ∃; ∃-syntax; proj₁; proj₂)
-open import Data.Sum     using (_⊎_; inj₁; inj₂)
-open import Data.Nat
-open import Data.Nat.Properties using (<-trans)
-
-open import Data.List using (List; []; _∷_; [_]; length; _++_; map; concat; concatMap; sum)
-open import Data.List.NonEmpty using (List⁺)
-open import Data.List.Membership.Propositional             using (_∈_; mapWith∈)
 open import Data.List.Membership.Propositional.Properties
-open import Data.List.Relation.Unary.Any                   using (Any; here; there; index)
-open import Data.List.Relation.Unary.All                   using (All; all)
-open import Data.List.Relation.Unary.Unique.Propositional  using (Unique)
-open import Data.List.Relation.Binary.Subset.Propositional using (_⊆_)
 open import Data.List.Relation.Binary.Subset.Propositional.Properties
 
-open import Relation.Nullary           using (Dec; yes; no)
-open import Relation.Nullary.Product   using (_×-dec_)
-open import Relation.Binary            using (Decidable; Transitive; Rel)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-
+open import Prelude.Init
 open import Prelude.General
 open import Prelude.Lists
 open import Prelude.DecEq
@@ -66,7 +47,7 @@ validAd? : ∀ (ad : Advertisement) → Dec (ValidAdvertisement ad)
 validAd? (⟨ G ⟩ C) =
         unique? (names G)
   ×-dec names C ⊆? names G
-  ×-dec all (λ{ (xs , as , p) → unique? xs ×-dec (secrets p ⊆? as)}) (putComponents C)
+  ×-dec all? (λ{ (xs , as , p) → unique? xs ×-dec (secrets p ⊆? as)}) (putComponents C)
   ×-dec participants G ++ participants C ⊆? persistentParticipants G
 
 ------------------------------------------

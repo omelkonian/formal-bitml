@@ -1,15 +1,7 @@
 ------------------------------------------------------------------------
 -- Types of configurations.
 ------------------------------------------------------------------------
-
-open import Data.Maybe   using (Maybe)
-open import Data.Nat     using (ℕ; _>_)
-open import Data.Product using (Σ-syntax; _,_)
-open import Data.List    using (foldl)
-
-open import Relation.Binary using (Decidable)
-open import Relation.Binary.PropositionalEquality using (_≡_)
-
+open import Prelude.Init
 open import Prelude.Lists
 open import Prelude.DecEq
 
@@ -55,7 +47,7 @@ data Configuration : Set where
 unquoteDecl DecEqᶜᶠ = DERIVE DecEq [ quote Configuration , DecEqᶜᶠ ]
 
 variable
-  Γ Γ′ Δ Δ′ L L′ M M′ : Configuration
+  Γ Γ′ Γ₀ Δ Δ′ L L′ M M′ : Configuration
 
 ||_ : List Configuration → Configuration
 -- ||_ = foldl _∣_ ∅ᶜ

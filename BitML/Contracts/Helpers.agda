@@ -1,22 +1,9 @@
 ------------------------------------------------------------------------
 -- Utilities for contracts, preconditions and advertisments.
 ------------------------------------------------------------------------
-open import Function using (_∘_)
-
-open import Data.Product using (_×_; _,_; Σ-syntax; proj₁; proj₂)
-open import Data.Sum     using (_⊎_; inj₁; inj₂)
-open import Data.Nat     using (_>_)
-
-open import Data.List using (List; []; _∷_; [_]; length; _++_; map; concatMap; partitionSums)
-open import Data.List.NonEmpty using (List⁺)
-open import Data.List.Membership.Propositional using (_∈_)
 open import Data.List.Membership.Propositional.Properties
-open import Data.List.Relation.Unary.Any using (Any; here; there)
 
-open import Relation.Nullary                      using (yes; no)
-open import Relation.Binary                       using (Decidable)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-
+open import Prelude.Init
 open import Prelude.Lists
 open import Prelude.DecEq
 open import Prelude.Collections
@@ -42,6 +29,12 @@ private
 
 names : {{_ : X has Name}} → X → Names
 names = collect
+
+namesˡ : {{_ : X has Name}} → X → Secrets
+namesˡ = filter₁ ∘ collect {B = Name}
+
+namesʳ : {{_ : X has Name}} → X → Ids
+namesʳ = filter₂ ∘ collect {B = Name}
 
 contracts : {{_ : X has Contract}} → X → Contracts
 contracts = collect {B = Contract}

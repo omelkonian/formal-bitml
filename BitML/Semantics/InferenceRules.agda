@@ -1,22 +1,7 @@
 ------------------------------------------------------------------------
 -- Small-step semantics for the BitML calculus.
 ------------------------------------------------------------------------
-
-open import Function using (_∘_)
-
-open import Data.Bool    using (true)
-open import Data.Product using (Σ-syntax; _×_; _,_; proj₁; proj₂)
-open import Data.Nat     using (ℕ; _>_; _+_; _≤_)
-open import Data.Maybe   using (Maybe; Is-just; just; nothing)
-open import Data.List    using (List; []; _∷_; [_]; _++_; map; length; zip; unzip; sum)
-
-open import Data.List.Membership.Propositional using (_∈_; _∉_)
-open import Data.List.Relation.Unary.All       using (All)
-open import Data.List.Relation.Unary.Any       using (Any)
-open import Data.List.Relation.Binary.Permutation.Propositional using (_↭_)
-
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-
+open import Prelude.Init
 open import Prelude.Lists hiding (⟦_⟧)
 open import Prelude.DecEq
 open import Prelude.Set'

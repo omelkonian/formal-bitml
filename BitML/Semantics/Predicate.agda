@@ -1,19 +1,10 @@
 ------------------------------------------------------------------------
 -- Denotational semantics of predicates.
 ------------------------------------------------------------------------
+open import Data.Maybe   using (ap; _<∣>_)
+open import Data.Integer using (_+_; _-_; _<?_)
 
-open import Function using (const)
-
-open import Data.Product using (Σ-syntax)
-open import Data.Bool    using (Bool; true; _∧_; not; if_then_else_)
-open import Data.Maybe   using (Maybe; just; nothing; ap; _<∣>_)
-open import Data.Nat     using (_>_)
-open import Data.Integer using (ℤ; +_; _+_; _-_; _<?_)
-
-open import Relation.Nullary.Decidable using (⌊_⌋)
-open import Relation.Binary using (Decidable)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-
+open import Prelude.Init hiding (_+_; _<?_)
 open import Prelude.Lists hiding (⟦_⟧)
 open import Prelude.DecEq
 

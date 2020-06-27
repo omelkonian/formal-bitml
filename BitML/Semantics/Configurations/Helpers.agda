@@ -1,33 +1,7 @@
 ------------------------------------------------------------------------
 -- Utilities for constructing configurations.
 ------------------------------------------------------------------------
-
-open import Level        using (0ℓ)
-open import Function     using (_∘_)
-open import Data.Empty   using (⊥-elim)
-open import Data.Unit    using (⊤; tt)
-open import Data.Bool    using (T; Bool; true; false; _∧_; if_then_else_)
-open import Data.Maybe   using (Maybe; just; nothing; maybe′)
-open import Data.Nat     using (ℕ; suc; _+_; _≤_; _>_)
-open import Data.Product using (∃; ∃-syntax; Σ; Σ-syntax; _×_; _,_; proj₁; proj₂)
-open import Data.String  using ()
-  renaming (length to lengthₛ)
-
-open import Data.List using (List; []; _∷_; [_]; _++_; map; length)
-open import Data.List.Properties using (++-identityʳ)
-open import Data.List.Relation.Binary.Permutation.Propositional using (_↭_)
-
-open import Relation.Nullary using (Dec; yes; no)
-open import Relation.Nullary.Decidable using (⌊_⌋; True; False; toWitness; fromWitness)
-open import Relation.Nullary.Negation using (¬?)
-open import Relation.Binary using (Decidable)
-
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
-
-open import Category.Functor using (RawFunctor)
-open import Data.List.Categorical renaming (functor to listFunctor)
-open RawFunctor {0ℓ} listFunctor using (_<$>_)
-
+open import Prelude.Init
 open import Prelude.Lists
 open import Prelude.DecEq
 open import Prelude.Set'
@@ -59,16 +33,39 @@ _≈_ : Configuration → Configuration → Set
 c ≈ c′ = cfgToList c ↭ cfgToList c′
 
 infix 3 _≈?_
-_≈?_ : Decidable {A = Configuration} _≈_
--- _≈?_ : Configuration → Configuration → Set
+_≈?_ : Decidable² {A = Configuration} _≈_
 c ≈? c′ = cfgToList c ↭? cfgToList c′
 
 instance
+  HNᵃᶜ : Action has Name
+  HNᵃᶜ .collect ac with ac
+  ... | ♯▷ ad            = collect ad
+  ... | x ▷ˢ ad          = inj₁ x ∷ collect ad
+  ... | x ▷ c            = inj₁ x ∷ collect c
+  ... | x ↔ y ▷⟨ _ , _ ⟩ = map inj₁ ⟦ x , y ⟧
+  ... | x ▷⟨ _ , _ , _ ⟩ = [ inj₁ x ]
+  ... | x ▷ᵈ _           = [ inj₁ x ]
+  ... | xs , _ ▷ᵈˢ x     = map inj₁ (x ∷ xs)
+
   HDᶜᶠ : Configuration has DepositRef
   HDᶜᶠ .collect cf with cf
   ... | ⟨ A has v ⟩at x = [ A , v , x ]
   ... | l ∣ r           = collect l ++ collect r
   ... | _               = []
+
+  HNᶜᶠ : Configuration has Name
+  HNᶜᶠ .collect c with c
+  ... | ∅ᶜ              = []
+  ... | ` ad            = collect ad
+  ... | ⟨ cs , _ ⟩at x  = inj₂ x ∷ collect cs
+  ... | ⟨ _ has _ ⟩at x = [ inj₂ x ]
+  ... | _ auth[ ac ]    = collect ac
+  ... | ⟨ _ ∶ s ♯ _ ⟩   = [ inj₁ s ]
+  ... | _ ∶ s ♯ _       = [ inj₁ s ]
+  ... | l ∣ r           = collect l ++ collect r
+
+  HNᵗᶜᶠ : TimedConfiguration has Name
+  HNᵗᶜᶠ .collect (Γ at _) = collect Γ
 
 secretsOfᶜᶠ : Participant → Configuration → Secrets
 secretsOfᶜᶠ A = {- Set'.nub ∘-} go
