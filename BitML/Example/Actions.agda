@@ -4,10 +4,11 @@
 
 module BitML.Example.Actions where
 
-open import Data.Product using (_,_)
-open import Data.Fin     using (#_)
-
+open import Prelude.Init
 open import Prelude.Lists
+open import Prelude.Applicative
+open import Prelude.Semigroup
+open import Prelude.Nary
 
 open import BitML.Example.Setup
 open import BitML.Example.Contracts

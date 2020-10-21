@@ -2,10 +2,12 @@
 -- Utilities for constructing configurations.
 ------------------------------------------------------------------------
 open import Prelude.Init
-open import Prelude.Lists
 open import Prelude.DecEq
 open import Prelude.Set'
 open import Prelude.Collections
+open import Prelude.Applicative
+open import Prelude.Semigroup
+open import Prelude.Nary
 
 open import BitML.BasicTypes
 

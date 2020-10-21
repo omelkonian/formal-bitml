@@ -19,7 +19,7 @@ module BitML.Contracts.Types
 Hon = NE.toList Honest
 
 variable
-  A B : Participant
+  A B A′ B′ : Participant
 
 ------------------------------------------------------------------------
 -- Contracts

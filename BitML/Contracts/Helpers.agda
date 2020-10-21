@@ -52,8 +52,8 @@ deposits : {{_ : X has DepositRef}} → X → List DepositRef
 deposits = collect
 
 instance
-  Hᵃ : {{_ : Precondition has X}} → Advertisement has X
-  Hᵃ .collect (⟨ G ⟩ _) = collect G
+  -- Hᵃ : {{_ : Precondition has X}} {{_ : Contracts has X}} → Advertisement has X
+  -- Hᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
 
   Hᵖʳ : {{_ : Arith has X}} → Predicate has X
   Hᵖʳ .collect pr with pr
@@ -74,7 +74,7 @@ instance
   ... | withdraw p                = [ p ]
   -- ... | split vcs                 = collect vcs
   ... | split []                  = []
-  -- ... | split ((_ , c′) ∷ vcs)   = collect c′ ++ collect (split vcs)
+  -- ... | split ((_ , cs) ∷ vcs)   = collect (put [] ⇒ cs) ++ collect (split vcs)
   ... | split ((_ , []) ∷ vcs)      = collect (split vcs)
   ... | split ((v , c′ ∷ cs) ∷ vcs) = collect c′ ++ collect (split [ v , cs ]) ++ collect (split vcs)
   ... | p ⇒ c′                    = p ∷ collect c′
@@ -129,6 +129,20 @@ instance
 
 --
 
+  HDᵃ : Advertisement has DepositRef
+  HDᵃ .collect = collect ∘ G
+
+  HPᵃ : Advertisement has Participant
+  HPᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
+
+  HNᵃ : Advertisement has Name
+  HNᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
+
+  HSᵃ : Advertisement has Secret
+  HSᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
+
+--
+
   HSᵃʳ : Arith has Secret
   HSᵃʳ .collect ar with ar
   ... | ` _    = []
@@ -175,39 +189,44 @@ secretsOfᵖ A = go
 -- Deposits
 
 persistentDeposits : Precondition → List DepositRef
-persistentDeposits = go
-  where
-    go : Precondition → List DepositRef
-    go (a :! v at x) = [ a , v , x ]
-    go (p₁ ∣∣ p₂)    = go p₁ ++ go p₂
-    go _             = []
+persistentDeposits (a :! v at x) = [ a , v , x ]
+persistentDeposits (p₁ ∣∣ p₂)    = persistentDeposits p₁ ++ persistentDeposits p₂
+persistentDeposits _             = []
 
 persistentParticipants : Precondition → List Participant
-persistentParticipants = go
-  where
-    go : Precondition → List Participant
-    go (A :! _ at _) = [ A ]
-    go (p ∣∣ p₁)     = go p ++ go p₁
-    go _             = []
+persistentParticipants (A :! _ at _) = [ A ]
+persistentParticipants (l ∣∣ r)      = persistentParticipants l ++ persistentParticipants r
+persistentParticipants _             = []
 
-getDeposit : ∀ {x} {g : Precondition} → inj₂ x ∈ names g → DepositRef
+persistent⊆ : persistentParticipants g ⊆ participants g
+persistent⊆ {g = A :! _ at _} p∈ = p∈
+persistent⊆ {g = l ∣∣ r}      p∈
+  with ∈-++⁻ (persistentParticipants l) p∈
+... | inj₁ p∈ˡ = ∈-++⁺ˡ (persistent⊆ {g = l} p∈ˡ)
+... | inj₂ p∈ʳ = ∈-++⁺ʳ (participants l) (persistent⊆ {g = r} p∈ʳ)
+
+getDeposit : namesʳ g ↦ DepositRef
 getDeposit {g = A :? v at x} (here refl) = A , v , x
 getDeposit {g = A :! v at x} (here refl) = A , v , x
-getDeposit {g = _ :secret _} (here ())
-getDeposit {g = _ :secret _} (there ())
+getDeposit {g = _ :secret _} ()
 getDeposit {g = l ∣∣ r}      x∈
-  with ∈-++⁻ (names l) x∈
-... | inj₁ x∈l = getDeposit {g = l} x∈l
-... | inj₂ x∈r = getDeposit {g = r} x∈r
+  with _ , y∈ , y≡ ← ∈-mapMaybe⁻ isInj₂ {xs = names l ++ names r} x∈
+  with ∈-++⁻ (names l) y∈
+... | inj₁ x∈ˡ = getDeposit {g = l} (∈-mapMaybe⁺ isInj₂ x∈ˡ y≡)
+... | inj₂ x∈ʳ = getDeposit {g = r} (∈-mapMaybe⁺ isInj₂ x∈ʳ y≡)
 
 getName : (A , v , x) ∈ persistentDeposits g
-        → inj₂ x ∈ names g
+        → x ∈ namesʳ g
 getName {g = _ :! _ at _} (here refl) = here refl
 getName {g = _ :! _ at _} (there ())
 getName {g = l ∣∣ r}      d∈
   with ∈-++⁻ (persistentDeposits l) d∈
-... | inj₁ d∈l = ∈-++⁺ˡ (getName {g = l} d∈l)
-... | inj₂ d∈r = ∈-++⁺ʳ _ (getName {g = r} d∈r)
+... | inj₁ d∈l =
+  let _ , y∈ , y≡ = ∈-mapMaybe⁻ isInj₂ {xs = names l} (getName {g = l} d∈l)
+  in ∈-mapMaybe⁺ isInj₂ (∈-++⁺ˡ y∈) y≡
+... | inj₂ d∈r =
+  let _ , y∈ , y≡ = ∈-mapMaybe⁻ isInj₂ {xs = names r} (getName {g = r} d∈r)
+  in ∈-mapMaybe⁺ isInj₂ (∈-++⁺ʳ (names l) y∈) y≡
 
 -- Decorations
 

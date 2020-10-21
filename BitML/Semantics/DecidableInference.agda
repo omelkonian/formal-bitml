@@ -2,7 +2,7 @@
 -- Decision procedure for BitML's small-step semantics.
 ------------------------------------------------------------------------
 open import Prelude.Init
-open import Prelude.Lists hiding (⟦_⟧)
+open import Prelude.Lists
 open import Prelude.DecEq
 open import Prelude.Set'
 

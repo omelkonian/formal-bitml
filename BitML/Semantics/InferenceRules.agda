@@ -2,7 +2,7 @@
 -- Small-step semantics for the BitML calculus.
 ------------------------------------------------------------------------
 open import Prelude.Init
-open import Prelude.Lists hiding (⟦_⟧)
+open import Prelude.Lists
 open import Prelude.DecEq
 open import Prelude.Set'
 

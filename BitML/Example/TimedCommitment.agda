@@ -1,7 +1,7 @@
 module BitML.Example.TimedCommitment where -- (see BitML paper, Section 2)
 
 open import Prelude.Init
-open import Prelude.Lists hiding (⟦_⟧)
+open import Prelude.Lists
 open import Prelude.DecEq
 
 open import BitML.BasicTypes hiding (a; x; y; t)

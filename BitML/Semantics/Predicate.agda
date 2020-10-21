@@ -1,12 +1,13 @@
 ------------------------------------------------------------------------
 -- Denotational semantics of predicates.
 ------------------------------------------------------------------------
-open import Data.Maybe   using (ap; _<∣>_)
+open import Data.Maybe   using (_<∣>_)
 open import Data.Integer using (_+_; _-_; _<?_)
 
 open import Prelude.Init hiding (_+_; _<?_)
-open import Prelude.Lists hiding (⟦_⟧)
+open import Prelude.Lists
 open import Prelude.DecEq
+open import Prelude.Monad
 
 open import BitML.BasicTypes
 open import BitML.Predicate
@@ -18,11 +19,6 @@ module BitML.Semantics.Predicate
   where
 
 open import BitML.Semantics.Configurations.Types Participant Honest hiding (`_)
-
--- To allow idiom brackets
-pure : ∀ {A : Set} → A → Maybe A
-pure  = just
-_<*>_ = ap
 
 infix 4 _<?ᵇ_
 _<?ᵇ_ : ℤ → ℤ → Bool
