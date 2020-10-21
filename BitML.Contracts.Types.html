@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html><head><meta charset="utf-8"><title>BitML.Contracts.Types</title><link rel="stylesheet" href="css/Agda.css"></head><body><pre class="Agda"><a id="1" class="Comment">------------------------------------------------------------------------</a>
+<a id="74" class="Comment">-- BitML datatypes: Contracts &amp; Advertisements</a>
+<a id="121" class="Comment">------------------------------------------------------------------------</a>
+<a id="194" class="Keyword">import</a> <a id="201" href="Data.List.NonEmpty.html" class="Module">Data.List.NonEmpty</a> <a id="220" class="Symbol">as</a> <a id="223" class="Module">NE</a>
+
+<a id="227" class="Keyword">open</a> <a id="232" class="Keyword">import</a> <a id="239" href="Prelude.Init.html" class="Module">Prelude.Init</a>
+<a id="252" class="Keyword">open</a> <a id="257" class="Keyword">import</a> <a id="264" href="Prelude.DecEq.html" class="Module">Prelude.DecEq</a>
+<a id="278" class="Keyword">open</a> <a id="283" class="Keyword">import</a> <a id="290" href="Prelude.Lists.html" class="Module">Prelude.Lists</a>
+
+<a id="305" class="Keyword">open</a> <a id="310" class="Keyword">import</a> <a id="317" href="BitML.BasicTypes.html" class="Module">BitML.BasicTypes</a>
+<a id="334" class="Keyword">open</a> <a id="339" class="Keyword">import</a> <a id="346" href="BitML.Predicate.html" class="Module">BitML.Predicate</a>
+
+<a id="363" class="Keyword">module</a> <a id="370" href="BitML.Contracts.Types.html" class="Module">BitML.Contracts.Types</a>
+  <a id="394" class="Symbol">(</a><a id="395" href="BitML.Contracts.Types.html#395" class="Bound">Participant</a> <a id="407" class="Symbol">:</a> <a id="409" class="PrimitiveType">Set</a><a id="412" class="Symbol">)</a>
+  <a id="416" class="Symbol">{{</a><a id="418" href="BitML.Contracts.Types.html#418" class="Bound">_</a> <a id="420" class="Symbol">:</a> <a id="422" href="Prelude.DecEq.html#533" class="Record">DecEq</a> <a id="428" href="BitML.Contracts.Types.html#395" class="Bound">Participant</a><a id="439" class="Symbol">}}</a>
+  <a id="444" class="Symbol">(</a><a id="445" href="BitML.Contracts.Types.html#445" class="Bound">Honest</a> <a id="452" class="Symbol">:</a> <a id="454" href="Data.List.NonEmpty.html#1318" class="Record">List⁺</a> <a id="460" href="BitML.Contracts.Types.html#395" class="Bound">Participant</a><a id="471" class="Symbol">)</a>
+  <a id="475" class="Keyword">where</a>
+
+<a id="Hon"></a><a id="482" href="BitML.Contracts.Types.html#482" class="Function">Hon</a> <a id="486" class="Symbol">=</a> <a id="488" href="Data.List.NonEmpty.html#1760" class="Function">NE.toList</a> <a id="498" href="BitML.Contracts.Types.html#445" class="Bound">Honest</a>
+
+<a id="506" class="Keyword">variable</a>
+  <a id="517" href="BitML.Contracts.Types.html#517" class="Generalizable">A</a> <a id="519" href="BitML.Contracts.Types.html#519" class="Generalizable">B</a> <a id="521" href="BitML.Contracts.Types.html#521" class="Generalizable">A′</a> <a id="524" href="BitML.Contracts.Types.html#524" class="Generalizable">B′</a> <a id="527" class="Symbol">:</a> <a id="529" href="BitML.Contracts.Types.html#395" class="Bound">Participant</a>
+
+<a id="542" class="Comment">------------------------------------------------------------------------</a>
+<a id="615" class="Comment">-- Contracts</a>
+
+<a id="629" class="Keyword">data</a> <a id="Contract"></a><a id="634" href="BitML.Contracts.Types.html#634" class="Datatype">Contract</a> <a id="643" class="Symbol">:</a> <a id="645" class="PrimitiveType">Set</a>
+<a id="Contracts"></a><a id="649" href="BitML.Contracts.Types.html#649" class="Function">Contracts</a> <a id="659" class="Symbol">=</a> <a id="661" href="Agda.Builtin.List.html#148" class="Datatype">List</a> <a id="666" href="BitML.Contracts.Types.html#634" class="Datatype">Contract</a>
+<a id="VContracts"></a><a id="675" href="BitML.Contracts.Types.html#675" class="Function">VContracts</a> <a id="686" class="Symbol">=</a> <a id="688" href="Agda.Builtin.List.html#148" class="Datatype">List</a> <a id="693" class="Symbol">(</a><a id="694" href="BitML.BasicTypes.html#229" class="Function">Value</a> <a id="700" href="Data.Product.html#1167" class="Function Operator">×</a> <a id="702" href="BitML.Contracts.Types.html#649" class="Function">Contracts</a><a id="711" class="Symbol">)</a>
+
+<a id="714" class="Keyword">data</a> <a id="719" href="BitML.Contracts.Types.html#634" class="Datatype">Contract</a> <a id="728" class="Keyword">where</a>
+
+  <a id="737" class="Comment">-- collect deposits and secrets</a>
+  <a id="Contract.put_&amp;reveal_if_⇒_"></a><a id="771" href="BitML.Contracts.Types.html#771" class="InductiveConstructor Operator">put_&amp;reveal_if_⇒_</a> <a id="789" class="Symbol">:</a> <a id="791" href="BitML.BasicTypes.html#314" class="Function">Ids</a> <a id="795" class="Symbol">→</a> <a id="797" href="BitML.BasicTypes.html#278" class="Function">Secrets</a> <a id="805" class="Symbol">→</a> <a id="807" href="BitML.Predicate.html#682" class="Datatype">Predicate</a> <a id="817" class="Symbol">→</a> <a id="819" href="BitML.Contracts.Types.html#649" class="Function">Contracts</a> <a id="829" class="Symbol">→</a> <a id="831" href="BitML.Contracts.Types.html#634" class="Datatype">Contract</a>
+
+  <a id="843" class="Comment">-- transfer the balance to a participant</a>
+  <a id="Contract.withdraw"></a><a id="886" href="BitML.Contracts.Types.html#886" class="InductiveConstructor">withdraw</a> <a id="895" class="Symbol">:</a> <a id="897" href="BitML.Contracts.Types.html#395" class="Bound">Participant</a> <a id="909" class="Symbol">→</a> <a id="911" href="BitML.Contracts.Types.html#634" class="Datatype">Contract</a>
+
+  <a id="923" class="Comment">-- split the balance</a>
+  <a id="Contract.split"></a><a id="946" href="BitML.Contracts.Types.html#946" class="InductiveConstructor">split</a> <a id="952" class="Symbol">:</a> <a id="954" href="BitML.Contracts.Types.html#675" class="Function">VContracts</a> <a id="965" class="Symbol">→</a> <a id="967" href="BitML.Contracts.Types.html#634" class="Datatype">Contract</a>
+
+  <a id="979" class="Comment">-- wait for participant&#39;s authorization</a>
+  <a id="Contract._⇒_"></a><a id="1021" href="BitML.Contracts.Types.html#1021" class="InductiveConstructor Operator">_⇒_</a> <a id="1025" class="Symbol">:</a> <a id="1027" href="BitML.Contracts.Types.html#395" class="Bound">Participant</a> <a id="1039" class="Symbol">→</a> <a id="1041" href="BitML.Contracts.Types.html#634" class="Datatype">Contract</a> <a id="1050" class="Symbol">→</a> <a id="1052" href="BitML.Contracts.Types.html#634" class="Datatype">Contract</a>
+
+  <a id="1064" class="Comment">-- wait of a period of time</a>
+  <a id="Contract.after_⇒_"></a><a id="1094" href="BitML.Contracts.Types.html#1094" class="InductiveConstructor Operator">after_⇒_</a> <a id="1103" class="Symbol">:</a> <a id="1105" href="BitML.BasicTypes.html#382" class="Function">Time</a> <a id="1110" class="Symbol">→</a> <a id="1112" href="BitML.Contracts.Types.html#634" class="Datatype">Contract</a> <a id="1121" class="Symbol">→</a> <a id="1123" href="BitML.Contracts.Types.html#634" class="Datatype">Contract</a>
+
+<a id="1133" class="Symbol">{-#</a> <a id="1137" class="Keyword">TERMINATING</a> <a id="1149" class="Symbol">#-}</a>
+<a id="1153" class="Keyword">unquoteDecl</a> <a id="DecEq-Contract"></a><a id="1165" href="BitML.Contracts.Types.html#1165" class="Function">DecEq-Contract</a> <a id="1180" class="Symbol">=</a> <a id="1182" href="Prelude.Generics.html#5318" class="Function">DERIVE</a> <a id="1189" href="Prelude.DecEq.html#533" class="Record">DecEq</a> <a id="1195" href="Data.List.Base.html#4458" class="Function Operator">[</a> <a id="1197" class="Keyword">quote</a> <a id="1203" href="BitML.Contracts.Types.html#634" class="Datatype">Contract</a> <a id="1212" href="Agda.Builtin.Sigma.html#236" class="InductiveConstructor Operator">,</a> <a id="1214" href="BitML.Contracts.Types.html#1165" class="Function">DecEq-Contract</a> <a id="1229" href="Data.List.Base.html#4458" class="Function Operator">]</a>
+
+<a id="1232" class="Keyword">variable</a>
+  <a id="1243" href="BitML.Contracts.Types.html#1243" class="Generalizable">d</a> <a id="1245" href="BitML.Contracts.Types.html#1245" class="Generalizable">d′</a> <a id="1248" class="Symbol">:</a> <a id="1250" href="BitML.Contracts.Types.html#634" class="Datatype">Contract</a>
+  <a id="1261" href="BitML.Contracts.Types.html#1261" class="Generalizable">ds</a> <a id="1264" href="BitML.Contracts.Types.html#1264" class="Generalizable">ds′</a> <a id="1268" href="BitML.Contracts.Types.html#1268" class="Generalizable">c</a> <a id="1270" href="BitML.Contracts.Types.html#1270" class="Generalizable">c′</a> <a id="1273" class="Symbol">:</a> <a id="1275" href="BitML.Contracts.Types.html#649" class="Function">Contracts</a>
+  <a id="1287" href="BitML.Contracts.Types.html#1287" class="Generalizable">vcs</a> <a id="1291" href="BitML.Contracts.Types.html#1291" class="Generalizable">vcs′</a> <a id="1296" class="Symbol">:</a> <a id="1298" href="BitML.Contracts.Types.html#675" class="Function">VContracts</a>
+
+<a id="_⊕_"></a><a id="1310" href="BitML.Contracts.Types.html#1310" class="Function Operator">_⊕_</a> <a id="1314" class="Symbol">:</a> <a id="1316" class="Symbol">∀</a> <a id="1318" class="Symbol">{</a><a id="1319" href="BitML.Contracts.Types.html#1319" class="Bound">A</a> <a id="1321" class="Symbol">:</a> <a id="1323" class="PrimitiveType">Set</a><a id="1326" class="Symbol">}</a> <a id="1328" class="Symbol">→</a> <a id="1330" href="BitML.Contracts.Types.html#1319" class="Bound">A</a> <a id="1332" class="Symbol">→</a> <a id="1334" href="Agda.Builtin.List.html#148" class="Datatype">List</a> <a id="1339" href="BitML.Contracts.Types.html#1319" class="Bound">A</a> <a id="1341" class="Symbol">→</a> <a id="1343" href="Agda.Builtin.List.html#148" class="Datatype">List</a> <a id="1348" href="BitML.Contracts.Types.html#1319" class="Bound">A</a>
+<a id="1350" href="BitML.Contracts.Types.html#1310" class="Function Operator">_⊕_</a> <a id="1354" class="Symbol">=</a> <a id="1356" href="Agda.Builtin.List.html#200" class="InductiveConstructor Operator">_∷_</a>
+
+<a id="_∙"></a><a id="1361" href="BitML.Contracts.Types.html#1361" class="Function Operator">_∙</a> <a id="1364" class="Symbol">:</a> <a id="1366" class="Symbol">∀</a> <a id="1368" class="Symbol">{</a><a id="1369" href="BitML.Contracts.Types.html#1369" class="Bound">A</a> <a id="1371" class="Symbol">:</a> <a id="1373" class="PrimitiveType">Set</a><a id="1376" class="Symbol">}</a> <a id="1378" class="Symbol">→</a> <a id="1380" href="BitML.Contracts.Types.html#1369" class="Bound">A</a> <a id="1382" class="Symbol">→</a> <a id="1384" href="Agda.Builtin.List.html#148" class="Datatype">List</a> <a id="1389" href="BitML.Contracts.Types.html#1369" class="Bound">A</a>
+<a id="1391" href="BitML.Contracts.Types.html#1361" class="Function Operator">_∙</a> <a id="1394" class="Symbol">=</a> <a id="1396" href="Data.List.Base.html#4458" class="Function Operator">[_]</a>
+
+<a id="_⊸_"></a><a id="1401" href="BitML.Contracts.Types.html#1401" class="Function Operator">_⊸_</a> <a id="1405" class="Symbol">:</a> <a id="1407" href="BitML.BasicTypes.html#229" class="Function">Value</a> <a id="1413" class="Symbol">→</a> <a id="1415" href="BitML.Contracts.Types.html#649" class="Function">Contracts</a> <a id="1425" class="Symbol">→</a> <a id="1427" href="BitML.BasicTypes.html#229" class="Function">Value</a> <a id="1433" href="Data.Product.html#1167" class="Function Operator">×</a> <a id="1435" href="BitML.Contracts.Types.html#649" class="Function">Contracts</a>
+<a id="1445" href="BitML.Contracts.Types.html#1401" class="Function Operator">_⊸_</a> <a id="1449" class="Symbol">=</a> <a id="1451" href="Agda.Builtin.Sigma.html#236" class="InductiveConstructor Operator">_,_</a>
+
+<a id="1456" class="Keyword">pattern</a> <a id="put_&amp;reveal_⇒_"></a><a id="1464" href="BitML.Contracts.Types.html#1464" class="InductiveConstructor Operator">put_&amp;reveal_⇒_</a> <a id="1479" href="BitML.Contracts.Types.html#1493" class="Bound">xs</a> <a id="1482" href="BitML.Contracts.Types.html#1504" class="Bound">as</a> <a id="1485" href="BitML.Contracts.Types.html#1518" class="Bound">c</a> <a id="1487" class="Symbol">=</a> <a id="1489" href="BitML.Contracts.Types.html#771" class="InductiveConstructor Operator">put</a> <a id="1493" href="BitML.Contracts.Types.html#1493" class="Bound">xs</a> <a id="1496" href="BitML.Contracts.Types.html#771" class="InductiveConstructor Operator">&amp;reveal</a> <a id="1504" href="BitML.Contracts.Types.html#1504" class="Bound">as</a> <a id="1507" href="BitML.Contracts.Types.html#771" class="InductiveConstructor Operator">if</a> <a id="1510" href="BitML.Predicate.html#706" class="InductiveConstructor">`true</a> <a id="1516" href="BitML.Contracts.Types.html#771" class="InductiveConstructor Operator">⇒</a> <a id="1518" href="BitML.Contracts.Types.html#1518" class="Bound">c</a>
+<a id="1520" class="Keyword">pattern</a> <a id="put_⇒_"></a><a id="1528" href="BitML.Contracts.Types.html#1528" class="InductiveConstructor Operator">put_⇒_</a> <a id="1535" href="BitML.Contracts.Types.html#1557" class="Bound">xs</a> <a id="1538" href="BitML.Contracts.Types.html#1573" class="Bound">c</a>            <a id="1551" class="Symbol">=</a> <a id="1553" href="BitML.Contracts.Types.html#1464" class="InductiveConstructor Operator">put</a> <a id="1557" href="BitML.Contracts.Types.html#1557" class="Bound">xs</a> <a id="1560" href="BitML.Contracts.Types.html#1464" class="InductiveConstructor Operator">&amp;reveal</a> <a id="1568" class="InductiveConstructor">[]</a> <a id="1571" href="BitML.Contracts.Types.html#1464" class="InductiveConstructor Operator">⇒</a> <a id="1573" href="BitML.Contracts.Types.html#1573" class="Bound">c</a>
+<a id="1575" class="Keyword">pattern</a> <a id="reveal_⇒_"></a><a id="1583" href="BitML.Contracts.Types.html#1583" class="InductiveConstructor Operator">reveal_⇒_</a> <a id="1593" href="BitML.Contracts.Types.html#1623" class="Bound">as</a> <a id="1596" href="BitML.Contracts.Types.html#1628" class="Bound">c</a>         <a id="1606" class="Symbol">=</a> <a id="1608" href="BitML.Contracts.Types.html#1464" class="InductiveConstructor Operator">put</a> <a id="1612" class="InductiveConstructor">[]</a> <a id="1615" href="BitML.Contracts.Types.html#1464" class="InductiveConstructor Operator">&amp;reveal</a> <a id="1623" href="BitML.Contracts.Types.html#1623" class="Bound">as</a> <a id="1626" href="BitML.Contracts.Types.html#1464" class="InductiveConstructor Operator">⇒</a> <a id="1628" href="BitML.Contracts.Types.html#1628" class="Bound">c</a>
+
+<a id="1631" class="Comment">-------------------------------------------------------------------</a>
+<a id="1699" class="Comment">-- Contract preconditions.</a>
+
+<a id="1727" class="Keyword">data</a> <a id="Precondition"></a><a id="1732" href="BitML.Contracts.Types.html#1732" class="Datatype">Precondition</a> <a id="1745" class="Symbol">:</a> <a id="1747" class="PrimitiveType">Set</a> <a id="1751" class="Keyword">where</a>
+
+  <a id="1760" class="Comment">-- volatile deposit</a>
+  <a id="Precondition._:?_at_"></a><a id="1782" href="BitML.Contracts.Types.html#1782" class="InductiveConstructor Operator">_:?_at_</a> <a id="1790" class="Symbol">:</a> <a id="1792" href="BitML.Contracts.Types.html#395" class="Bound">Participant</a> <a id="1804" class="Symbol">→</a> <a id="1806" href="BitML.BasicTypes.html#229" class="Function">Value</a> <a id="1812" class="Symbol">→</a> <a id="1814" href="BitML.BasicTypes.html#301" class="Function">Id</a> <a id="1817" class="Symbol">→</a> <a id="1819" href="BitML.Contracts.Types.html#1732" class="Datatype">Precondition</a>
+
+  <a id="1835" class="Comment">-- persistent deposit</a>
+  <a id="Precondition._:!_at_"></a><a id="1859" href="BitML.Contracts.Types.html#1859" class="InductiveConstructor Operator">_:!_at_</a> <a id="1867" class="Symbol">:</a> <a id="1869" href="BitML.Contracts.Types.html#395" class="Bound">Participant</a> <a id="1881" class="Symbol">→</a> <a id="1883" href="BitML.BasicTypes.html#229" class="Function">Value</a> <a id="1889" class="Symbol">→</a> <a id="1891" href="BitML.BasicTypes.html#301" class="Function">Id</a> <a id="1894" class="Symbol">→</a> <a id="1896" href="BitML.Contracts.Types.html#1732" class="Datatype">Precondition</a>
+
+  <a id="1912" class="Comment">-- committed secret (random nonce) by &lt;Participant&gt;</a>
+  <a id="Precondition._:secret_"></a><a id="1966" href="BitML.Contracts.Types.html#1966" class="InductiveConstructor Operator">_:secret_</a> <a id="1976" class="Symbol">:</a> <a id="1978" href="BitML.Contracts.Types.html#395" class="Bound">Participant</a> <a id="1990" class="Symbol">→</a> <a id="1992" href="BitML.BasicTypes.html#261" class="Function">Secret</a> <a id="1999" class="Symbol">→</a> <a id="2001" href="BitML.Contracts.Types.html#1732" class="Datatype">Precondition</a>
+
+  <a id="2017" class="Comment">-- composition</a>
+  <a id="Precondition._∣∣_"></a><a id="2034" href="BitML.Contracts.Types.html#2034" class="InductiveConstructor Operator">_∣∣_</a> <a id="2039" class="Symbol">:</a> <a id="2041" href="BitML.Contracts.Types.html#1732" class="Datatype">Precondition</a> <a id="2054" class="Symbol">→</a> <a id="2056" href="BitML.Contracts.Types.html#1732" class="Datatype">Precondition</a> <a id="2069" class="Symbol">→</a> <a id="2071" href="BitML.Contracts.Types.html#1732" class="Datatype">Precondition</a>
+
+<a id="2085" class="Keyword">unquoteDecl</a> <a id="DecEq-Precondition"></a><a id="2097" href="BitML.Contracts.Types.html#2097" class="Function">DecEq-Precondition</a> <a id="2116" class="Symbol">=</a> <a id="2118" href="Prelude.Generics.html#5318" class="Function">DERIVE</a> <a id="2125" href="Prelude.DecEq.html#533" class="Record">DecEq</a> <a id="2131" href="Data.List.Base.html#4458" class="Function Operator">[</a> <a id="2133" class="Keyword">quote</a> <a id="2139" href="BitML.Contracts.Types.html#1732" class="Datatype">Precondition</a> <a id="2152" href="Agda.Builtin.Sigma.html#236" class="InductiveConstructor Operator">,</a> <a id="2154" href="BitML.Contracts.Types.html#2097" class="Function">DecEq-Precondition</a> <a id="2173" href="Data.List.Base.html#4458" class="Function Operator">]</a>
+
+<a id="2176" class="Keyword">variable</a>
+  <a id="2187" href="BitML.Contracts.Types.html#2187" class="Generalizable">g</a> <a id="2189" href="BitML.Contracts.Types.html#2189" class="Generalizable">g′</a> <a id="2192" class="Symbol">:</a> <a id="2194" href="BitML.Contracts.Types.html#1732" class="Datatype">Precondition</a>
+
+<a id="2208" class="Comment">------------------------------------------------------------------------</a>
+<a id="2281" class="Comment">-- Advertisements.</a>
+
+<a id="2301" class="Keyword">record</a> <a id="Advertisement"></a><a id="2308" href="BitML.Contracts.Types.html#2308" class="Record">Advertisement</a> <a id="2322" class="Symbol">:</a> <a id="2324" class="PrimitiveType">Set</a> <a id="2328" class="Keyword">where</a>
+  <a id="2336" class="Keyword">constructor</a> <a id="⟨_⟩_"></a><a id="2348" href="BitML.Contracts.Types.html#2348" class="InductiveConstructor Operator">⟨_⟩_</a>
+  <a id="2355" class="Keyword">field</a>
+    <a id="Advertisement.G"></a><a id="2365" href="BitML.Contracts.Types.html#2365" class="Field">G</a> <a id="2367" class="Symbol">:</a> <a id="2369" href="BitML.Contracts.Types.html#1732" class="Datatype">Precondition</a>
+    <a id="Advertisement.C"></a><a id="2386" href="BitML.Contracts.Types.html#2386" class="Field">C</a> <a id="2388" class="Symbol">:</a> <a id="2390" href="BitML.Contracts.Types.html#649" class="Function">Contracts</a>
+<a id="2400" class="Keyword">open</a> <a id="2405" href="BitML.Contracts.Types.html#2308" class="Module">Advertisement</a> <a id="2419" class="Keyword">public</a>
+<a id="2426" class="Keyword">unquoteDecl</a> <a id="DecEq-Advertisement"></a><a id="2438" href="BitML.Contracts.Types.html#2438" class="Function">DecEq-Advertisement</a> <a id="2458" class="Symbol">=</a> <a id="2460" href="Prelude.Generics.html#5318" class="Function">DERIVE</a> <a id="2467" href="Prelude.DecEq.html#533" class="Record">DecEq</a> <a id="2473" href="Data.List.Base.html#4458" class="Function Operator">[</a> <a id="2475" class="Keyword">quote</a> <a id="2481" href="BitML.Contracts.Types.html#2308" class="Record">Advertisement</a> <a id="2495" href="Agda.Builtin.Sigma.html#236" class="InductiveConstructor Operator">,</a> <a id="2497" href="BitML.Contracts.Types.html#2438" class="Function">DecEq-Advertisement</a> <a id="2517" href="Data.List.Base.html#4458" class="Function Operator">]</a>
+
+<a id="2520" class="Keyword">variable</a>
+  <a id="2531" href="BitML.Contracts.Types.html#2531" class="Generalizable">ad</a> <a id="2534" href="BitML.Contracts.Types.html#2534" class="Generalizable">ad′</a> <a id="2538" class="Symbol">:</a> <a id="2540" href="BitML.Contracts.Types.html#2308" class="Record">Advertisement</a>
+
+<a id="2555" class="Keyword">infix</a>  <a id="2562" class="Number">2</a> <a id="2564" href="BitML.Contracts.Types.html#2348" class="InductiveConstructor Operator">⟨_⟩_</a>
+
+<a id="2570" class="Keyword">infix</a>  <a id="2577" class="Number">5</a> <a id="2579" href="BitML.Contracts.Types.html#1782" class="InductiveConstructor Operator">_:?_at_</a>
+<a id="2587" class="Keyword">infix</a>  <a id="2594" class="Number">5</a> <a id="2596" href="BitML.Contracts.Types.html#1859" class="InductiveConstructor Operator">_:!_at_</a>
+<a id="2604" class="Keyword">infix</a>  <a id="2611" class="Number">5</a> <a id="2613" href="BitML.Contracts.Types.html#1966" class="InductiveConstructor Operator">_:secret_</a>
+<a id="2623" class="Keyword">infixl</a> <a id="2630" class="Number">2</a> <a id="2632" href="BitML.Contracts.Types.html#2034" class="InductiveConstructor Operator">_∣∣_</a>
+
+<a id="2638" class="Keyword">infixr</a> <a id="2645" class="Number">9</a> <a id="2647" href="BitML.Contracts.Types.html#1021" class="InductiveConstructor Operator">_⇒_</a>
+<a id="2651" class="Keyword">infix</a>  <a id="2658" class="Number">8</a> <a id="2660" href="BitML.Contracts.Types.html#771" class="InductiveConstructor Operator">put_&amp;reveal_if_⇒_</a>
+<a id="2678" class="Keyword">infix</a>  <a id="2685" class="Number">8</a> <a id="2687" href="BitML.Contracts.Types.html#1464" class="InductiveConstructor Operator">put_&amp;reveal_⇒_</a>
+<a id="2702" class="Keyword">infix</a>  <a id="2709" class="Number">8</a> <a id="2711" href="BitML.Contracts.Types.html#1528" class="InductiveConstructor Operator">put_⇒_</a>
+<a id="2718" class="Keyword">infix</a>  <a id="2725" class="Number">8</a> <a id="2727" href="BitML.Contracts.Types.html#1583" class="InductiveConstructor Operator">reveal_⇒_</a>
+<a id="2737" class="Keyword">infix</a>  <a id="2744" class="Number">7</a> <a id="2746" href="BitML.Contracts.Types.html#1401" class="Function Operator">_⊸_</a>
+<a id="2750" class="Keyword">infix</a>  <a id="2757" class="Number">6</a> <a id="2759" href="BitML.Contracts.Types.html#1361" class="Function Operator">_∙</a>
+<a id="2762" class="Keyword">infixr</a> <a id="2769" class="Number">5</a> <a id="2771" href="BitML.Contracts.Types.html#1310" class="Function Operator">_⊕_</a>
+
+<a id="DepositRef"></a><a id="2776" href="BitML.Contracts.Types.html#2776" class="Function">DepositRef</a> <a id="2787" class="Symbol">:</a> <a id="2789" class="PrimitiveType">Set</a>
+<a id="2793" href="BitML.Contracts.Types.html#2776" class="Function">DepositRef</a> <a id="2804" class="Symbol">=</a> <a id="2806" href="BitML.Contracts.Types.html#395" class="Bound">Participant</a> <a id="2818" href="Data.Product.html#1167" class="Function Operator">×</a> <a id="2820" href="BitML.BasicTypes.html#229" class="Function">Value</a> <a id="2826" href="Data.Product.html#1167" class="Function Operator">×</a> <a id="2828" href="BitML.BasicTypes.html#301" class="Function">Id</a>
+</pre></body></html>
