@@ -7,6 +7,7 @@ open import Prelude.Init
 open import Prelude.Lists
 open import Prelude.DecEq
 open import Prelude.Collections
+open import Prelude.Bifunctor
 
 open import BitML.BasicTypes
 open import BitML.Predicate
@@ -42,8 +43,9 @@ contracts = collect {B = Contract}
 secrets : {{_ : X has Secret}} → X → Secrets
 secrets = collect {B = Secret}
 
-participants : {{_ : X has Participant}} → X → List Participant
+participants nub-participants : {{_ : X has Participant}} → X → List Participant
 participants = collect
+nub-participants = nub ∘ participants
 
 putComponents : {{_ : X has PutComponent}} → X → List PutComponent
 putComponents = collect
@@ -65,7 +67,7 @@ instance
 
 --
 
-  -- NB: Unfolding recursion inline, in order to convice the termination checker
+  -- NB: Unfolding recursion inline, in order to convince the termination checker
   HPᶜ : Contract has Participant
   HPᶜ .collect c with c
   -- ... | put _ &reveal _ if _ ⇒ cs = collect cs
@@ -205,15 +207,15 @@ persistent⊆ {g = l ∣∣ r}      p∈
 ... | inj₁ p∈ˡ = ∈-++⁺ˡ (persistent⊆ {g = l} p∈ˡ)
 ... | inj₂ p∈ʳ = ∈-++⁺ʳ (participants l) (persistent⊆ {g = r} p∈ʳ)
 
-getDeposit : namesʳ g ↦ DepositRef
-getDeposit {g = A :? v at x} (here refl) = A , v , x
-getDeposit {g = A :! v at x} (here refl) = A , v , x
+getDeposit : namesʳ g ↦ (Σ[ d ∈ DepositRef ] (proj₁ d ∈ participants g))
+getDeposit {g = A :? v at x} (here refl) = (A , v , x) , here refl
+getDeposit {g = A :! v at x} (here refl) = (A , v , x) , here refl
 getDeposit {g = _ :secret _} ()
 getDeposit {g = l ∣∣ r}      x∈
   with _ , y∈ , y≡ ← ∈-mapMaybe⁻ isInj₂ {xs = names l ++ names r} x∈
   with ∈-++⁻ (names l) y∈
-... | inj₁ x∈ˡ = getDeposit {g = l} (∈-mapMaybe⁺ isInj₂ x∈ˡ y≡)
-... | inj₂ x∈ʳ = getDeposit {g = r} (∈-mapMaybe⁺ isInj₂ x∈ʳ y≡)
+... | inj₁ x∈ˡ = map₂′ ∈-++⁺ˡ $ getDeposit {g = l} (∈-mapMaybe⁺ isInj₂ x∈ˡ y≡)
+... | inj₂ x∈ʳ = map₂′ (∈-++⁺ʳ (participants l)) $ getDeposit {g = r} (∈-mapMaybe⁺ isInj₂ x∈ʳ y≡)
 
 getName : (A , v , x) ∈ persistentDeposits g
         → x ∈ namesʳ g
