@@ -18,7 +18,9 @@ module BitML.Contracts.Helpers
   (Honest : List⁺ Participant)
   where
 
-open import BitML.Contracts.Types Participant Honest
+open import BitML.Contracts.Types     Participant Honest
+  hiding (C)
+open import BitML.Contracts.Induction Participant Honest
 
 -- T0D0 use Set'.nub on all results? or only on use-sites
 
@@ -67,18 +69,12 @@ instance
 
 --
 
-  -- NB: Unfolding recursion inline, in order to convince the termination checker
+  {-# TERMINATING #-}
   HPᶜ : Contract has Participant
   HPᶜ .collect c with c
-  -- ... | put _ &reveal _ if _ ⇒ cs = collect cs
-  ... | put _ &reveal _ if _ ⇒ []       = []
-  ... | put _ &reveal _ if _ ⇒ (c′ ∷ cs) = collect c′ ++ collect (put [] ⇒ cs)
+  ... | put _ &reveal _ if _ ⇒ cs = collect cs
   ... | withdraw p                = [ p ]
-  -- ... | split vcs                 = collect vcs
-  ... | split []                  = []
-  -- ... | split ((_ , cs) ∷ vcs)   = collect (put [] ⇒ cs) ++ collect (split vcs)
-  ... | split ((_ , []) ∷ vcs)      = collect (split vcs)
-  ... | split ((v , c′ ∷ cs) ∷ vcs) = collect c′ ++ collect (split [ v , cs ]) ++ collect (split vcs)
+  ... | split vcs                 = collect vcs
   ... | p ⇒ c′                    = p ∷ collect c′
   ... | after _ ⇒ c′              = collect c′
 
@@ -86,10 +82,21 @@ instance
   HNᶜ : Contract has Name
   HNᶜ .collect c with c
   ... | put xs &reveal as if _ ⇒ cs = map inj₂ xs ++ map inj₁ as ++ collect cs
-  ... | withdraw _                = []
-  ... | split vcs                 = collect vcs
-  ... | _ ⇒ c′                    = collect c′
-  ... | after _ ⇒ c′              = collect c′
+  ... | withdraw _                  = []
+  ... | split vcs                   = collect vcs
+  ... | _ ⇒ c′                      = collect c′
+  ... | after _ ⇒ c′                = collect c′
+  -- HNᶜ .collect = ≺-rec _ go ∘ C
+  --   where
+  --     go : ∀ c → (∀ c′ → c′ ≺ c → Names) → Names
+  --     go (C c) f with c
+  --     ... | put xs &reveal as if _ ⇒ cs = map inj₂ xs ++ map inj₁ as ++ f (CS cs) it
+  --     ... | withdraw _                  = []
+  --     ... | split vcs                   = f (VCS vcs) it
+  --     ... | _ ⇒ c′                      = f (C c′) it
+  --     ... | after _ ⇒ c′                = f (C c′) it
+  --     go (CS cs)   f = concat $ mapWith∈ cs λ {c} → f (C c) ∘ ≺-∈
+  --     go (VCS vcs) f = concat $ mapWith∈ (map proj₂ vcs) λ {cs} → f (CS cs) ∘ ≺-∈ᵛ
 
   HSᶜ : Contract has Secret
   HSᶜ .collect = filter₁ ∘ collect {B = Name}
@@ -102,6 +109,17 @@ instance
   ... | split vcs                   = collect vcs
   ... | _ ⇒ c′                      = collect c′
   ... | after _ ⇒ c′                = collect c′
+  -- HPCᶜ .collect = ≺-rec _ go ∘ C
+  --   where
+  --     go : ∀ c → (∀ c′ → c′ ≺ c → List PutComponent) → List PutComponent
+  --     go (C c) f with c
+  --     ... | put xs &reveal as if p ⇒ cs = (xs , as , p) ∷ f (CS cs) it
+  --     ... | withdraw _                  = []
+  --     ... | split vcs                   = f (VCS vcs) it
+  --     ... | _ ⇒ c′                      = f (C c′) it
+  --     ... | after _ ⇒ c′                = f (C c′) it
+  --     go (CS cs)   f = concat $ mapWith∈ cs λ {c} → f (C c) ∘ ≺-∈
+  --     go (VCS vcs) f = concat $ mapWith∈ (map proj₂ vcs) λ {cs} → f (CS cs) ∘ ≺-∈ᵛ
 
 --
 
@@ -264,3 +282,100 @@ remove-names {after _ ⇒ d} rewrite remove-names {d} = refl
 remove-names {put _ &reveal _ if _ ⇒ _} = refl
 remove-names {withdraw _}               = refl
 remove-names {split _}                  = refl
+
+-- Participants
+
+-- participants-helperᶜˢ : participants (CS ds) ⊆ participants (put xs &reveal as if p ⇒ ds)
+-- participants-helperᶜˢ {ds = d ∷ ds}{xs}{as}{p} d∈ = d∈
+--   with ∈-++⁻ (participants d) d∈
+-- ... | inj₁ d∈ˡ = ∈-++⁺ˡ d∈ˡ
+-- ... | inj₂ d∈ʳ = ∈-++⁺ʳ (participants d) d∈ʳ -- (participants-helperᶜˢ {ds = ds}{xs}{as}{p} d∈ʳ)
+
+-- participants-helperᵛᶜˢ : participants (VCS vcs) ⊆ participants (split vcs)
+-- participants-helperᵛᶜˢ {vcs = (_ , ds) ∷ vcs} d∈ = d∈
+--   with ∈-++⁻ (participants ds) d∈
+-- ... | inj₁ d∈ˡ = ∈-++⁺ˡ d∈ˡ
+-- ... | inj₂ d∈ʳ = ∈-++⁺ʳ (participants (CS ds)) d∈ʳ
+
+-- Subterms
+
+subterms subterms⁺ : ℂ → List Contract
+
+subterms c@(C _)   = drop 1 $ subterms⁺ c
+subterms c@(CS _)  = subterms⁺ c
+subterms c@(VCS _) = subterms⁺ c
+
+subterms⁺ (C c) with c
+... | _ ⇒ d                      = subterms⁺ (C d)
+... | after _ ⇒ d                = subterms⁺ (C d)
+... | split vcs                  = c ∷ subterms⁺ (VCS vcs)
+... | put _ &reveal _ if _ ⇒ cs  = c ∷ subterms⁺ (CS cs)
+... | withdraw _                 = c ∷ []
+subterms⁺ (CS [])                = []
+subterms⁺ (CS (c ∷ cs))          = subterms⁺ (C c) ++ subterms⁺ (CS cs)
+subterms⁺ (VCS [])               = []
+subterms⁺ (VCS ((_ , cs) ∷ vcs)) = subterms⁺ (CS cs) ++ subterms⁺ (VCS vcs)
+
+subterms′ : ℂ → List Contract
+subterms′ (C c) with c
+... | _ ⇒ d                      = subterms′ (C d)
+... | after _ ⇒ d                = subterms′ (C d)
+... | split vcs                  = subterms′ (VCS vcs)
+... | put _ &reveal _ if _ ⇒ cs  = subterms′ (CS cs)
+... | withdraw _                 = []
+subterms′ (CS [])                = []
+subterms′ (CS (c ∷ cs))          = c ∷ subterms′ (C c) ++ subterms′ (CS cs)
+subterms′ (VCS [])               = []
+subterms′ (VCS ((_ , cs) ∷ vcs)) = subterms′ (CS cs) ++ subterms′ (VCS vcs)
+
+-- Lemmas about `subterms`
+
+subterms⊆ᶜˢ : ds ⊆ subterms′ (CS ds)
+subterms⊆ᶜˢ {ds = d ∷ ds} (here refl) = here refl
+subterms⊆ᶜˢ {ds = d ∷ ds} (there d∈)  = there $ ∈-++⁺ʳ (subterms′ $ C d) (subterms⊆ᶜˢ d∈)
+
+subterms⊆ᵛᶜˢ : (v , ds) ∈ vcs → ds ⊆ subterms′ (VCS vcs)
+subterms⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} (here refl) = ∈-++⁺ˡ ∘ subterms⊆ᶜˢ
+subterms⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} (there p)   = ∈-++⁺ʳ (subterms′ (CS ds)) ∘ subterms⊆ᵛᶜˢ p
+
+{-# TERMINATING #-}
+subterms′-collect⊆ᶜˢ : ∀ {{_ : Contract has X}}
+  → d ∈ subterms′ (CS ds) → collect {B = X} d ⊆ collect {B = X} ds
+subterms′-collect⊆ᶜˢ {X = X} {ds = c ∷ cs} d∈
+  with d∈
+... | here refl = ∈-++⁺ˡ
+... | there d∈′
+  with ∈-++⁻ (subterms′ (C c)) d∈′
+... | inj₂ d∈ʳ = ∈-++⁺ʳ _ ∘ subterms′-collect⊆ᶜˢ {ds = cs} d∈ʳ
+... | inj₁ d∈ˡ = ∈-++⁺ˡ
+               ∘ subst (_ ∈_) (L.++-identityʳ (collect {B = X} c))
+               ∘ subterms′-collect⊆ᶜˢ {ds = [ c ]} (∈-++⁺ˡ $ there d∈ˡ)
+
+-- subterms′-names⊆ : d ∈ subterms′ (CS ds) → names d ⊆ names ds
+-- subterms′-names⊆ {d}{ds = c ∷ cs} d∈
+--   with d∈
+-- ... | here refl = ∈-++⁺ˡ
+-- ... | there d∈′
+--   with ∈-++⁻ (subterms′ (C c)) d∈′
+-- ... | inj₁ d∈ˡ = {!!}
+-- ... | inj₂ d∈ʳ = ∈-++⁺ʳ _ ∘ subterms′-names⊆ {ds = cs} d∈ʳ
+
+-- postulate
+--   subterms′-putComponents⊆ : d ∈ subterms′ (CS ds) → putComponents d ⊆ putComponents ds
+-- subterms′-putComponents⊆ d∈ = {!!}
+
+↦-∈ : ∀ {R : Set}
+  → (∀ {d} → d ∈ ds → subterms⁺ (C d) ↦ R)
+  → subterms⁺ (CS ds) ↦ R
+↦-∈ {ds = c ∷ cs} f x∈
+  with ∈-++⁻ (subterms⁺ (C c)) x∈
+... | inj₁ x∈ˡ = f (here refl) x∈ˡ
+... | inj₂ x∈ʳ = ↦-∈ (f ∘ there) x∈ʳ
+
+↦-∈ᵛ : ∀ {R : Set}
+  → (∀ {cs} → cs ∈ map proj₂ vcs → subterms⁺ (CS cs) ↦ R)
+  → subterms⁺ (VCS vcs) ↦ R
+↦-∈ᵛ {vcs = (_ , cs) ∷ vcs} f x∈
+  with ∈-++⁻ (subterms⁺ (CS cs)) x∈
+... | inj₁ x∈ˡ = f (here refl) x∈ˡ
+... | inj₂ x∈ʳ = ↦-∈ᵛ (f ∘ there) x∈ʳ

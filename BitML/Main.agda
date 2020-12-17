@@ -7,8 +7,8 @@ open import BitML.Example.Setup
 open import BitML.Predicate
 
 open import BitML.Contracts.Types
-open import BitML.Contracts.Helpers
 open import BitML.Contracts.Induction
+open import BitML.Contracts.Helpers
 open import BitML.Contracts.Validity
 open import BitML.Example.Contracts
 
