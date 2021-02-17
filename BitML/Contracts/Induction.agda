@@ -64,7 +64,7 @@ instance
   Toℂᵛᶜˢ : Toℂ VContracts
   Toℂᵛᶜˢ .toℂ = VCS
 
-  HP-ℂ : ∀ {X : Set} {{_ : Contract has X}} → ℂ has X
-  HP-ℂ .collect (C d)     = collect d
-  HP-ℂ .collect (CS ds)   = collect ds
-  HP-ℂ .collect (VCS vcs) = collect vcs
+  -- HP-ℂ : ∀ {X : Set} {{_ : Contract has X}} → ℂ has X
+  -- HP-ℂ .collect (C d)     = collect d
+  -- HP-ℂ .collect (CS ds)   = collect ds
+  -- HP-ℂ .collect (VCS vcs) = collect vcs

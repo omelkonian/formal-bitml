@@ -14,7 +14,7 @@ open import BitML.Predicate
 
 module BitML.Contracts.Helpers
   (Participant : Set)
-  {{_ : DecEq Participant}}
+  ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
 
@@ -30,108 +30,49 @@ private
   variable
     X : Set
 
-names : {{_ : X has Name}} → X → Names
-names = collect
+----------------
+-- ** Collectors
 
-namesˡ : {{_ : X has Name}} → X → Secrets
-namesˡ = filter₁ ∘ collect {B = Name}
-
-namesʳ : {{_ : X has Name}} → X → Ids
-namesʳ = filter₂ ∘ collect {B = Name}
-
-contracts : {{_ : X has Contract}} → X → Contracts
-contracts = collect {B = Contract}
-
-secrets : {{_ : X has Secret}} → X → Secrets
-secrets = collect {B = Secret}
-
-participants nub-participants : {{_ : X has Participant}} → X → List Participant
-participants = collect
-nub-participants = nub ∘ participants
-
-putComponents : {{_ : X has PutComponent}} → X → List PutComponent
-putComponents = collect
-
-deposits : {{_ : X has DepositRef}} → X → List DepositRef
-deposits = collect
+mkCollect : (∀ e → (∀ e′ → e′ ≺ C e → List X) → List X) → ℂ → List X
+mkCollect {X = X} mk = ≺-rec _ go
+  where
+    go : ∀ c → (∀ c′ → c′ ≺ c → List X) → List X
+    go (C c)     f = mk c f
+    go (CS cs)   f = concat $ mapWith∈ cs (f (C _) ∘ ≺-∈)
+    go (VCS vcs) f = concat $ mapWith∈ (map proj₂ vcs) (f (CS _) ∘ ≺-∈ᵛ)
 
 instance
-  -- Hᵃ : {{_ : Precondition has X}} {{_ : Contracts has X}} → Advertisement has X
-  -- Hᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
+  -- Hℂ : ⦃ _ : Contract has X ⦄ → ℂ has X
+  -- Hℂ .collect = mkCollect (λ e _ → collect e)
 
-  Hᵖʳ : {{_ : Arith has X}} → Predicate has X
-  Hᵖʳ .collect pr with pr
-  ... | `true   = []
-  ... | x `∧ y  = collect x ++ collect y
-  ... | `¬ x    = collect x
-  ... | x `= y  = collect x ++ collect y
-  ... | x `< y  = collect x ++ collect y
+  Hℂ : ⦃ _ : Contract has X ⦄ ⦃ _ : Contracts has X ⦄ ⦃ _ : VContracts has X ⦄ → ℂ has X
+  Hℂ .collect 𝕔 with 𝕔
+  ... | C c = collect c
+  ... | CS cs = collect cs
+  ... | VCS vcs = collect vcs
 
---
+-- participants
 
-  {-# TERMINATING #-}
+participantsℂ : ℂ → List Participant
+participantsℂ = mkCollect go
+  where
+    go : ∀ e → (∀ e′ → e′ ≺ C e → List Participant) → List Participant
+    go c f with c
+    ... | put _ &reveal _ if _ ⇒ cs = f (CS cs) it
+    ... | withdraw p                = [ p ]
+    ... | split vcs                 = f (VCS vcs) it
+    ... | p ⇒ c′                    = p ∷ f (C c′) it
+    ... | after _ ⇒ c′              = f (C c′) it
+
+instance
   HPᶜ : Contract has Participant
-  HPᶜ .collect c with c
-  ... | put _ &reveal _ if _ ⇒ cs = collect cs
-  ... | withdraw p                = [ p ]
-  ... | split vcs                 = collect vcs
-  ... | p ⇒ c′                    = p ∷ collect c′
-  ... | after _ ⇒ c′              = collect c′
+  HPᶜ .collect = participantsℂ ∘ C
 
-  {-# TERMINATING #-}
-  HNᶜ : Contract has Name
-  HNᶜ .collect c with c
-  ... | put xs &reveal as if _ ⇒ cs = map inj₂ xs ++ map inj₁ as ++ collect cs
-  ... | withdraw _                  = []
-  ... | split vcs                   = collect vcs
-  ... | _ ⇒ c′                      = collect c′
-  ... | after _ ⇒ c′                = collect c′
-  -- HNᶜ .collect = ≺-rec _ go ∘ C
-  --   where
-  --     go : ∀ c → (∀ c′ → c′ ≺ c → Names) → Names
-  --     go (C c) f with c
-  --     ... | put xs &reveal as if _ ⇒ cs = map inj₂ xs ++ map inj₁ as ++ f (CS cs) it
-  --     ... | withdraw _                  = []
-  --     ... | split vcs                   = f (VCS vcs) it
-  --     ... | _ ⇒ c′                      = f (C c′) it
-  --     ... | after _ ⇒ c′                = f (C c′) it
-  --     go (CS cs)   f = concat $ mapWith∈ cs λ {c} → f (C c) ∘ ≺-∈
-  --     go (VCS vcs) f = concat $ mapWith∈ (map proj₂ vcs) λ {cs} → f (CS cs) ∘ ≺-∈ᵛ
+  HPᶜˢ : Contracts has Participant
+  HPᶜˢ .collect = participantsℂ ∘ CS
 
-  HSᶜ : Contract has Secret
-  HSᶜ .collect = filter₁ ∘ collect {B = Name}
-
-  {-# TERMINATING #-}
-  HPCᶜ : Contract has PutComponent
-  HPCᶜ .collect c with c
-  ... | put xs &reveal as if p ⇒ cs = (xs , as , p) ∷ collect cs
-  ... | withdraw _                  = []
-  ... | split vcs                   = collect vcs
-  ... | _ ⇒ c′                      = collect c′
-  ... | after _ ⇒ c′                = collect c′
-  -- HPCᶜ .collect = ≺-rec _ go ∘ C
-  --   where
-  --     go : ∀ c → (∀ c′ → c′ ≺ c → List PutComponent) → List PutComponent
-  --     go (C c) f with c
-  --     ... | put xs &reveal as if p ⇒ cs = (xs , as , p) ∷ f (CS cs) it
-  --     ... | withdraw _                  = []
-  --     ... | split vcs                   = f (VCS vcs) it
-  --     ... | _ ⇒ c′                      = f (C c′) it
-  --     ... | after _ ⇒ c′                = f (C c′) it
-  --     go (CS cs)   f = concat $ mapWith∈ cs λ {c} → f (C c) ∘ ≺-∈
-  --     go (VCS vcs) f = concat $ mapWith∈ (map proj₂ vcs) λ {cs} → f (CS cs) ∘ ≺-∈ᵛ
-
---
-
-  HNᵖ : Precondition has Name
-  HNᵖ .collect pr with pr
-  ... | _ :? _ at x = [ inj₂ x ]
-  ... | _ :! _ at x = [ inj₂ x ]
-  ... | _ :secret a = [ inj₁ a ]
-  ... | p₁ ∣∣ p₂    = collect p₁ ++ collect p₂
-
-  HSᵖ : Precondition has Secret
-  HSᵖ .collect = filter₁ ∘ collect {B = Name}
+  HPᵛᶜˢ : VContracts has Participant
+  HPᵛᶜˢ .collect = participantsℂ ∘ VCS
 
   HPᵖ : Precondition has Participant
   HPᵖ .collect pr with pr
@@ -140,28 +81,59 @@ instance
   ... | p :secret _ = [ p ]
   ... | p₁ ∣∣ p₂    = collect p₁ ++ collect p₂
 
-  HDᵖ : Precondition has DepositRef
-  HDᵖ .collect pr with pr
-  ... | p :? v at x = [ p , v , x ]
-  ... | p :! v at x = [ p , v , x ]
-  ... | _ :secret _ = []
-  ... | p₁ ∣∣ p₂    = collect p₁ ++ collect p₂
-
---
-
-  HDᵃ : Advertisement has DepositRef
-  HDᵃ .collect = collect ∘ G
-
   HPᵃ : Advertisement has Participant
   HPᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
+
+participants nub-participants : ⦃ _ :  X has Participant ⦄ → X → List Participant
+participants = collect
+nub-participants = nub ∘ participants
+
+-- names
+
+namesℂ : ℂ → List Name
+namesℂ = mkCollect go
+  where
+    go : ∀ e → (∀ e′ → e′ ≺ C e → List Name) → List Name
+    go c f with c
+    ... | put xs &reveal as if _ ⇒ cs = map inj₂ xs ++ map inj₁ as ++ f (CS cs) it
+    ... | withdraw _                  = []
+    ... | split vcs                   = f (VCS vcs) it
+    ... | _ ⇒ c′                      = f (C c′) it
+    ... | after _ ⇒ c′                = f (C c′) it
+
+instance
+  HNᶜ : Contract has Name
+  HNᶜ .collect = namesℂ ∘ C
+
+  HNᶜˢ : Contracts has Name
+  HNᶜˢ .collect = namesℂ ∘ CS
+
+  HNᵛᶜˢ : VContracts has Name
+  HNᵛᶜˢ .collect = namesℂ ∘ VCS
+
+  HNᵖ : Precondition has Name
+  HNᵖ .collect pr with pr
+  ... | _ :? _ at x = [ inj₂ x ]
+  ... | _ :! _ at x = [ inj₂ x ]
+  ... | _ :secret a = [ inj₁ a ]
+  ... | p₁ ∣∣ p₂    = collect p₁ ++ collect p₂
 
   HNᵃ : Advertisement has Name
   HNᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
 
-  HSᵃ : Advertisement has Secret
-  HSᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
+names : ⦃ _ :  X has Name ⦄ → X → Names
+names = collect
 
---
+namesˡ : ⦃ _ :  X has Name ⦄ → X → Secrets
+namesˡ = filter₁ ∘ names
+
+namesʳ : ⦃ _ :  X has Name ⦄ → X → Ids
+namesʳ = filter₂ ∘ names
+
+-- secrets
+-- T0D0: reuse `names` generically
+
+instance
 
   HSᵃʳ : Arith has Secret
   HSᵃʳ .collect ar with ar
@@ -169,6 +141,77 @@ instance
   ... | ∣ s ∣  = [ s ]
   ... | x `+ y = collect x ++ collect y
   ... | x `- y = collect x ++ collect y
+
+  Hᵖʳ : ⦃ _ :  Arith has X ⦄ → Predicate has X
+  Hᵖʳ .collect pr with pr
+  ... | `true   = []
+  ... | x `∧ y  = collect x ++ collect y
+  ... | `¬ x    = collect x
+  ... | x `= y  = collect x ++ collect y
+  ... | x `< y  = collect x ++ collect y
+
+  -- HN→HS : ⦃ _ : X has Name ⦄ → X has Secret
+  -- HN→HS .collect = filter₁ ∘ collect {B = Name}
+
+  HSᶜ : Contract has Secret
+  HSᶜ .collect = filter₁ ∘ collect {B = Name}
+
+  HSᶜˢ : Contracts has Secret
+  HSᶜˢ .collect = filter₁ ∘ collect {B = Name}
+
+  HSᵛᶜˢ : VContracts has Secret
+  HSᵛᶜˢ .collect = filter₁ ∘ collect {B = Name}
+
+  HSᵖ : Precondition has Secret
+  HSᵖ .collect = filter₁ ∘ collect {B = Name}
+
+  HSᵃ : Advertisement has Secret
+  HSᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
+
+secrets : ⦃ _ :  X has Secret ⦄ → X → Secrets
+secrets = collect
+
+-- put components
+
+putComponentsℂ : ℂ → List PutComponent
+putComponentsℂ = mkCollect go
+  where
+    go : ∀ c → (∀ c′ → c′ ≺ C c → List PutComponent) → List PutComponent
+    go c f with c
+    ... | put xs &reveal as if p ⇒ cs = (xs , as , p) ∷ f (CS cs) it
+    ... | withdraw _                  = []
+    ... | split vcs                   = f (VCS vcs) it
+    ... | _ ⇒ c′                      = f (C c′) it
+    ... | after _ ⇒ c′                = f (C c′) it
+
+instance
+  HPCᶜ : Contract has PutComponent
+  HPCᶜ .collect = putComponentsℂ ∘ C
+
+  HPCᶜˢ : Contracts has PutComponent
+  HPCᶜˢ .collect = putComponentsℂ ∘ CS
+
+  HPCᵛᶜˢ : VContracts has PutComponent
+  HPCᵛᶜˢ .collect = putComponentsℂ ∘ VCS
+
+putComponents : ⦃ _ :  X has PutComponent ⦄ → X → List PutComponent
+putComponents = collect
+
+-- deposits
+
+instance
+  HDᵖ : Precondition has DepositRef
+  HDᵖ .collect pr with pr
+  ... | p :? v at x = [ p , v , x ]
+  ... | p :! v at x = [ p , v , x ]
+  ... | _ :secret _ = []
+  ... | p₁ ∣∣ p₂    = collect p₁ ++ collect p₂
+
+  HDᵃ : Advertisement has DepositRef
+  HDᵃ .collect = collect ∘ G
+
+deposits : ⦃ _ :  X has DepositRef ⦄ → X → List DepositRef
+deposits = collect
 
 private
   -- ** check that we get all accessors we want
@@ -283,40 +326,24 @@ remove-names {put _ &reveal _ if _ ⇒ _} = refl
 remove-names {withdraw _}               = refl
 remove-names {split _}                  = refl
 
--- Participants
-
--- participants-helperᶜˢ : participants (CS ds) ⊆ participants (put xs &reveal as if p ⇒ ds)
--- participants-helperᶜˢ {ds = d ∷ ds}{xs}{as}{p} d∈ = d∈
---   with ∈-++⁻ (participants d) d∈
--- ... | inj₁ d∈ˡ = ∈-++⁺ˡ d∈ˡ
--- ... | inj₂ d∈ʳ = ∈-++⁺ʳ (participants d) d∈ʳ -- (participants-helperᶜˢ {ds = ds}{xs}{as}{p} d∈ʳ)
-
--- participants-helperᵛᶜˢ : participants (VCS vcs) ⊆ participants (split vcs)
--- participants-helperᵛᶜˢ {vcs = (_ , ds) ∷ vcs} d∈ = d∈
---   with ∈-++⁻ (participants ds) d∈
--- ... | inj₁ d∈ˡ = ∈-++⁺ˡ d∈ˡ
--- ... | inj₂ d∈ʳ = ∈-++⁺ʳ (participants (CS ds)) d∈ʳ
-
 -- Subterms
 
-subterms subterms⁺ : ℂ → List Contract
+subterms subterms⁺ subterms′ : ℂ → Contracts
 
 subterms c@(C _)   = drop 1 $ subterms⁺ c
 subterms c@(CS _)  = subterms⁺ c
 subterms c@(VCS _) = subterms⁺ c
 
-subterms⁺ (C c) with c
-... | _ ⇒ d                      = subterms⁺ (C d)
-... | after _ ⇒ d                = subterms⁺ (C d)
-... | split vcs                  = c ∷ subterms⁺ (VCS vcs)
-... | put _ &reveal _ if _ ⇒ cs  = c ∷ subterms⁺ (CS cs)
-... | withdraw _                 = c ∷ []
-subterms⁺ (CS [])                = []
-subterms⁺ (CS (c ∷ cs))          = subterms⁺ (C c) ++ subterms⁺ (CS cs)
-subterms⁺ (VCS [])               = []
-subterms⁺ (VCS ((_ , cs) ∷ vcs)) = subterms⁺ (CS cs) ++ subterms⁺ (VCS vcs)
+subterms⁺ = mkCollect go
+  where
+    go : ∀ c → (∀ c′ → c′ ≺ C c → Contracts) → Contracts
+    go c f with c
+    ... | _ ⇒ d                      = f (C d) it
+    ... | after _ ⇒ d                = f (C d) it
+    ... | split vcs                  = c ∷ f (VCS vcs) it
+    ... | put _ &reveal _ if _ ⇒ cs  = c ∷ f (CS cs) it
+    ... | withdraw _                 = c ∷ []
 
-subterms′ : ℂ → List Contract
 subterms′ (C c) with c
 ... | _ ⇒ d                      = subterms′ (C d)
 ... | after _ ⇒ d                = subterms′ (C d)
@@ -329,40 +356,6 @@ subterms′ (VCS [])               = []
 subterms′ (VCS ((_ , cs) ∷ vcs)) = subterms′ (CS cs) ++ subterms′ (VCS vcs)
 
 -- Lemmas about `subterms`
-
-subterms⊆ᶜˢ : ds ⊆ subterms′ (CS ds)
-subterms⊆ᶜˢ {ds = d ∷ ds} (here refl) = here refl
-subterms⊆ᶜˢ {ds = d ∷ ds} (there d∈)  = there $ ∈-++⁺ʳ (subterms′ $ C d) (subterms⊆ᶜˢ d∈)
-
-subterms⊆ᵛᶜˢ : (v , ds) ∈ vcs → ds ⊆ subterms′ (VCS vcs)
-subterms⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} (here refl) = ∈-++⁺ˡ ∘ subterms⊆ᶜˢ
-subterms⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} (there p)   = ∈-++⁺ʳ (subterms′ (CS ds)) ∘ subterms⊆ᵛᶜˢ p
-
-{-# TERMINATING #-}
-subterms′-collect⊆ᶜˢ : ∀ {{_ : Contract has X}}
-  → d ∈ subterms′ (CS ds) → collect {B = X} d ⊆ collect {B = X} ds
-subterms′-collect⊆ᶜˢ {X = X} {ds = c ∷ cs} d∈
-  with d∈
-... | here refl = ∈-++⁺ˡ
-... | there d∈′
-  with ∈-++⁻ (subterms′ (C c)) d∈′
-... | inj₂ d∈ʳ = ∈-++⁺ʳ _ ∘ subterms′-collect⊆ᶜˢ {ds = cs} d∈ʳ
-... | inj₁ d∈ˡ = ∈-++⁺ˡ
-               ∘ subst (_ ∈_) (L.++-identityʳ (collect {B = X} c))
-               ∘ subterms′-collect⊆ᶜˢ {ds = [ c ]} (∈-++⁺ˡ $ there d∈ˡ)
-
--- subterms′-names⊆ : d ∈ subterms′ (CS ds) → names d ⊆ names ds
--- subterms′-names⊆ {d}{ds = c ∷ cs} d∈
---   with d∈
--- ... | here refl = ∈-++⁺ˡ
--- ... | there d∈′
---   with ∈-++⁻ (subterms′ (C c)) d∈′
--- ... | inj₁ d∈ˡ = {!!}
--- ... | inj₂ d∈ʳ = ∈-++⁺ʳ _ ∘ subterms′-names⊆ {ds = cs} d∈ʳ
-
--- postulate
---   subterms′-putComponents⊆ : d ∈ subterms′ (CS ds) → putComponents d ⊆ putComponents ds
--- subterms′-putComponents⊆ d∈ = {!!}
 
 ↦-∈ : ∀ {R : Set}
   → (∀ {d} → d ∈ ds → subterms⁺ (C d) ↦ R)
@@ -379,3 +372,56 @@ subterms′-collect⊆ᶜˢ {X = X} {ds = c ∷ cs} d∈
   with ∈-++⁻ (subterms⁺ (CS cs)) x∈
 ... | inj₁ x∈ˡ = f (here refl) x∈ˡ
 ... | inj₂ x∈ʳ = ↦-∈ᵛ (f ∘ there) x∈ʳ
+
+subterms⊆ᶜˢ : ds ⊆ subterms′ (CS ds)
+subterms⊆ᶜˢ {ds = d ∷ ds} (here refl) = here refl
+subterms⊆ᶜˢ {ds = d ∷ ds} (there d∈)  = there $ ∈-++⁺ʳ (subterms′ $ C d) (subterms⊆ᶜˢ d∈)
+
+subterms⊆ᵛᶜˢ : (v , ds) ∈ vcs → ds ⊆ subterms′ (VCS vcs)
+subterms⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} (here refl) = ∈-++⁺ˡ ∘ subterms⊆ᶜˢ
+subterms⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} (there p)   = ∈-++⁺ʳ (subterms′ (CS ds)) ∘ subterms⊆ᵛᶜˢ p
+
+subterms′-names⊆ᶜ : d ∈ subterms′ (C d′) → names d ⊆ names d′
+subterms′-names⊆ᶜˢ : d ∈ subterms′ (CS ds) → names d ⊆ names ds
+subterms′-names⊆ᵛᶜˢ : d ∈ subterms′ (VCS vcs) → names d ⊆ names vcs
+
+subterms′-names⊆ᶜ {d′ = put xs &reveal as if _ ⇒ ds} x∈ =
+  ∈-++⁺ʳ (map inj₂ xs) ∘ ∈-++⁺ʳ (map inj₁ as) ∘ subterms′-names⊆ᶜˢ {ds = ds} x∈
+subterms′-names⊆ᶜ {d′ = withdraw _} ()
+subterms′-names⊆ᶜ {d′ = split vcs}    = subterms′-names⊆ᵛᶜˢ {vcs = vcs}
+subterms′-names⊆ᶜ {d′ = _ ⇒ d′}       = subterms′-names⊆ᶜ {d′ = d′}
+subterms′-names⊆ᶜ {d′ = after _ ⇒ d′} = subterms′-names⊆ᶜ {d′ = d′}
+
+subterms′-names⊆ᶜˢ {ds = d ∷ ds} (here refl) = ∈-++⁺ˡ
+subterms′-names⊆ᶜˢ {ds = d ∷ ds} (there p)
+  with ∈-++⁻ _ p
+... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-names⊆ᶜˢ {ds = ds} p′
+... | inj₁ p′ = ∈-++⁺ˡ ∘ subterms′-names⊆ᶜ {d′ = d} p′
+
+subterms′-names⊆ᵛᶜˢ {vcs = (_ , []) ∷ vcs} p = ∈-++⁺ʳ _ ∘ subterms′-names⊆ᵛᶜˢ {vcs = vcs} p
+subterms′-names⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} p
+  with ∈-++⁻ (subterms′ (CS ds)) p
+... | inj₁ p′ = ∈-++⁺ˡ ∘ subterms′-names⊆ᶜˢ {ds = ds} p′
+... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-names⊆ᵛᶜˢ {vcs = vcs} p′
+
+subterms′-putComponents⊆ᶜ : d ∈ subterms′ (C d′) → putComponents d ⊆ putComponents d′
+subterms′-putComponents⊆ᶜˢ : d ∈ subterms′ (CS ds) → putComponents d ⊆ putComponents ds
+subterms′-putComponents⊆ᵛᶜˢ : d ∈ subterms′ (VCS vcs) → putComponents d ⊆ putComponents vcs
+
+subterms′-putComponents⊆ᶜ {d′ = put xs &reveal as if _ ⇒ ds} x∈ = there ∘ subterms′-putComponents⊆ᶜˢ {ds = ds} x∈
+subterms′-putComponents⊆ᶜ {d′ = withdraw _} ()
+subterms′-putComponents⊆ᶜ {d′ = split vcs}    = subterms′-putComponents⊆ᵛᶜˢ {vcs = vcs}
+subterms′-putComponents⊆ᶜ {d′ = _ ⇒ d′}       = subterms′-putComponents⊆ᶜ {d′ = d′}
+subterms′-putComponents⊆ᶜ {d′ = after _ ⇒ d′} = subterms′-putComponents⊆ᶜ {d′ = d′}
+
+subterms′-putComponents⊆ᶜˢ {ds = d ∷ ds} (here refl) = ∈-++⁺ˡ
+subterms′-putComponents⊆ᶜˢ {ds = d ∷ ds} (there p)
+  with ∈-++⁻ _ p
+... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-putComponents⊆ᶜˢ {ds = ds} p′
+... | inj₁ p′ = ∈-++⁺ˡ ∘ subterms′-putComponents⊆ᶜ {d′ = d} p′
+
+subterms′-putComponents⊆ᵛᶜˢ {vcs = (_ , []) ∷ vcs} p = ∈-++⁺ʳ _ ∘ subterms′-putComponents⊆ᵛᶜˢ {vcs = vcs} p
+subterms′-putComponents⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} p
+  with ∈-++⁻ (subterms′ (CS ds)) p
+... | inj₁ p′ = ∈-++⁺ˡ ∘ subterms′-putComponents⊆ᶜˢ {ds = ds} p′
+... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-putComponents⊆ᵛᶜˢ {vcs = vcs} p′

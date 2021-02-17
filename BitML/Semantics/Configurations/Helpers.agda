@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 open import Prelude.Init
 open import Prelude.DecEq
-open import Prelude.Set'
+open import Prelude.Sets
 open import Prelude.Collections
 open import Prelude.Applicative
 open import Prelude.Semigroup

@@ -10,7 +10,7 @@ open import Prelude.Init
 open import Prelude.General
 open import Prelude.Lists
 open import Prelude.DecEq
-open import Prelude.Set'
+open import Prelude.Sets
 open import Prelude.Measurable
 open import Prelude.Collections
 
@@ -50,6 +50,7 @@ validAd? (⟨ G ⟩ C) =
   ×-dec all? (λ{ (xs , as , p) → unique? xs ×-dec (secrets p ⊆? as)}) (putComponents C)
   ×-dec participants G ++ participants C ⊆? persistentParticipants G
 
+{-
 ------------------------------------------
 -- *** Mapping while preserving validity.
 
@@ -158,3 +159,4 @@ map-⊆ : ∀ {{_ : CC-like C₁}} {{_ : CC-like C₂}} {z : C₂}
   → (∀ (x : C₁) → x ⊆ᶜ z → B)
   → List B
 map-⊆ xs xs⊆ᶜz f = map∈-⊆ xs xs⊆ᶜz (λ {x} _ → f x)
+-}
