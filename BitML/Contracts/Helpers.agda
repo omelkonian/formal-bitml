@@ -26,9 +26,7 @@ open import BitML.Contracts.Induction Participant Honest
 
 PutComponent = Ids × Secrets × Predicate
 
-private
-  variable
-    X : Set
+private variable X : Set
 
 ----------------
 -- ** Collectors

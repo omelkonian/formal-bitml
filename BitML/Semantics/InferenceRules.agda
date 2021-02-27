@@ -15,9 +15,7 @@ module BitML.Semantics.InferenceRules
   (Honest : List⁺ Participant)
   where
 
-open import BitML.Contracts.Types Participant Honest
-open import BitML.Contracts.Helpers Participant Honest
-open import BitML.Contracts.Validity Participant Honest
+open import BitML.Contracts Participant Honest
 open import BitML.Semantics.Action Participant Honest
 open import BitML.Semantics.Configurations.Types Participant Honest
 open import BitML.Semantics.Configurations.Helpers Participant Honest
@@ -88,7 +86,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
       ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
         —→[ donate[ x ▷ᵈ B ] ]
-      ⟨ B has v ⟩at y ∣ A auth[ x ▷ᵈ B ] ∣ Γ
+      ⟨ B has v ⟩at y ∣ Γ
 
 
   [DEP-AuthDestroy] :
@@ -127,9 +125,9 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [C-Advertise] :
 
-      ValidAdvertisement ad                -- the advertisement is valid
-    → Any (_∈ Hon) (participants (G ad))  -- at least one honest participant
-    → All (_∈ deposits Γ) (deposits ad) -- all persistent deposits in place
+      ValidAdvertisement ad              -- the advertisement is valid
+    → Any (_∈ Hon) (participants (G ad)) -- at least one honest participant
+    → All (_∈ deposits Γ) (deposits ad)  -- all persistent deposits in place
 
       ------------------------------------------------------------------------
 

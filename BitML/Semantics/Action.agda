@@ -42,3 +42,9 @@ data Action : Set where
   _,_▷ᵈˢ_ : (xs : Ids) → Index xs → Id → Action
 
 unquoteDecl DecEq-Action = DERIVE DecEq [ quote Action , DecEq-Action ]
+
+Actions = List Action
+
+variable
+  act act′ : Action
+  acts acts′ : Actions

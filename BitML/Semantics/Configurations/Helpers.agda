@@ -38,6 +38,8 @@ infix 3 _≈?_
 _≈?_ : Decidable² {A = Configuration} _≈_
 c ≈? c′ = cfgToList c ↭? cfgToList c′
 
+private variable X : Set
+
 instance
   HNᵃᶜ : Action has Name
   HNᵃᶜ .collect ac with ac
@@ -57,17 +59,51 @@ instance
 
   HNᶜᶠ : Configuration has Name
   HNᶜᶠ .collect c with c
-  ... | ∅ᶜ              = []
-  ... | ` ad            = collect ad
-  ... | ⟨ cs , _ ⟩at x  = inj₂ x ∷ collect cs
-  ... | ⟨ _ has _ ⟩at x = [ inj₂ x ]
-  ... | _ auth[ ac ]    = collect ac
+  -- secrets
   ... | ⟨ _ ∶ s ♯ _ ⟩   = [ inj₁ s ]
   ... | _ ∶ s ♯ _       = [ inj₁ s ]
+  -- names
+  ... | ⟨ _ ,   _ ⟩at x = [ inj₂ x ]
+  ... | ⟨ _ has _ ⟩at x = [ inj₂ x ]
+  -- other
   ... | l ∣ r           = collect l ++ collect r
+  ... | _               = []
+  -- ... | ∅ᶜ              = []
+  -- ... | ` ad            = []
+  -- ... | _ auth[ ac ]    = []
 
-  HNᵗᶜᶠ : TimedConfiguration has Name
-  HNᵗᶜᶠ .collect (Γ at _) = collect Γ
+  HAᶜᶠ : Configuration has Action
+  HAᶜᶠ .collect c with c
+  ... | _ auth[ a ] = [ a ]
+  ... | l ∣ r       = collect l ++ collect r
+  ... | _           = []
+
+  -- HAᶜᶠ : Configuration has Advertisement
+  -- HAᶜᶠ .collect c with c
+  -- ... | ` ad  = [ ad ]
+  -- ... | l ∣ r = collect l ++ collect r
+  -- ... | _     = []
+
+  Hᶜᶠ⇒Hᵗᶜᶠ : ∀ {X : Set} ⦃ _ : Configuration has X ⦄ → TimedConfiguration has X
+  Hᶜᶠ⇒Hᵗᶜᶠ .collect (Γ at _) = collect Γ
+
+advertisements : ⦃ _ :  X has Advertisement ⦄ → X → List Advertisement
+advertisements = collect
+
+-- authorizedActions : ⦃ _ :  X has Action ⦄ → X → List Action
+-- authorizedActions = collect
+
+-- authorizedAds : ⦃ _ :  X has Action ⦄ → X → List Advertisement
+-- authorizedAds = mapMaybe (case_of λ{ (♯▷ ad) → just ad; _ → nothing })
+--               ∘ authorizedActions
+
+authorizedHonAds : Configuration → List Advertisement
+authorizedHonAds (A auth[ ♯▷ ad ])
+  with A ∈? Hon
+... | yes _ = [ ad ]
+... | no  _ = []
+authorizedHonAds (l ∣ r) = authorizedHonAds l ++ authorizedHonAds r
+authorizedHonAds _       = []
 
 secretsOfᶜᶠ : Participant → Configuration → Secrets
 secretsOfᶜᶠ A = {- Set'.nub ∘-} go
