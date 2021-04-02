@@ -14,7 +14,7 @@ open import BitML.Predicate
 
 module BitML.Semantics.Predicate
   (Participant : Set)
-  {{_ : DecEq Participant}}
+  ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
 

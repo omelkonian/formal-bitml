@@ -9,7 +9,7 @@ open import BitML.BasicTypes
 
 module BitML.Semantics.Label
   (Participant : Set)
-  {{_ : DecEq Participant}}
+  ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
 

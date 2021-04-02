@@ -11,7 +11,7 @@ open import BitML.Predicate hiding (`; ∣_∣)
 
 module BitML.Semantics.InferenceRules
   (Participant : Set)
-  {{_ : DecEq Participant}}
+  ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
 
@@ -42,6 +42,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
         —→[ auth-join[ A , x ↔ y ] ]
       ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
 
+
   [DEP-Join] :
 
       ------------------------------------------------------------
@@ -60,7 +61,6 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
       ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
 
 
-
   [DEP-Divide] :
 
       -------------------------------------------------------------------------
@@ -77,7 +77,6 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
       ⟨ A has v ⟩at x ∣ Γ
         —→[ auth-donate[ A , x ▷ᵈ B ] ]
       ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
-
 
 
   [DEP-Donate] :
@@ -105,7 +104,6 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
       Δ ∣ Aj auth[ xs , j′ ▷ᵈˢ y ] ∣ Γ
 
 
-
   [DEP-Destroy] :
     ∀ {ds : List (Participant × Value × Id)} {j : Index ds}
 
@@ -127,7 +125,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
       ValidAdvertisement ad              -- the advertisement is valid
     → Any (_∈ Hon) (participants (G ad)) -- at least one honest participant
-    → All (_∈ deposits Γ) (deposits ad)  -- all persistent deposits in place
+    → deposits ad ⊆ deposits Γ           -- all persistent deposits in place
 
       ------------------------------------------------------------------------
 
@@ -154,8 +152,8 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [C-AuthInit] :
 
-      All (_∈ committedParticipants Γ ad) (participants (G ad)) -- all participants have committed their secrets
-    → (A , v , x) ∈ persistentDeposits (G ad)                   -- G = A :! v @ x | ...
+      All (_∈ committedParticipants Γ ad) (nub-participants $ G ad) -- all participants have committed their secrets
+    → (A , v , x) ∈ persistentDeposits (G ad)                       -- G = A :! v @ x | ...
 
       ----------------------------------------------------------------------
 
@@ -166,7 +164,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [C-Init] :
 
-      -- all participants have committed their secrets (guaranteed from [C-AuthInit]
+      -- all participants have committed their secrets (guaranteed from [C-AuthInit])
 
       let toSpend = persistentDeposits (G ad)
           vs      = map (proj₁ ∘ proj₂) toSpend
@@ -175,7 +173,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
       ----------------------------------------------------------------------
 
       ` ad ∣ Γ ∣ || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xi ▷ˢ ad ] }) toSpend
-               ∣ || map (_auth[ ♯▷ ad ]) (nub (participants (G ad)))
+               ∣ || map (_auth[ ♯▷ ad ]) (nub-participants $ G ad)
         —→[ init[ G ad , C ad ] ]
       ⟨ C ad , sum vs ⟩at x ∣ Γ
 
@@ -194,6 +192,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
         —→[ split[ y ] ]
       || map (λ{ (vi , ci , xi) → ⟨ ci , vi ⟩at xi }) vcis ∣ Γ
 
+
   [C-AuthRev] :
 
       -------------------------------------------------------------
@@ -201,6 +200,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
       ⟨ A ∶ a ♯ just n ⟩ ∣ Γ
         —→[ auth-rev[ A , a ] ]
       A ∶ a ♯ n ∣ Γ
+
 
   [C-PutRev] :
     ∀ {ds : List (Participant × Value × Id)}
@@ -244,6 +244,8 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
       ⟨ c , v ⟩at x ∣ A auth[ x ▷ d ] ∣ Γ
 
 
+  -- T0D0 linearize, i.e. introduce new label and produce intermediate configuration:
+  -- ⟨ c , v ⟩at x ∣ Δ ∣ Γ —→[ choice[c , i] ] ⟨ [ d′ ] , v ⟩at x ∣ Γ
   [C-Control] :
     ∀ {i : Index c}
 
@@ -282,6 +284,7 @@ data _—→ₜ[_]_ : TimedConfiguration → Label → TimedConfiguration → Se
 
     → Γ at t —→ₜ[ α ] Γ′ at t
 
+
   [Delay] :
 
       δ > 0
@@ -289,6 +292,7 @@ data _—→ₜ[_]_ : TimedConfiguration → Label → TimedConfiguration → Se
       -------------------------------------
 
     → Γ at t —→ₜ[ delay[ δ ] ] Γ at (t + δ)
+
 
   [Timeout] :
     ∀ {i : Index c}

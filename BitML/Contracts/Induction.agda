@@ -6,7 +6,7 @@ open import Prelude.Collections
 
 module BitML.Contracts.Induction
   (Participant : Set)
-  {{_ : DecEq Participant}}
+  ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
 
@@ -49,9 +49,9 @@ data _≺_ : Rel ℂ 0ℓ where
 
 record Toℂ (A : Set) : Set where
   field toℂ : A → ℂ
-open Toℂ {{...}} public
+open Toℂ ⦃ ... ⦄ public
 
-_≺ℂ_ : ∀ {A B : Set} {{_ : Toℂ A}} {{_ : Toℂ B}} → A → B → Set
+_≺ℂ_ : ∀ {A B : Set} ⦃ _ : Toℂ A ⦄ ⦃ _ : Toℂ B ⦄ → A → B → Set
 x ≺ℂ y = toℂ x ≺ toℂ y
 
 instance
@@ -64,7 +64,7 @@ instance
   Toℂᵛᶜˢ : Toℂ VContracts
   Toℂᵛᶜˢ .toℂ = VCS
 
-  -- HP-ℂ : ∀ {X : Set} {{_ : Contract has X}} → ℂ has X
+  -- HP-ℂ : ∀ {X : Set} ⦃ _ : Contract has X ⦄ → ℂ has X
   -- HP-ℂ .collect (C d)     = collect d
   -- HP-ℂ .collect (CS ds)   = collect ds
   -- HP-ℂ .collect (VCS vcs) = collect vcs

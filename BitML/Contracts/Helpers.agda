@@ -198,18 +198,30 @@ putComponents = collect
 -- deposits
 
 instance
-  HDᵖ : Precondition has DepositRef
-  HDᵖ .collect pr with pr
-  ... | p :? v at x = [ p , v , x ]
-  ... | p :! v at x = [ p , v , x ]
+  -- HD⇒HD : ⦃ _ : X has TDepositRef ⦄ → X has DepositRef
+  -- HD⇒HD ⦃ hd ⦄ .collect = map proj₂ ∘ collect ⦃ hd ⦄
+
+  HTDᵖ : Precondition has TDepositRef
+  HTDᵖ .collect pr with pr
+  ... | p :? v at x = [ volatile   , p , v , x ]
+  ... | p :! v at x = [ persistent , p , v , x ]
   ... | _ :secret _ = []
   ... | p₁ ∣∣ p₂    = collect p₁ ++ collect p₂
 
+  HDᵖ : Precondition has DepositRef
+  HDᵖ .collect = map proj₂ ∘ collect
+
+  HTDᵃ : Advertisement has TDepositRef
+  HTDᵃ .collect = collect ∘ G
+
   HDᵃ : Advertisement has DepositRef
-  HDᵃ .collect = collect ∘ G
+  HDᵃ .collect = map proj₂ ∘ collect
+
+tdeposits : ⦃ _ :  X has TDepositRef ⦄ → X → List TDepositRef
+tdeposits = collect
 
 deposits : ⦃ _ :  X has DepositRef ⦄ → X → List DepositRef
-deposits = collect
+deposits ⦃ hd ⦄ = collect ⦃ hd ⦄
 
 private
   -- ** check that we get all accessors we want
@@ -234,6 +246,9 @@ private
   _ : ∀C PutComponent
   _ = putComponents , putComponents , putComponents
 
+  _ : ∀P TDepositRef
+  _ = tdeposits , tdeposits
+
   _ : ∀P DepositRef
   _ = deposits , deposits
 
@@ -249,22 +264,77 @@ secretsOfᵖ A = go
 
 -- Deposits
 
-persistentDeposits : Precondition → List DepositRef
-persistentDeposits (a :! v at x) = [ a , v , x ]
-persistentDeposits (p₁ ∣∣ p₂)    = persistentDeposits p₁ ++ persistentDeposits p₂
-persistentDeposits _             = []
+isVolatile isPersistent : TDepositRef → Maybe DepositRef
+isVolatile = case_of λ where
+  (volatile   , d) → just d
+  (persistent , _) → nothing
+isPersistent = case_of λ where
+  (volatile   , _) → nothing
+  (persistent , d) → just d
 
-persistentParticipants : Precondition → List Participant
-persistentParticipants (A :! _ at _) = [ A ]
-persistentParticipants (l ∣∣ r)      = persistentParticipants l ++ persistentParticipants r
-persistentParticipants _             = []
+volatileDeposits persistentDeposits : Precondition → List DepositRef
+volatileDeposits   = mapMaybe isVolatile   ∘ tdeposits
+persistentDeposits = mapMaybe isPersistent ∘ tdeposits
 
-persistent⊆ : persistentParticipants g ⊆ participants g
-persistent⊆ {g = A :! _ at _} p∈ = p∈
-persistent⊆ {g = l ∣∣ r}      p∈
-  with ∈-++⁻ (persistentParticipants l) p∈
-... | inj₁ p∈ˡ = ∈-++⁺ˡ (persistent⊆ {g = l} p∈ˡ)
-... | inj₂ p∈ʳ = ∈-++⁺ʳ (participants l) (persistent⊆ {g = r} p∈ʳ)
+volatileParticipants persistentParticipants : Precondition → List Participant
+volatileParticipants   = map proj₁ ∘ volatileDeposits
+persistentParticipants = map proj₁ ∘ persistentDeposits
+
+volatileNamesʳ persistentNamesʳ : Precondition → Ids
+volatileNamesʳ   = map (proj₂ ∘ proj₂) ∘ volatileDeposits
+persistentNamesʳ = map (proj₂ ∘ proj₂) ∘ persistentDeposits
+
+volatileNames⊆ : volatileNamesʳ g ⊆ namesʳ g
+volatileNames⊆ {g = A :? v at x} n∈ = n∈
+volatileNames⊆ {g = l ∣∣ r}  {n} n∈
+  with (p , v , .n) , d∈ , refl ← ∈-map⁻ (proj₂ ∘ proj₂) n∈
+  with _ , d∈ , d≡ ← ∈-mapMaybe⁻ isVolatile {xs = tdeposits (l ∣∣ r)} d∈
+  with ∈-++⁻ (tdeposits l) d∈
+... | inj₁ d∈ˡ
+  with (_ , m∈ , m≡) ← ∈-mapMaybe⁻ isInj₂ {xs = names l} $ volatileNames⊆ {g = l}
+                     $ ∈-map⁺ (proj₂ ∘ proj₂)
+                     $ ∈-mapMaybe⁺ isVolatile d∈ˡ d≡
+  = ∈-mapMaybe⁺ isInj₂ {xs = names (l ∣∣ r)} (∈-++⁺ˡ m∈) m≡
+... | inj₂ d∈ʳ
+  with (_ , m∈ , m≡) ← ∈-mapMaybe⁻ isInj₂ {xs = names r} $ volatileNames⊆ {g = r}
+                     $ ∈-map⁺ (proj₂ ∘ proj₂)
+                     $ ∈-mapMaybe⁺ isVolatile d∈ʳ d≡
+  = ∈-mapMaybe⁺ isInj₂ {xs = names (l ∣∣ r)} (∈-++⁺ʳ (names l) m∈) m≡
+
+persistentNames⊆ : persistentNamesʳ g ⊆ namesʳ g
+persistentNames⊆ {g = A :! v at x} n∈ = n∈
+persistentNames⊆ {g = l ∣∣ r}  {n} n∈
+  with (p , v , .n) , d∈ , refl ← ∈-map⁻ (proj₂ ∘ proj₂) n∈
+  with _ , d∈ , d≡ ← ∈-mapMaybe⁻ isPersistent {xs = tdeposits (l ∣∣ r)} d∈
+  with ∈-++⁻ (tdeposits l) d∈
+... | inj₁ d∈ˡ
+  with (_ , m∈ , m≡) ← ∈-mapMaybe⁻ isInj₂ {xs = names l} $ persistentNames⊆ {g = l}
+                     $ ∈-map⁺ (proj₂ ∘ proj₂)
+                     $ ∈-mapMaybe⁺ isPersistent d∈ˡ d≡
+  = ∈-mapMaybe⁺ isInj₂ {xs = names (l ∣∣ r)} (∈-++⁺ˡ m∈) m≡
+... | inj₂ d∈ʳ
+  with (_ , m∈ , m≡) ← ∈-mapMaybe⁻ isInj₂ {xs = names r} $ persistentNames⊆ {g = r}
+                     $ ∈-map⁺ (proj₂ ∘ proj₂)
+                     $ ∈-mapMaybe⁺ isPersistent d∈ʳ d≡
+  = ∈-mapMaybe⁺ isInj₂ {xs = names (l ∣∣ r)} (∈-++⁺ʳ (names l) m∈) m≡
+
+volatileParticipants⊆ : volatileParticipants g ⊆ participants g
+volatileParticipants⊆ {g = A :? _ at _} p∈ = p∈
+volatileParticipants⊆ {g = l ∣∣ r} {p} p∈
+  with (.p , v , x) , d∈ , refl ← ∈-map⁻ proj₁ p∈
+  with _ , d∈ , d≡ ← ∈-mapMaybe⁻ isVolatile {xs = tdeposits (l ∣∣ r)} d∈
+  with ∈-++⁻ (tdeposits l) d∈
+... | inj₁ d∈ˡ = ∈-++⁺ˡ (volatileParticipants⊆ {g = l} $ ∈-map⁺ proj₁ $ ∈-mapMaybe⁺ isVolatile d∈ˡ d≡)
+... | inj₂ d∈ʳ = ∈-++⁺ʳ (participants l) (volatileParticipants⊆ {g = r} $ ∈-map⁺ proj₁ $ ∈-mapMaybe⁺ isVolatile d∈ʳ d≡)
+
+persistentParticipants⊆ : persistentParticipants g ⊆ participants g
+persistentParticipants⊆ {g = A :! _ at _} p∈ = p∈
+persistentParticipants⊆ {g = l ∣∣ r} {p} p∈
+  with (.p , v , x) , d∈ , refl ← ∈-map⁻ proj₁ p∈
+  with _ , d∈ , d≡ ← ∈-mapMaybe⁻ isPersistent {xs = tdeposits (l ∣∣ r)} d∈
+  with ∈-++⁻ (tdeposits l) d∈
+... | inj₁ d∈ˡ = ∈-++⁺ˡ (persistentParticipants⊆ {g = l} $ ∈-map⁺ proj₁ $ ∈-mapMaybe⁺ isPersistent d∈ˡ d≡)
+... | inj₂ d∈ʳ = ∈-++⁺ʳ (participants l) (persistentParticipants⊆ {g = r} $ ∈-map⁺ proj₁ $ ∈-mapMaybe⁺ isPersistent d∈ʳ d≡)
 
 getDeposit : namesʳ g ↦ (Σ[ d ∈ DepositRef ] (proj₁ d ∈ participants g))
 getDeposit {g = A :? v at x} (here refl) = (A , v , x) , here refl
@@ -281,12 +351,13 @@ getName : (A , v , x) ∈ persistentDeposits g
 getName {g = _ :! _ at _} (here refl) = here refl
 getName {g = _ :! _ at _} (there ())
 getName {g = l ∣∣ r}      d∈
-  with ∈-++⁻ (persistentDeposits l) d∈
-... | inj₁ d∈l =
-  let _ , y∈ , y≡ = ∈-mapMaybe⁻ isInj₂ {xs = names l} (getName {g = l} d∈l)
+  with _ , td∈ , td≡ ← ∈-mapMaybe⁻ isPersistent {xs = tdeposits (l ∣∣ r)} d∈
+  with ∈-++⁻ (tdeposits l) td∈
+... | inj₁ d∈ˡ =
+  let _ , y∈ , y≡ = ∈-mapMaybe⁻ isInj₂ {xs = names l} (getName {g = l} $ ∈-mapMaybe⁺ isPersistent d∈ˡ td≡)
   in ∈-mapMaybe⁺ isInj₂ (∈-++⁺ˡ y∈) y≡
-... | inj₂ d∈r =
-  let _ , y∈ , y≡ = ∈-mapMaybe⁻ isInj₂ {xs = names r} (getName {g = r} d∈r)
+... | inj₂ d∈ʳ =
+  let _ , y∈ , y≡ = ∈-mapMaybe⁻ isInj₂ {xs = names r} (getName {g = r} $ ∈-mapMaybe⁺ isPersistent d∈ʳ td≡)
   in ∈-mapMaybe⁺ isInj₂ (∈-++⁺ʳ (names l) y∈) y≡
 
 -- Decorations
@@ -309,6 +380,10 @@ removeTopDecorations : Contract → Contract
 removeTopDecorations (_       ⇒ d) = removeTopDecorations d
 removeTopDecorations (after _ ⇒ d) = removeTopDecorations d
 removeTopDecorations d             = d
+
+infix 0 _≡⋯∶_
+_≡⋯∶_ : Rel₀ Contract
+d ≡⋯∶ d′ = removeTopDecorations d ≡ d′
 
 remove-putComponents : (putComponents d) ≡ putComponents (removeTopDecorations d)
 remove-putComponents {_       ⇒ d} rewrite remove-putComponents {d} = refl
@@ -352,6 +427,60 @@ subterms′ (CS [])                = []
 subterms′ (CS (c ∷ cs))          = c ∷ subterms′ (C c) ++ subterms′ (CS cs)
 subterms′ (VCS [])               = []
 subterms′ (VCS ((_ , cs) ∷ vcs)) = subterms′ (CS cs) ++ subterms′ (VCS vcs)
+
+subtermsᵈ′ subtermsᵈ⁺ subtermsᵈ : Contract → List Contract
+subtermsᵈ′ = subterms′ ∘ C
+subtermsᵈ⁺ = subterms⁺ ∘ C
+subtermsᵈ  = subterms  ∘ C
+
+subtermsᶜ′ subtermsᶜ⁺ subtermsᶜ : Contracts → List Contract
+subtermsᶜ′ = subterms′ ∘ CS
+subtermsᶜ⁺ = subterms⁺ ∘ CS
+subtermsᶜ  = subterms  ∘ CS
+
+subtermsᵛ′ subtermsᵛ⁺ subtermsᵛ : VContracts → List Contract
+subtermsᵛ′ = subterms′ ∘ VCS
+subtermsᵛ⁺ = subterms⁺ ∘ VCS
+subtermsᵛ  = subterms  ∘ VCS
+
+subtermsᵃ subtermsᵃ⁺ : Advertisement → List Contract
+subtermsᵃ  (⟨ _ ⟩ c) = subtermsᶜ  c
+subtermsᵃ⁺ (⟨ _ ⟩ c) = subtermsᶜ⁺ c
+
+postulate
+  subtermsᶜ′-trans : ds ⊆ subtermsᶜ′ ds′ → subtermsᶜ′ ds ⊆ subtermsᶜ′ ds′
+-- subtermsᶜ′-trans ds⊆ = {!!}
+
+-- h-sub :
+--     ds ⊆ subtermsᶜ′ ds′
+--   → d ∈ ds
+--     --------------------------------------
+--   → removeTopDecorations d ∈ subtermsᶜ⁺ ds′
+-- h-sub {x ∷ ds} {[]} {d} ds⊆ d∈ = {!ds⊆ d∈!}
+-- -- h-sub {x₁ ∷ ds} {x ∷ ds′} {d} ds⊆ d∈
+-- h-sub {x₁ ∷ ds} {x ∷ ds′} {.x₁} ds⊆ (here refl) = {!!}
+-- h-sub {x₁ ∷ ds} {x ∷ ds′} {d} ds⊆ (there d∈) = {!!}
+--   with ds⊆ d∈
+-- h-sub {x₁ ∷ ds} {x ∷ ds′} {.x} ds⊆ d∈ | here refl = {!!}
+-- h-sub {x₁ ∷ ds} {x ∷ ds′} {d} ds⊆ d∈ | there p = {!h-sub {ds = ds} {ds′ = ds′} d∈!}
+-- h-sub {x₁ ∷ ds} {x ∷ ds′} {.x₁} ds⊆ (here refl) = {!!}
+-- h-sub {x₁ ∷ ds} {x ∷ ds′} {d} ds⊆ (there d∈) = {!!}
+
+-- h-sub {d = put x &reveal x₁ if x₂ ⇒ x₃} {x = C .(put _ &reveal _ if _ ⇒ _)} ≺-put d∈ = {!!}
+-- h-sub {d = put x &reveal x₁ if x₂ ⇒ x₃} {x = CS x₄} () d∈
+-- h-sub {d = put x &reveal x₁ if x₂ ⇒ x₃} {x = VCS x₄} (≺-∈ᵛ x₅) d∈ = {!!}
+-- h-sub {d = withdraw x} {x = C .(put _ &reveal _ if _ ⇒ _)} ≺-put d∈ = {!!}
+-- h-sub {d = withdraw x} {x = CS x₁} () d∈
+-- h-sub {d = withdraw x} {x = VCS x₁} (≺-∈ᵛ x₂) d∈ = {!!}
+-- h-sub {d = split x} {x = C .(put _ &reveal _ if _ ⇒ _)} ≺-put d∈ = {!!}
+-- h-sub {d = split x} {x = CS x₁} () d∈
+-- h-sub {d = split x} {x = VCS x₁} (≺-∈ᵛ x₂) d∈ = {!!}
+-- h-sub {d = x ⇒ d} {x = C .(put _ &reveal _ if _ ⇒ _)} ≺-put d∈ = {!!}
+-- h-sub {d = x ⇒ d} {x = CS x₁} () d∈
+-- h-sub {d = x ⇒ d} {x = VCS x₁} (≺-∈ᵛ x₂) d∈ = {!!}
+-- h-sub {d = after x ⇒ d} {x = C .(put _ &reveal _ if _ ⇒ _)} ≺-put d∈ = {!!}
+-- h-sub {d = after x ⇒ d} {x = CS x₁} () d∈
+-- h-sub {d = after x ⇒ d} {x = VCS x₁} (≺-∈ᵛ x₂) d∈ = {!!}
 
 -- Lemmas about `subterms`
 

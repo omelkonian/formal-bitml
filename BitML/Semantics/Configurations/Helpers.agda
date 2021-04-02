@@ -13,7 +13,7 @@ open import BitML.BasicTypes
 
 module BitML.Semantics.Configurations.Helpers
   (Participant : Set)
-  {{_ : DecEq Participant}}
+  ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
 
@@ -31,12 +31,16 @@ cfgToList (l ∣ r) = cfgToList l ++ cfgToList r
 cfgToList c        = [ c ]
 
 infix 3 _≈_
-_≈_ : Configuration → Configuration → Set
+_≈_ : Rel₀ Configuration
 c ≈ c′ = cfgToList c ↭ cfgToList c′
 
 infix 3 _≈?_
 _≈?_ : Decidable² {A = Configuration} _≈_
 c ≈? c′ = cfgToList c ↭? cfgToList c′
+
+infix 4 _∈ᶜ_
+_∈ᶜ_ : Rel₀ Configuration
+c ∈ᶜ c′ = c ∈ cfgToList c′
 
 private variable X : Set
 
@@ -70,6 +74,7 @@ instance
   ... | _               = []
   -- ... | ∅ᶜ              = []
   -- ... | ` ad            = []
+  -- ... | ` (⟨ G ⟩ _)     = collect G
   -- ... | _ auth[ ac ]    = []
 
   HAᶜᶠ : Configuration has Action
@@ -78,6 +83,7 @@ instance
   ... | l ∣ r       = collect l ++ collect r
   ... | _           = []
 
+  -- ** See `authorizedHonAds` below
   -- HAᶜᶠ : Configuration has Advertisement
   -- HAᶜᶠ .collect c with c
   -- ... | ` ad  = [ ad ]
@@ -99,11 +105,15 @@ advertisements = collect
 
 authorizedHonAds : Configuration → List Advertisement
 authorizedHonAds (A auth[ ♯▷ ad ])
-  with A ∈? Hon
-... | yes _ = [ ad ]
-... | no  _ = []
+ with does (A ∈? Hon)
+... | true  = [ ad ]
+... | false = []
 authorizedHonAds (l ∣ r) = authorizedHonAds l ++ authorizedHonAds r
 authorizedHonAds _       = []
+
+instance
+  HAdᶜᶠ : Configuration has Advertisement
+  HAdᶜᶠ .collect = authorizedHonAds
 
 secretsOfᶜᶠ : Participant → Configuration → Secrets
 secretsOfᶜᶠ A = {- Set'.nub ∘-} go
@@ -117,6 +127,21 @@ committedParticipants : Configuration → Advertisement → List Participant
 committedParticipants (p auth[ (♯▷ ad′) ]) ad = if ad == ad′ then [ p ] else []
 committedParticipants (l ∣ r) ad = committedParticipants l ad ++ committedParticipants r ad
 committedParticipants _       _  = []
+
+module _ (A∈ : A ∈ Hon) where
+  committed⇒authAd :
+      A ∈ committedParticipants Γ ad
+    → ad ∈ authorizedHonAds Γ
+  -- committed⇒authAd {Γ} {ad} P
+  committed⇒authAd {p auth[ ♯▷ ad′ ]} {ad} P
+    with ad ≟ ad′ | P
+  ... | no _    | ()
+  ... | yes ad≡ | here refl
+    rewrite dec-true (A ∈? Hon) A∈
+    = here ad≡
+  committed⇒authAd {l ∣ r} {ad} P with L.Mem.∈-++⁻ (committedParticipants l ad) P
+  ... | inj₁ ∈l = L.Mem.∈-++⁺ˡ (committed⇒authAd {Γ = l} ∈l)
+  ... | inj₂ ∈r = L.Mem.∈-++⁺ʳ _ (committed⇒authAd {Γ = r} ∈r)
 
 isInitial : Configuration → Bool
 isInitial (⟨ _ has _ ⟩at _) = true

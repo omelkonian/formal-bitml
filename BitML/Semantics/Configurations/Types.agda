@@ -9,7 +9,7 @@ open import BitML.BasicTypes
 
 module BitML.Semantics.Configurations.Types
   (Participant : Set)
-  {{_ : DecEq Participant}}
+  ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
 
@@ -17,6 +17,8 @@ open import BitML.Contracts.Types Participant Honest
 open import BitML.Semantics.Action Participant Honest
 
 -------------------------------------------------------------------
+
+ActiveContract = Contracts × Value × Id
 
 data Configuration : Set where
 
@@ -67,9 +69,9 @@ unquoteDecl DecEqᵗᶜᶠ = DERIVE DecEq [ quote TimedConfiguration , DecEqᵗ�
 variable
   Γₜ Γₜ′ Γₜ″ : TimedConfiguration
 
-infix  9 ⟨_,_⟩at_
-infix  8 ⟨_has_⟩at_
-infix  6 _auth[_]
-infix  5 ||_
-infixl 4 _∣_
-infix  3 _at_
+infix  11 ⟨_,_⟩at_
+infix  10 ⟨_has_⟩at_
+infix  8 _auth[_]
+infix  7 ||_
+infixl 6 _∣_
+infix  5 _at_

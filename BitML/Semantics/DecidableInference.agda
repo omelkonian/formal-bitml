@@ -11,7 +11,7 @@ open import BitML.Predicate hiding (`; ∣_∣)
 
 module BitML.Semantics.DecidableInference
   (Participant : Set)
-  {{_ : DecEq Participant}}
+  ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
 
@@ -28,12 +28,12 @@ open import BitML.Semantics.InferenceRules Participant Honest
 C-Advertise :
   ∀ {p₁ : True (validAd? ad)}
     {p₂ : True (any? (_∈? Hon) (participants (G ad)))}
-    {p₃ : True (all? (_∈? deposits Γ) (deposits ad))}
+    {p₃ : True (deposits ad ⊆? deposits Γ)}
   → Γ —→[ advertise[ ad ] ] ` ad ∣ Γ
 C-Advertise {p₁ = p₁} {p₂} {p₃} = [C-Advertise] (toWitness p₁) (toWitness p₂) (toWitness p₃)
 
 C-AuthInit :
-  ∀ {p₁ : True (all? (_∈? committedParticipants Γ ad) (participants (G ad)))}
+  ∀ {p₁ : True (all? (_∈? committedParticipants Γ ad) (nub-participants $ G ad))}
     {p₂ : True ((A , v , x) ∈? persistentDeposits (G ad))}
   → ` ad ∣ Γ —→[ auth-init[ A , ad , x ] ] ` ad ∣ Γ ∣ A auth[ x ▷ˢ ad ]
 C-AuthInit {p₁ = p₁} {p₂} = [C-AuthInit] (toWitness p₁) (toWitness p₂)

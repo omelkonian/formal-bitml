@@ -12,7 +12,7 @@ open import BitML.Predicate
 
 module BitML.Contracts.Types
   (Participant : Set)
-  {{_ : DecEq Participant}}
+  ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
 
@@ -49,9 +49,9 @@ data Contract where
 unquoteDecl DecEq-Contract = DERIVE DecEq [ quote Contract , DecEq-Contract ]
 
 variable
-  d d′ : Contract
-  ds ds′ c c′ : Contracts
-  vcs vcs′ : VContracts
+  d d′ d″ : Contract
+  ds ds′ ds″ c c′ c″ : Contracts
+  vcs vcs′ vcs″ : VContracts
 
 _⊕_ : ∀ {A : Set} → A → List A → List A
 _⊕_ = _∷_
@@ -86,7 +86,7 @@ data Precondition : Set where
 unquoteDecl DecEq-Precondition = DERIVE DecEq [ quote Precondition , DecEq-Precondition ]
 
 variable
-  g g′ : Precondition
+  g g′ g″ : Precondition
 
 ------------------------------------------------------------------------
 -- Advertisements.
@@ -100,7 +100,7 @@ open Advertisement public
 unquoteDecl DecEq-Advertisement = DERIVE DecEq [ quote Advertisement , DecEq-Advertisement ]
 
 variable
-  ad ad′ : Advertisement
+  ad ad′ ad″ : Advertisement
 
 infix  2 ⟨_⟩_
 
@@ -118,5 +118,8 @@ infix  7 _⊸_
 infix  6 _∙
 infixr 5 _⊕_
 
-DepositRef : Set
-DepositRef = Participant × Value × Id
+data DepositType : Set where
+  volatile persistent : DepositType
+
+DepositRef  = Participant × Value × Id
+TDepositRef = DepositType × DepositRef

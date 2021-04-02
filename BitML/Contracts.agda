@@ -2,7 +2,7 @@ open import Prelude.Init
 open import Prelude.DecEq
 
 module BitML.Contracts
-  (Participant : Set) {{_ : DecEq Participant}} (Honest : List⁺ Participant)
+  (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
   where
 
 open import BitML.Contracts.Types     Participant Honest public
