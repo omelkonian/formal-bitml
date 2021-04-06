@@ -411,14 +411,14 @@ subterms⁺ = mkCollect go
   where
     go : ∀ c → (∀ c′ → c′ ≺ C c → Contracts) → Contracts
     go c f with c
-    ... | _ ⇒ d                      = f (C d) it
+    ... | _       ⇒ d                = f (C d) it
     ... | after _ ⇒ d                = f (C d) it
     ... | split vcs                  = c ∷ f (VCS vcs) it
     ... | put _ &reveal _ if _ ⇒ cs  = c ∷ f (CS cs) it
     ... | withdraw _                 = c ∷ []
 
 subterms′ (C c) with c
-... | _ ⇒ d                      = subterms′ (C d)
+... | _       ⇒ d                = subterms′ (C d)
 ... | after _ ⇒ d                = subterms′ (C d)
 ... | split vcs                  = subterms′ (VCS vcs)
 ... | put _ &reveal _ if _ ⇒ cs  = subterms′ (CS cs)
@@ -432,16 +432,19 @@ subtermsᵈ′ subtermsᵈ⁺ subtermsᵈ : Contract → List Contract
 subtermsᵈ′ = subterms′ ∘ C
 subtermsᵈ⁺ = subterms⁺ ∘ C
 subtermsᵈ  = subterms  ∘ C
+-- {-# DISPLAY subterms′ (C c) = subtermsᵈ′ c #-}
 
 subtermsᶜ′ subtermsᶜ⁺ subtermsᶜ : Contracts → List Contract
 subtermsᶜ′ = subterms′ ∘ CS
 subtermsᶜ⁺ = subterms⁺ ∘ CS
 subtermsᶜ  = subterms  ∘ CS
+-- {-# DISPLAY subtermsᶜ′ cs = subterms′ (CS cs) #-}
 
 subtermsᵛ′ subtermsᵛ⁺ subtermsᵛ : VContracts → List Contract
 subtermsᵛ′ = subterms′ ∘ VCS
 subtermsᵛ⁺ = subterms⁺ ∘ VCS
 subtermsᵛ  = subterms  ∘ VCS
+-- {-# DISPLAY subterms′ (VCS vcs) = subtermsᵛ′ vcs #-}
 
 subtermsᵃ subtermsᵃ⁺ : Advertisement → List Contract
 subtermsᵃ  (⟨ _ ⟩ c) = subtermsᶜ  c
@@ -451,36 +454,47 @@ postulate
   subtermsᶜ′-trans : ds ⊆ subtermsᶜ′ ds′ → subtermsᶜ′ ds ⊆ subtermsᶜ′ ds′
 -- subtermsᶜ′-trans ds⊆ = {!!}
 
--- h-sub :
---     ds ⊆ subtermsᶜ′ ds′
---   → d ∈ ds
---     --------------------------------------
---   → removeTopDecorations d ∈ subtermsᶜ⁺ ds′
--- h-sub {x ∷ ds} {[]} {d} ds⊆ d∈ = {!ds⊆ d∈!}
--- -- h-sub {x₁ ∷ ds} {x ∷ ds′} {d} ds⊆ d∈
--- h-sub {x₁ ∷ ds} {x ∷ ds′} {.x₁} ds⊆ (here refl) = {!!}
--- h-sub {x₁ ∷ ds} {x ∷ ds′} {d} ds⊆ (there d∈) = {!!}
---   with ds⊆ d∈
--- h-sub {x₁ ∷ ds} {x ∷ ds′} {.x} ds⊆ d∈ | here refl = {!!}
--- h-sub {x₁ ∷ ds} {x ∷ ds′} {d} ds⊆ d∈ | there p = {!h-sub {ds = ds} {ds′ = ds′} d∈!}
--- h-sub {x₁ ∷ ds} {x ∷ ds′} {.x₁} ds⊆ (here refl) = {!!}
--- h-sub {x₁ ∷ ds} {x ∷ ds′} {d} ds⊆ (there d∈) = {!!}
+h-subᵈ :
+    d ∈ subtermsᵈ′ d′
+    --------------------------------------
+  → removeTopDecorations d ∈ subtermsᵈ⁺ d′
 
--- h-sub {d = put x &reveal x₁ if x₂ ⇒ x₃} {x = C .(put _ &reveal _ if _ ⇒ _)} ≺-put d∈ = {!!}
--- h-sub {d = put x &reveal x₁ if x₂ ⇒ x₃} {x = CS x₄} () d∈
--- h-sub {d = put x &reveal x₁ if x₂ ⇒ x₃} {x = VCS x₄} (≺-∈ᵛ x₅) d∈ = {!!}
--- h-sub {d = withdraw x} {x = C .(put _ &reveal _ if _ ⇒ _)} ≺-put d∈ = {!!}
--- h-sub {d = withdraw x} {x = CS x₁} () d∈
--- h-sub {d = withdraw x} {x = VCS x₁} (≺-∈ᵛ x₂) d∈ = {!!}
--- h-sub {d = split x} {x = C .(put _ &reveal _ if _ ⇒ _)} ≺-put d∈ = {!!}
--- h-sub {d = split x} {x = CS x₁} () d∈
--- h-sub {d = split x} {x = VCS x₁} (≺-∈ᵛ x₂) d∈ = {!!}
--- h-sub {d = x ⇒ d} {x = C .(put _ &reveal _ if _ ⇒ _)} ≺-put d∈ = {!!}
--- h-sub {d = x ⇒ d} {x = CS x₁} () d∈
--- h-sub {d = x ⇒ d} {x = VCS x₁} (≺-∈ᵛ x₂) d∈ = {!!}
--- h-sub {d = after x ⇒ d} {x = C .(put _ &reveal _ if _ ⇒ _)} ≺-put d∈ = {!!}
--- h-sub {d = after x ⇒ d} {x = CS x₁} () d∈
--- h-sub {d = after x ⇒ d} {x = VCS x₁} (≺-∈ᵛ x₂) d∈ = {!!}
+h-subᶜ :
+    d ∈ subtermsᶜ′ ds
+    --------------------------------------
+  → removeTopDecorations d ∈ subtermsᶜ⁺ ds
+
+h-subᵛ :
+    d ∈ subtermsᵛ′ vcs
+    --------------------------------------
+  → removeTopDecorations d ∈ subtermsᵛ⁺ vcs
+
+h-subᵈ {d} {put _ &reveal _ if _ ⇒ cs} d∈ = there $ h-subᶜ {ds = cs} d∈
+h-subᵈ {d} {split vcs}                 d∈ = there $ h-subᵛ {vcs = vcs} d∈
+h-subᵈ {d} {_       ⇒ d′} d∈ = h-subᵈ {d′ = d′} d∈
+h-subᵈ {d} {after _ ⇒ d′} d∈ = h-subᵈ {d′ = d′} d∈
+
+h-subᶜ {.d} {d ∷ ds} (here refl)
+  with d
+... | put _ &reveal _ if _ ⇒ _ = here refl
+... | withdraw _               = here refl
+... | split _                  = here refl
+... | _       ⇒ d′ = h-subᶜ {ds = d′ ∷ ds} (here refl)
+... | after _ ⇒ d′ = h-subᶜ {ds = d′ ∷ ds} (here refl)
+h-subᶜ {d} {d′ ∷ ds} (there d∈)
+  with ∈-++⁻ (subtermsᵈ′ d′) d∈
+... | inj₂ d∈ʳ = ∈-++⁺ʳ (subtermsᵈ⁺ d′) (h-subᶜ {ds = ds} d∈ʳ)
+... | inj₁ d∈ˡ
+  with d′ | d∈ˡ
+... | put _ &reveal _ if _ ⇒ cs | d∈ˡ′ = there $ ∈-++⁺ˡ $ h-subᶜ {ds = cs} d∈ˡ′
+... | split vcs                 | d∈ˡ′ = there $ ∈-++⁺ˡ $ h-subᵛ {vcs = vcs} d∈ˡ′
+... | _       ⇒ d″ | d∈ˡ′ = ∈-++⁺ˡ $ h-subᵈ {d′ = d″} d∈ˡ′
+... | after _ ⇒ d″ | d∈ˡ′ = ∈-++⁺ˡ $ h-subᵈ {d′ = d″} d∈ˡ′
+
+h-subᵛ {d} {(_ , cs) ∷ vcs} d∈
+  with ∈-++⁻ (subtermsᶜ′ cs) d∈
+... | inj₁ d∈ˡ = ∈-++⁺ˡ $ h-subᶜ {ds = cs} d∈ˡ
+... | inj₂ d∈ʳ = ∈-++⁺ʳ (subtermsᶜ⁺ cs) $ h-subᵛ {vcs = vcs} d∈ʳ
 
 -- Lemmas about `subterms`
 
