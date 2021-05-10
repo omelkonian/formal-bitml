@@ -3,6 +3,9 @@
 ------------------------------------------------------------------------
 open import Prelude.Init
 open import Prelude.DecEq
+open import Prelude.Lists
+open import Prelude.DecLists
+open import Prelude.Membership
 open import Prelude.Sets
 open import Prelude.Collections
 open import Prelude.Applicative

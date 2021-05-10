@@ -9,15 +9,19 @@ open import Data.List.Relation.Binary.Subset.Propositional.Properties
 open import Prelude.Init
 open import Prelude.General
 open import Prelude.Lists
+open import Prelude.DecLists
 open import Prelude.DecEq
+-- open import Prelude.Membership
 open import Prelude.Sets
 open import Prelude.Measurable
 open import Prelude.Collections
+open import Prelude.Functor
+open import Prelude.Foldable
+open import Prelude.Traversable
+open import Prelude.Monad
 
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (∣_∣)
-
--- open import Induction.WellFounded
 
 module BitML.Contracts.Validity
   (Participant : Set)
@@ -28,135 +32,64 @@ module BitML.Contracts.Validity
 open import BitML.Contracts.Types Participant Honest hiding (B)
 open import BitML.Contracts.Helpers Participant Honest
 
-ValidAdvertisement : Advertisement → Set
-ValidAdvertisement (⟨ G ⟩ C) =
+splitsOK : Precondition → Contracts → Bool
+splitsOK G C₀ = goᶜˢ C₀ (persistentValue G)
+  where
+    goᶜ : (C : Contract) → Value → Bool
+    goᶜˢ : (C : Contracts) → Value → Bool
+    goᵛᶜˢ : (C : VContracts) → Bool
+
+    goᵛᶜˢ [] = true
+    goᵛᶜˢ ((v , cs) ∷ vcs) = goᶜˢ cs v
+
+    goᶜˢ [] _ = true
+    goᶜˢ (c ∷ cs) v = goᶜ c v ∧ goᶜˢ cs v
+
+    goᶜ c₀@(put xs &reveal as if p ⇒ c) v
+      with sequenceM $ map (λ x → checkDeposit volatile x G) xs
+    ... | nothing = false
+    ... | just vs = goᶜˢ c (∑ℕ vs)
+    goᶜ (split vcs)   v = (∑₁ vcs == v) ∧ goᵛᶜˢ vcs
+    goᶜ (after _ ⇒ c) v = goᶜ c v
+    goᶜ (_ ⇒ c)       v = goᶜ c v
+    goᶜ (withdraw _)  _ = true
+
+record ValidAdvertisement (ad : Advertisement) : Set where
+  -- open Advertisement ad renaming (C to c; G to g) -- ⟨ G ⟩ C = ad
+  field
     -- (i) names in G are distinct
-    Unique (names G)
+    names-uniq : Unique (names $ G ad)
 
     -- (ii) each name in C appears in G
-  × names C ⊆ names G
+    names-⊆ : names (C ad) ⊆ names (G ad)
 
     -- (iii) the names in put_&reveal_ are distinct and secrets in `if ...` appear in `reveal ...`
-  × All (λ{ (xs , as , p) → Unique xs × (secrets p ⊆ as)}) (putComponents C)
+    names-put : All (λ{ (xs , as , p) → Unique xs × (secrets p ⊆ as)}) (putComponents $ C ad)
 
     -- (iv) each participant has a persistent deposit in G
-  × participants G ++ participants C ⊆ persistentParticipants G
+    participants-⊆ : participants (G ad) ++ participants (C ad) ⊆ persistentParticipants (G ad)
 
--- Decision procedure.
+    -- (extra) split commands are valid
+    splits-OK : T $ splitsOK (G ad) (C ad)
+
+open ValidAdvertisement public
+
 validAd? : ∀ (ad : Advertisement) → Dec (ValidAdvertisement ad)
-validAd? (⟨ G ⟩ C) =
-        unique? (names G)
-  ×-dec names C ⊆? names G
-  ×-dec all? (λ{ (xs , as , p) → unique? xs ×-dec (secrets p ⊆? as)}) (putComponents C)
-  ×-dec participants G ++ participants C ⊆? persistentParticipants G
-
-{-
-------------------------------------------
--- *** Mapping while preserving validity.
-
-private
-  variable
-    B : Set
-    C₁ C₂ C₃ : Set
-
-record CC-like (A : Set) : Set where
-  field
-    {{hc}} : A has Contract
-    {{hp}} : A has PutComponent
-    {{hn}} : A has Name
-open CC-like {{...}} public
-
-instance
-  HCᶜ : Contract has Contract
-  HCᶜ = record {collect = [_]}
-
-  CCᶜ : CC-like Contract
-  CCᶜ = record {hc = record {collect = collect}; hp = record {collect = collect}; hn = record {collect = collect}}
-
-  CC-× : ∀ {V A : Set} ⦃ _ : CC-like A ⦄ → CC-like (V × A)
-  CC-× = record { hc = record {collect = collect ∘ proj₂}
-                ; hp = record {collect = collect ∘ proj₂}
-                ; hn = record {collect = collect ∘ proj₂}
-                }
-
-  CC-List : ∀ {A : Set} ⦃ _ : CC-like A ⦄ → CC-like (List A)
-  CC-List {{record {hc = hc; hp = hp; hn = hn}}}
-        = record { hc = record {collect = collect {{H-List {{hc}}}}}
-                 ; hp = record {collect = collect {{H-List {{hp}}}}}
-                 ; hn = record {collect = collect {{H-List {{hn}}}}}
-                 }
-
---
-
-record _⊆ᶜ_ ⦃ _ : CC-like C₁}} {{_ : CC-like C₂ ⦄ (x : C₁) (y : C₂) : Set where
-  constructor _&_
-  field
-    put⊆ : putComponents x ⊆ putComponents y
-    names⊆ : names x ⊆ names y
-
-⊆ᶜ-refl : ∀ ⦃ _ : CC-like C₁ ⦄ (c : C₁) → c ⊆ᶜ c
-⊆ᶜ-refl _ = id & id
-
-⊆ᶜ-trans : ∀ ⦃ _ : CC-like C₁}} {{_ : CC-like C₂}} {{_ : CC-like C₃ ⦄
-            {c₁ : C₁} {c₂ : C₂} {c₃ : C₃}
-  → c₁ ⊆ᶜ c₂ → c₂ ⊆ᶜ c₃ → c₁ ⊆ᶜ c₃
-⊆ᶜ-trans c₁⊆ᶜc₂ c₂⊆ᶜc₃ =
-  let p⊆  & s⊆  = c₁⊆ᶜc₂
-      p⊆′ & s⊆′ = c₂⊆ᶜc₃
-  in  (p⊆′ ∘ p⊆) & (s⊆′ ∘ s⊆)
-
-contracts-∷ : ∀ ⦃ _ : CC-like C₁ ⦄ {x : C₁} {xs : List C₁}
-  → contracts (x ∷ xs) ≡ contracts x ++ contracts xs
-
-contracts-∷ {x = x}{xs} rewrite concatMap-∷ {x = x}{xs}{contracts} = refl
-putComponents-∷ : ∀ ⦃ _ : CC-like C₁ ⦄ {x : C₁} {xs : List C₁}
-    → putComponents (x ∷ xs) ≡ putComponents x ++ putComponents xs
-putComponents-∷ {x = x}{xs} rewrite contracts-∷ {x = x}{xs}
-                                  | concatMap-++ {xs = contracts x}{contracts xs}{putComponents}
-                                  = refl
-
-names-∷ : ∀ ⦃ _ : CC-like C₁ ⦄ {x : C₁} {xs : List C₁}
-    → names (x ∷ xs) ≡ names x ++ names xs
-names-∷ {x = x}{xs} rewrite contracts-∷ {x = x}{xs}
-                          | concatMap-++ {xs = contracts x}{contracts xs}{names}
-                          = refl
-
-∈⇒⊆ᶜ : ∀ ⦃ _ : CC-like C₁ ⦄ {x : C₁} {xs : List C₁} → x ∈ xs → x ⊆ᶜ xs
-∈⇒⊆ᶜ {x = x}{xs} (here {xs = xs′} refl) = ⊆ᶜ-∷ˡ {x = x}{xs′}
-  where
-    ⊆ᶜ-∷ˡ : ∀ ⦃ _ : CC-like C₁ ⦄ {x : C₁} {xs : List C₁}
-      → x ⊆ᶜ (x ∷ xs)
-    ⊆ᶜ-∷ˡ {x = x}{xs} = l & r
-      where
-        l : putComponents x ⊆ putComponents (x ∷ xs)
-        l rewrite putComponents-∷ {x = x}{xs} = ∈-++⁺ˡ
-
-        r : names x ⊆ names (x ∷ xs)
-        r rewrite names-∷ {x = x}{xs} = ∈-++⁺ˡ
-∈⇒⊆ᶜ {x = x}{xs} (there {xs = xs′} x∈)  = ⊆ᶜ-∷ʳ {x = x} {xs = xs′} (∈⇒⊆ᶜ x∈)
-  where
-    ⊆ᶜ-∷ʳ : ∀ ⦃ _ : CC-like C₁ ⦄ {x x′ : C₁} {xs : List C₁}
-      → x ⊆ᶜ xs
-      → x ⊆ᶜ (x′ ∷ xs)
-    ⊆ᶜ-∷ʳ {x = x}{x′}{xs} (p⊆ & n⊆) = (l ∘ p⊆) & (r ∘ n⊆)
-      where
-        l : putComponents xs ⊆ putComponents (x′ ∷ xs)
-        l rewrite putComponents-∷ {x = x′}{xs} = ∈-++⁺ʳ _
-
-        r : names xs ⊆ names (x′ ∷ xs)
-        r rewrite names-∷ {x = x′}{xs} = ∈-++⁺ʳ _
-
-map∈-⊆ : ∀ ⦃ _ : CC-like C₁}} {{_ : CC-like C₂ ⦄ {z : C₂}
-  → (xs : List C₁)
-  → xs ⊆ᶜ z
-  → (∀ {x : C₁} → x ∈ xs → x ⊆ᶜ z → B)
-  → List B
-map∈-⊆ xs xs⊆z f = mapWith∈ xs λ {x} x∈ → f x∈ (⊆ᶜ-trans (∈⇒⊆ᶜ x∈) xs⊆z)
-
-map-⊆ : ∀ ⦃ _ : CC-like C₁}} {{_ : CC-like C₂ ⦄ {z : C₂}
-  → (xs : List C₁)
-  → xs ⊆ᶜ z
-  → (∀ (x : C₁) → x ⊆ᶜ z → B)
-  → List B
-map-⊆ xs xs⊆ᶜz f = map∈-⊆ xs xs⊆ᶜz (λ {x} _ → f x)
--}
+validAd? (⟨ G ⟩ C)
+  with unique? (names G)
+     | names C ⊆? names G
+     | all? (λ{ (xs , as , p) → unique? xs ×-dec (secrets p ⊆? as)}) (putComponents C)
+     | participants G ++ participants C ⊆? persistentParticipants G
+     | T? (splitsOK G C)
+... | no ¬names-uniq | _ | _ | _ | _     = no $ ¬names-uniq ∘ names-uniq
+... | _ | no ¬names-⊆ | _ | _ | _        = no $ ¬names-⊆ ∘ names-⊆
+... | _ | _ | no ¬names-put | _ | _      = no $ ¬names-put ∘ names-put
+... | _ | _ | _ | no ¬participants-⊆ | _ = no $ ¬participants-⊆ ∘ participants-⊆
+... | _ | _ | _ | _ | no ¬splits-OK      = no $ ¬splits-OK ∘ splits-OK
+... | yes p₁ | yes p₂ | yes p₃ | yes p₄ | yes p₅ = yes record
+  { names-uniq = p₁
+  ; names-⊆ = p₂
+  ; names-put = p₃
+  ; participants-⊆ = p₄
+  ; splits-OK = p₅
+  }

@@ -37,6 +37,7 @@ data Contract where
   withdraw : Participant → Contract
 
   -- split the balance
+  -- T0D0: phrase as percentages to mitigate the need for `Validity.splitsOK`
   split : VContracts → Contract
 
   -- wait for participant's authorization

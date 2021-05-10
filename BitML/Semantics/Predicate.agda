@@ -1,12 +1,11 @@
 ------------------------------------------------------------------------
 -- Denotational semantics of predicates.
 ------------------------------------------------------------------------
-open import Data.Maybe   using (_<∣>_)
-open import Data.Integer using (_+_; _-_; _<?_)
-
 open import Prelude.Init hiding (_+_; _<?_)
+open Integer using (_+_; _-_; _<?_)
 open import Prelude.Lists
 open import Prelude.DecEq
+open import Prelude.Applicative
 open import Prelude.Monad
 
 open import BitML.BasicTypes
@@ -26,7 +25,7 @@ x <?ᵇ y = ⌊ x <? y ⌋
 
 lookupSecretLen : Secret → Configuration → Maybe ℤ
 lookupSecretLen a (_ ∶ a′ ♯ N) = if a == a′ then ⦇ (+ N) ⦈ else nothing
-lookupSecretLen a (l ∣ r)      = lookupSecretLen a l <∣> lookupSecretLen a r
+lookupSecretLen a (l ∣ r)      = lookupSecretLen a l <|> lookupSecretLen a r
 lookupSecretLen _ _            = nothing
 
 ⟦_⟧ᵃʳ_ : Arith → Configuration → Maybe ℤ

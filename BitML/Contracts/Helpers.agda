@@ -5,7 +5,9 @@ open import Data.List.Membership.Propositional.Properties
 
 open import Prelude.Init
 open import Prelude.Lists
+open import Prelude.DecLists
 open import Prelude.DecEq
+open import Prelude.Membership
 open import Prelude.Collections
 open import Prelude.Bifunctor
 
@@ -276,6 +278,9 @@ volatileDeposits persistentDeposits : Precondition → List DepositRef
 volatileDeposits   = mapMaybe isVolatile   ∘ tdeposits
 persistentDeposits = mapMaybe isPersistent ∘ tdeposits
 
+persistentValue : Precondition → Value
+persistentValue = ∑ℕ ∘ map (proj₁ ∘ proj₂) ∘ persistentDeposits
+
 volatileParticipants persistentParticipants : Precondition → List Participant
 volatileParticipants   = map proj₁ ∘ volatileDeposits
 persistentParticipants = map proj₁ ∘ persistentDeposits
@@ -345,6 +350,11 @@ getDeposit {g = l ∣∣ r}      x∈
   with ∈-++⁻ (names l) y∈
 ... | inj₁ x∈ˡ = map₂′ ∈-++⁺ˡ $ getDeposit {g = l} (∈-mapMaybe⁺ isInj₂ x∈ˡ y≡)
 ... | inj₂ x∈ʳ = map₂′ (∈-++⁺ʳ (participants l)) $ getDeposit {g = r} (∈-mapMaybe⁺ isInj₂ x∈ʳ y≡)
+
+checkDeposit : DepositType → Id → Precondition → Maybe Value
+checkDeposit ty x
+  = L.head ∘ map (proj₁ ∘ proj₂) ∘ filter ((_≟ x) ∘ proj₂ ∘ proj₂)
+  ∘ (case ty of λ{ persistent → persistentDeposits; volatile → volatileDeposits })
 
 getName : (A , v , x) ∈ persistentDeposits g
         → x ∈ namesʳ g
@@ -498,17 +508,17 @@ h-subᵛ {d} {(_ , cs) ∷ vcs} d∈
 
 -- Lemmas about `subterms`
 
-↦-∈ : ∀ {R : Set}
-  → (∀ {d} → d ∈ ds → subterms⁺ (C d) ↦ R)
-  → subterms⁺ (CS ds) ↦ R
+↦-∈ : ∀ {R : Contract → Set}
+  → (∀ {d} → d ∈ ds → subterms⁺ (C d) ↦′ R)
+  → subterms⁺ (CS ds) ↦′ R
 ↦-∈ {ds = c ∷ cs} f x∈
   with ∈-++⁻ (subterms⁺ (C c)) x∈
 ... | inj₁ x∈ˡ = f (here refl) x∈ˡ
 ... | inj₂ x∈ʳ = ↦-∈ (f ∘ there) x∈ʳ
 
-↦-∈ᵛ : ∀ {R : Set}
-  → (∀ {cs} → cs ∈ map proj₂ vcs → subterms⁺ (CS cs) ↦ R)
-  → subterms⁺ (VCS vcs) ↦ R
+↦-∈ᵛ : ∀ {R : Contract → Set}
+  → (∀ {cs} → cs ∈ map proj₂ vcs → subterms⁺ (CS cs) ↦′ R)
+  → subterms⁺ (VCS vcs) ↦′ R
 ↦-∈ᵛ {vcs = (_ , cs) ∷ vcs} f x∈
   with ∈-++⁻ (subterms⁺ (CS cs)) x∈
 ... | inj₁ x∈ˡ = f (here refl) x∈ˡ
