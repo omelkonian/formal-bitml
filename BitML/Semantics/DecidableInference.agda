@@ -35,7 +35,7 @@ C-Advertise :
 C-Advertise {p₁ = p₁} {p₂} {p₃} = [C-Advertise] (toWitness p₁) (toWitness p₂) (toWitness p₃)
 
 C-AuthInit :
-  ∀ {p₁ : True (all? (_∈? committedParticipants Γ ad) (nub-participants $ G ad))}
+  ∀ {p₁ : True $ nub-participants (G ad) ⊆? committedParticipants Γ ad}
     {p₂ : True ((A , v , x) ∈? persistentDeposits (G ad))}
   → ` ad ∣ Γ —→[ auth-init[ A , ad , x ] ] ` ad ∣ Γ ∣ A auth[ x ▷ˢ ad ]
 C-AuthInit {p₁ = p₁} {p₂} = [C-AuthInit] (toWitness p₁) (toWitness p₂)

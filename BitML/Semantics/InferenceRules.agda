@@ -1,6 +1,6 @@
-------------------------------------------------------------------------
+-----------------------------------------------
 -- Small-step semantics for the BitML calculus.
-------------------------------------------------------------------------
+-----------------------------------------------
 open import Prelude.Init
 open import Prelude.Lists
 open import Prelude.DecLists
@@ -24,7 +24,7 @@ open import BitML.Semantics.Configurations.Helpers Participant Honest
 open import BitML.Semantics.Label Participant Honest
 open import BitML.Semantics.Predicate Participant Honest
 
---------------------------------------------------------------------------------
+---------------------------------------------
 -- Semantic rules for untimed configurations.
 
 -- T0D0 fresh variables can be arbitrarily picked out, maybe that is wrong?
@@ -38,8 +38,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [DEP-AuthJoin] :
 
-      -----------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
       ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ Γ
         —→[ auth-join[ A , x ↔ y ] ]
       ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
@@ -47,8 +46,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [DEP-Join] :
 
-      ------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
       ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
         —→[ join[ x ↔ y ] ]
       ⟨ A has (v + v′) ⟩at z ∣ Γ
@@ -56,8 +54,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [DEP-AuthDivide] :
 
-      --------------------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
       ⟨ A has (v + v′) ⟩at x ∣ Γ
         —→[ auth-divide[ A , x ▷ v , v′ ] ]
       ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
@@ -65,8 +62,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [DEP-Divide] :
 
-      -------------------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
       ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
         —→[ divide[ x ▷ v , v′ ] ]
       ⟨ A has v ⟩at y ∣ ⟨ A has v′ ⟩at y′ ∣ Γ
@@ -74,8 +70,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [DEP-AuthDonate] :
 
-      ------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
       ⟨ A has v ⟩at x ∣ Γ
         —→[ auth-donate[ A , x ▷ᵈ B ] ]
       ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
@@ -83,8 +78,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [DEP-Donate] :
 
-      ---------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
       ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
         —→[ donate[ x ▷ᵈ B ] ]
       ⟨ B has v ⟩at y ∣ Γ
@@ -98,24 +92,20 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
           j′ = ‼-map {xs = ds} j
           Δ  = || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi }) ds
       in
-
-      ----------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
       Δ ∣ Γ
         —→[ auth-destroy[ Aj , xs , j′ ] ]
       Δ ∣ Aj auth[ xs , j′ ▷ᵈˢ y ] ∣ Γ
 
 
   [DEP-Destroy] :
-    ∀ {ds : List (Participant × Value × Id)} {j : Index ds}
+    ∀ {ds : List (Participant × Value × Id)}
 
-    → let xs  = map (proj₂ ∘ proj₂) ds
-          Δ   = || map (λ{ (i , Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ] })
-                       (enumerate ds)
+    → let xs = map (proj₂ ∘ proj₂) ds
+          Δ  = || map (λ{ (i , Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ] })
+                      (enumerate ds)
       in
-
-      -----------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
       Δ ∣ Γ
         —→[ destroy[ xs ] ]
       Γ
@@ -123,61 +113,53 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
   ------------------------------------------------------------
   -- ii) Rules for contract advertisements and stipulation
 
-  [C-Advertise] :
+  [C-Advertise] : let ⟨ G ⟩ _ = ad in
 
       ValidAdvertisement ad              -- the advertisement is valid
-    → Any (_∈ Hon) (participants (G ad)) -- at least one honest participant
+    → Any (_∈ Hon) (participants G) -- at least one honest participant
     → deposits ad ⊆ deposits Γ           -- all persistent deposits in place
-
-      ------------------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
     → Γ —→[ advertise[ ad ] ] ` ad ∣ Γ
 
 
-  [C-AuthCommit] :
+  [C-AuthCommit] : let ⟨ G ⟩ _ = ad in
     ∀ {secrets : List (Secret × Maybe ℕ)}
 
     → let (as , ms) = unzip secrets
           Δ         = || map (λ{ (ai , Ni) → ⟨ A ∶ ai ♯ Ni ⟩}) secrets
       in
 
-      as ≡ secretsOfᵖ A (G ad)    -- a₁..aₖ secrets of A in G
+      as ≡ secretsOfᵖ A G         -- a₁..aₖ secrets of A in G
     → All (_∉ secretsOfᶜᶠ A Γ) as -- ∀i ∈ 1..k : ∄N : {A : aᵢ ♯ N} ∈ Γ
     → (A ∈ Hon → All Is-just ms)  -- honest participants commit to valid lengths
-
-      -----------------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
     → ` ad ∣ Γ
         —→[ auth-commit[ A , ad , secrets ] ]
       ` ad ∣ Γ ∣ Δ ∣ A auth[ ♯▷ ad ]
 
 
-  [C-AuthInit] :
+  [C-AuthInit] : let ⟨ G ⟩ _ = ad; partG = nub-participants G in
 
-      All (_∈ committedParticipants Γ ad) (nub-participants $ G ad) -- all participants have committed their secrets
-    → (A , v , x) ∈ persistentDeposits (G ad)                       -- G = A :! v @ x | ...
-
-      ----------------------------------------------------------------------
-
+      partG ⊆ committedParticipants Γ ad -- all participants have committed their secrets
+    → (A , v , x) ∈ persistentDeposits G -- G = A :! v @ x | ...
+      --——————————————————————————————————————————————————————————————————————
     → ` ad ∣ Γ
         —→[ auth-init[ A , ad , x ] ]
       ` ad ∣ Γ ∣ A auth[ x ▷ˢ ad ]
 
 
-  [C-Init] :
+  [C-Init] : let ⟨ G ⟩ C = ad in
 
       -- all participants have committed their secrets (guaranteed from [C-AuthInit])
 
-      let toSpend = persistentDeposits (G ad)
+      let toSpend = persistentDeposits G
           vs      = map (proj₁ ∘ proj₂) toSpend
       in
-
-      ----------------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
       ` ad ∣ Γ ∣ || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xi ▷ˢ ad ] }) toSpend
-               ∣ || map (_auth[ ♯▷ ad ]) (nub-participants $ G ad)
-        —→[ init[ G ad , C ad ] ]
-      ⟨ C ad , sum vs ⟩at x ∣ Γ
+               ∣ || map (_auth[ ♯▷ ad ]) (nub-participants G)
+        —→[ init[ G , C ] ]
+      ⟨ C , sum vs ⟩at x ∣ Γ
 
 
   ---------------------------------------------------
@@ -187,9 +169,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
     ∀ {vcis : List (Value × Contracts × Id)}
 
     → let (vs , cs , _) = unzip₃ vcis in
-
-      ------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
       ⟨ [ split (zip vs cs) ] , sum vs ⟩at y ∣ Γ
         —→[ split[ y ] ]
       || map (λ{ (vi , ci , xi) → ⟨ ci , vi ⟩at xi }) vcis ∣ Γ
@@ -197,8 +177,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [C-AuthRev] :
 
-      -------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
       ⟨ A ∶ a ♯ just n ⟩ ∣ Γ
         —→[ auth-rev[ A , a ] ]
       A ∶ a ♯ n ∣ Γ
@@ -215,9 +194,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
       in
 
       ⟦ p ⟧ Δ ≡ just true -- predicate is true
-
-      ------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
     → ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ Γ ∣ Δ ∣ Γ′
         —→[ put[ xs , as , y ] ]
       ⟨ c , v + sum vs ⟩at z ∣ Δ ∣ Γ′
@@ -225,8 +202,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [C-Withdraw] :
 
-      -------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
       ⟨ [ withdraw A ] , v ⟩at y ∣ Γ
         —→[ withdraw[ A , v , y ] ]
       ⟨ A has v ⟩at x ∣ Γ
@@ -238,9 +214,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
     → let d = c ‼ i in
 
       A ∈ authDecorations d -- D ≡ A : D′
-
-      ------------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
     → ⟨ c , v ⟩at x ∣ Γ
         —→[ auth-control[ A , x ▷ d ] ]
       ⟨ c , v ⟩at x ∣ A auth[ x ▷ d ] ∣ Γ
@@ -258,15 +232,13 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
       ⟨ [ d′ ] , v ⟩at x ∣ Γ ≈ L
     → L —→[ α ] Γ′ -- T0D0 replace with _—↠_?
     → cv α ≡ just x
-
-      ------------------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
     → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub (authDecorations d)) ∣ Γ
         —→[ α ]
       Γ′
 
 
------------------------------------------------------------------------------------
+-------------------------------------------
 -- Semantic rules for timed configurations.
 
 infix 3 _≈ₜ_
@@ -281,18 +253,14 @@ data _—→ₜ[_]_ : TimedConfiguration → Label → TimedConfiguration → Se
 
       Γ —→[ α ] Γ′
     → cv α ≡ nothing
-
-      -----------------------
-
+      --——————————————————————————————————————————————————————————————————————
     → Γ at t —→ₜ[ α ] Γ′ at t
 
 
   [Delay] :
 
       δ > 0
-
-      -------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
     → Γ at t —→ₜ[ delay[ δ ] ] Γ at (t + δ)
 
 
@@ -308,7 +276,5 @@ data _—→ₜ[_]_ : TimedConfiguration → Label → TimedConfiguration → Se
     → All (_≤ t) ts                     -- all time constraints are satisfied
     → ⟨ [ d′ ] , v ⟩at x ∣ Γ —→[ α ] Γ′ -- resulting state if we pick branch
     → cv α ≡ just x
-
-      ---------------------------------------------------------
-
+      --——————————————————————————————————————————————————————————————————————
     → (⟨ c , v ⟩at x ∣ Γ) at t —→ₜ[ α ] Γ′ at t
