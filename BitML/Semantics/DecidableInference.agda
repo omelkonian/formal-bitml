@@ -4,10 +4,12 @@
 open import Prelude.Init
 open import Prelude.Lists
 open import Prelude.DecLists
+open import Prelude.Decidable
 open import Prelude.Membership
 open import Prelude.DecEq
 open import Prelude.Sets
 open import Prelude.Setoid
+open import Prelude.Validity
 
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
@@ -29,16 +31,16 @@ open import BitML.Semantics.Predicate Participant Honest
 open import BitML.Semantics.InferenceRules Participant Honest
 
 C-Advertise :
-  ∀ {p₁ : True (validAd? ad)}
+  ∀ {p₁ : True (Valid? ad)}
     {p₂ : True (any? (_∈? Hon) (participants (G ad)))}
     {p₃ : True (deposits ad ⊆? deposits Γ)}
-  → Γ —[ advertise[ ad ] ]→ ` ad ∣ Γ
+  → Γ —[ advertise⦅ ad ⦆ ]→ ` ad ∣ Γ
 C-Advertise {p₁ = p₁} {p₂} {p₃} = [C-Advertise] (toWitness p₁) (toWitness p₂) (toWitness p₃)
 
 C-AuthInit :
-  ∀ {p₁ : True $ nub-participants (G ad) ⊆? committedParticipants Γ ad}
+  ∀ {p₁ : True $ nub-participants (G ad) ⊆? committedParticipants ad Γ}
     {p₂ : True ((A , v , x) ∈? persistentDeposits (G ad))}
-  → ` ad ∣ Γ —[ auth-init[ A , ad , x ] ]→ ` ad ∣ Γ ∣ A auth[ x ▷ˢ ad ]
+  → ` ad ∣ Γ —[ auth-init⦅ A , ad , x ⦆ ]→ ` ad ∣ Γ ∣ A auth[ x ▷ˢ ad ]
 C-AuthInit {p₁ = p₁} {p₂} = [C-AuthInit] (toWitness p₁) (toWitness p₂)
 
 C-PutRev :
@@ -52,7 +54,7 @@ C-PutRev :
     in
     {p₁ : True (⟦ p ⟧ Δ ≟ just true)}
   → ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ (Γ ∣ ΔΓ′)
-      —[ put[ xs , as , y ] ]→
+      —[ put⦅ xs , as , y ⦆ ]→
     ⟨ c , v + sum vs ⟩at z ∣ ΔΓ′
 C-PutRev {ds = ds} {ss = ss} {p₁ = p₁} = [C-PutRev] {ds = ds} {ss = ss} (toWitness p₁)
 
@@ -60,7 +62,7 @@ C-AuthControl :
   ∀ {i : Index c}
   → let d = c ‼ i in
     {p₁ : True (A ∈? authDecorations d)}
-  → ⟨ c , v ⟩at x ∣ Γ —[ auth-control[ A , x ▷ d ] ]→ ⟨ c , v ⟩at x ∣ A auth[ x ▷ d ] ∣ Γ
+  → ⟨ c , v ⟩at x ∣ Γ —[ auth-control⦅ A , x ▷ d ⦆ ]→ ⟨ c , v ⟩at x ∣ A auth[ x ▷ d ] ∣ Γ
 C-AuthControl {p₁ = p₁} = [C-AuthControl] (toWitness p₁)
 
 _→?_ : ∀ {P Q : Set} → Dec P → Dec Q → Dec (P → Q)
@@ -78,7 +80,7 @@ C-AuthCommit :
     {p₁ : True (as ≟ secretsOfᵖ A (G ad))}
   → {p₂ : True (all? (_∉? secretsOfᶜᶠ A Γ) as)}
   → {p₃ : True ((A ∈? Hon) →? all? (M.Any.dec λ _ → yes tt) ms)}
-  → ` ad ∣ Γ —[ auth-commit[ A , ad , secrets ] ]→ ` ad ∣ Γ ∣ Δ ∣ A auth[ ♯▷ ad ]
+  → ` ad ∣ Γ —[ auth-commit⦅ A , ad , secrets ⦆ ]→ ` ad ∣ Γ ∣ Δ ∣ A auth[ ♯▷ ad ]
 C-AuthCommit {p₁ = p₁} {p₂} {p₃} = [C-AuthCommit] (toWitness p₁) (toWitness p₂) (toWitness p₃)
 
 -- T0D0 can we decide which transition to choose?

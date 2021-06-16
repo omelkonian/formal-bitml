@@ -3,6 +3,7 @@ module BitML.Example.TimedCommitment where -- (see BitML paper, Section 2)
 open import Prelude.Init
 open import Prelude.Lists
 open import Prelude.DecEq
+open import Prelude.Decidable
 open import Prelude.Setoid
 
 open import BitML.BasicTypes hiding (a; x; y; t)
@@ -35,15 +36,15 @@ tc = ⟨ A :! 1 at x ∣∣ A :secret a ∣∣ B :! 0 at y ⟩
 
 tc-steps :
   ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
-    —[ advertise[ tc ]
-     ∷ auth-commit[ A , tc , [ a , just N ] ]
-     ∷ auth-commit[ B , tc , [] ]
-     ∷ auth-init[ A , tc , x ]
-     ∷ auth-init[ B , tc , y ]
-     ∷ init[ G tc , C tc ]
-     ∷ auth-rev[ A , a ]
-     ∷ put[ [] , [ a ] , x₁ ]
-     ∷ withdraw[ A , 1 , x₂ ]
+    —[ advertise⦅ tc ⦆
+     ∷ auth-commit⦅ A , tc , [ a , just N ] ⦆
+     ∷ auth-commit⦅ B , tc , [] ⦆
+     ∷ auth-init⦅ A , tc , x ⦆
+     ∷ auth-init⦅ B , tc , y ⦆
+     ∷ init⦅ G tc , C tc ⦆
+     ∷ auth-rev⦅ A , a ⦆
+     ∷ put⦅ [] , [ a ] , x₁ ⦆
+     ∷ withdraw⦅ A , 1 , x₂ ⦆
      ∷ []
      ]↠
   ⟨ A has 1 ⟩at x₃ ∣ A ∶ a ♯ N

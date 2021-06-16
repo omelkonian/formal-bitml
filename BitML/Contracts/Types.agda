@@ -18,8 +18,7 @@ module BitML.Contracts.Types
 
 Hon = NE.toList Honest
 
-variable
-  A B A′ B′ : Participant
+variable A B A′ B′ : Participant
 
 ------------------------------------------------------------------------
 -- Contracts
@@ -86,8 +85,7 @@ data Precondition : Set where
 
 unquoteDecl DecEq-Precondition = DERIVE DecEq [ quote Precondition , DecEq-Precondition ]
 
-variable
-  g g′ g″ : Precondition
+variable g g′ g″ : Precondition
 
 ------------------------------------------------------------------------
 -- Advertisements.
@@ -100,8 +98,8 @@ record Advertisement : Set where
 open Advertisement public
 unquoteDecl DecEq-Advertisement = DERIVE DecEq [ quote Advertisement , DecEq-Advertisement ]
 
-variable
-  ad ad′ ad″ : Advertisement
+Ad = Advertisement
+variable ad ad′ ad″ : Advertisement
 
 infix  2 ⟨_⟩_
 

@@ -14,6 +14,9 @@ open import Prelude.Nary
 open import Prelude.Decidable
 open import Prelude.General
 open import Prelude.Setoid
+open import Prelude.Traces
+open import Prelude.Bifunctor
+open import Prelude.Coercions
 
 open import BitML.BasicTypes
 
@@ -28,72 +31,87 @@ open import BitML.Contracts.Helpers Participant Honest
 open import BitML.Semantics.Action Participant Honest
 open import BitML.Semantics.Configurations.Types Participant Honest
 
--- Re-ordering configurations
-cfgToList : Configuration → List Configuration
-cfgToList ∅ᶜ      = []
-cfgToList (l ∣ r) = cfgToList l ++ cfgToList r
-cfgToList c       = [ c ]
-
 instance
-  IS-Cfg : ISetoid Configuration
-  IS-Cfg ._≈_ c c′ = cfgToList c ↭ cfgToList c′
+  IS-Cfg : ISetoid Cfg
+  IS-Cfg ._≈_ = _↭_ on to[ Cfg′ ]
 
-  IDS-Cfg : IDecSetoid Configuration
-  IDS-Cfg ._≈?_ c c′ = cfgToList c ↭? cfgToList c′
+  IS-TCfg : ISetoid Cfgᵗ
+  IS-TCfg ._≈_ (Γ at t) (Γ′ at t′) = (t ≡ t′) × (Γ ≈ Γ′)
+
+  -- ** Initiality (for constructing traces)
+  HI-Cfg : HasInitial Cfg
+  HI-Cfg .Initial = λ where
+    (⟨ _ has _ ⟩at _) → ⊤
+    (l ∣ r)           → Initial l × Initial r
+    _                 → ⊥
+
+  HI-TCfg : HasInitial Cfgᵗ
+  HI-TCfg .Initial (Γ at t) = Initial Γ × (t ≡ 0)
+
+cfgToList : Cfg → List Cfg
+cfgToList = map to[ Cfg ] ∘ to[ Cfg′ ]
+
+cfgToList-++ : ∀ l r → cfgToList (l ∣ r) ≡ cfgToList l ++ cfgToList r
+cfgToList-++ l r = L.map-++-commute to[ Cfg ] (to[ Cfg′ ] l) (to[ Cfg′ ] r)
+
+∈-cfgToList-++⁻ : ∀ l r → Γ₀ ∈ cfgToList (l ∣ r) → Γ₀ ∈ cfgToList l ⊎ Γ₀ ∈ cfgToList r
+∈-cfgToList-++⁻ l r rewrite cfgToList-++ l r = L.Mem.∈-++⁻ (cfgToList l)
+
+∈-cfgToList-++⁺ˡ : ∀ l r → Γ₀ ∈ cfgToList l → Γ₀ ∈ cfgToList (l ∣ r)
+∈-cfgToList-++⁺ˡ l r rewrite cfgToList-++ l r = L.Mem.∈-++⁺ˡ
+
+∈-cfgToList-++⁺ʳ : ∀ l r → Γ₀ ∈ cfgToList r → Γ₀ ∈ cfgToList (l ∣ r)
+∈-cfgToList-++⁺ʳ l r rewrite cfgToList-++ l r = L.Mem.∈-++⁺ʳ (cfgToList l)
 
 infix 4 _∈ᶜ_ _∉ᶜ_
-_∈ᶜ_ _∉ᶜ_ : Rel₀ Configuration
+_∈ᶜ_ _∉ᶜ_ : Rel₀ Cfg
 c ∈ᶜ c′ = c ∈ cfgToList c′
 c ∉ᶜ c′ = ¬ c ∈ᶜ c′
 
+Initial⇒ad∉ : Initial Γ → ` ad ∉ᶜ Γ
+Initial⇒ad∉ {⟨ _ has _ ⟩at _} _ = contradict
+Initial⇒ad∉ {l ∣ r} (pˡ , pʳ) =
+  ∈-cfgToList-++⁻ l r >≡>
+  Sum.[ Initial⇒ad∉ pˡ
+      , Initial⇒ad∉ pʳ ]
+
 ∈ᶜ-resp-≈ : Γ ≈ Γ′ → Γ₀ ∈ᶜ Γ → Γ₀ ∈ᶜ Γ′
-∈ᶜ-resp-≈ = L.Perm.∈-resp-↭
+∈ᶜ-resp-≈ {Γ}{Γ′}{Γ₀} Γ≈Γ′ c∈
+  with Γ¹ , Γ¹∈ , Γ₀≡ ← L.Mem.∈-map⁻ to[ Cfg ] c∈
+  with Γ¹∈′ ← L.Perm.∈-resp-↭ Γ≈Γ′ Γ¹∈
+  = ⟪ _∈ cfgToList Γ′ ⟫ Γ₀≡ ~: L.Mem.∈-map⁺ to[ Cfg ] Γ¹∈′
 
-∈ᶜ-bringToFront : Δ ∈ᶜ Γ₀ → ∃[ Γ ] (Γ₀ ≈ Δ ∣ Γ)
-∈ᶜ-bringToFront {Δ}{Γ₀} Δ∈
-  with Γ₀ | cfgToList Γ₀ | inspect cfgToList Γ₀ | Δ | Δ∈
-... | ` x | .(` x) ∷ [] | ≡[ refl ] | .(` x) | here refl = ∅ᶜ , ↭-refl
-... | ⟨ A , v ⟩at x | .(⟨ A , v ⟩at x) ∷ [] | ≡[ refl ] | .(⟨ A , v ⟩at x) | here refl = ∅ᶜ , ↭-refl
-... | ⟨ A has v ⟩at x | .(⟨ A has v ⟩at x) ∷ [] | ≡[ refl ] | .(⟨ A has v ⟩at x) | here refl = ∅ᶜ , ↭-refl
-... | A auth[ x ] | .(A auth[ x ]) ∷ [] | ≡[ refl ] | .(A auth[ x ]) | here refl = ∅ᶜ , ↭-refl
-... | ⟨ A ∶ a ♯ n ⟩ | .(⟨ A ∶ a ♯ n ⟩) ∷ [] | ≡[ refl ] | .(⟨ A ∶ a ♯ n ⟩) | here refl = ∅ᶜ , ↭-refl
-... | A ∶ a ♯ n | .(A ∶ a ♯ n) ∷ [] | ≡[ refl ] | .(A ∶ a ♯ n) | here refl = ∅ᶜ , ↭-refl
-... | l ∣ r | xs | ≡[ eq ] | Δ′ | Δ∈′
-  rewrite sym eq
-  with L.Mem.∈-++⁻ (cfgToList l) Δ∈′
-... | inj₁ Δ∈ˡ =
-  let l′ , l≈ = ∈ᶜ-bringToFront {Γ₀ = l} Δ∈ˡ
-  in l′ ∣ r , ⟪ (λ ◆ → cfgToList l ++ cfgToList r ↭ ◆) ⟫ sym $ L.++-assoc (cfgToList Δ′) (cfgToList l′) (cfgToList r) ~:
-              L.Perm.++⁺ʳ (cfgToList r) l≈
-... | inj₂ Δ∈ʳ =
-  let
-    r′ , r≈ = ∈ᶜ-bringToFront {Γ₀ = r} Δ∈ʳ
-    open PermutationReasoning
-  in l ∣ r′ , (begin
-    cfgToList l ++ cfgToList r
-  ↭⟨ L.Perm.++⁺ˡ (cfgToList l) r≈ ⟩
-    cfgToList l ++ (cfgToList Δ′ ++ cfgToList r′)
-  ↭⟨ (↭-sym $ L.Perm.++-assoc (cfgToList l) (cfgToList Δ′) (cfgToList r′)) ⟩
-    (cfgToList l ++ cfgToList Δ′) ++ cfgToList r′
-  ↭⟨ L.Perm.++⁺ʳ (cfgToList r′) (L.Perm.++-comm (cfgToList l) (cfgToList Δ′)) ⟩
-    (cfgToList Δ′ ++ cfgToList l) ++ cfgToList r′
-  ↭⟨ L.Perm.++-assoc (cfgToList Δ′) (cfgToList l) (cfgToList r′) ⟩
-    cfgToList Δ′ ++ cfgToList l ++ cfgToList r′
-  ∎)
-
-∉ᶜ-|| : ∀ {A : Set} {f : A → Configuration}
+∉ᶜ-|| : ∀ {A : Set} {f : A → Cfg}
   → (∀ {x} → Γ ∉ᶜ f x)
     --———————————————————————————
   → ∀ xs → Γ ∉ᶜ || map f xs
 ∉ᶜ-|| Γ≢ [] ()
 ∉ᶜ-|| Γ∉ (_ ∷ []) Γ∈ = Γ∉ Γ∈
 ∉ᶜ-|| {f = f} Γ≢ (x ∷ xs@(_ ∷ _)) =
-  L.Mem.∈-++⁻ (cfgToList $ f x) >≡>
+  ∈-cfgToList-++⁻ (f x) (|| map f xs) >≡>
   Sum.[ Γ≢
-      , ∉ᶜ-|| Γ≢ xs
-      ]
+      , ∉ᶜ-|| Γ≢ xs ]
 
 private variable X : Set
+
+collectFromBase : (BaseCfg → List X) → (Cfg → List X)
+collectFromBase f = collectFromList f ∘ to[ Cfg′ ]
+
+collectFromBase-++ : ⦃ I : BaseCfg has X ⦄ → ∀ l r → let f = collectFromBase (collect ⦃ I ⦄) in
+    f (l ∣ r) ≡ f l ++ f r
+collectFromBase-++ l r rewrite cfgToList-++ l r | concatMap-++ collect (to[ Cfg′ ] l) (to[ Cfg′ ] r) = refl
+
+∈-collect-++⁻ : ∀ l r {x : X} → ⦃ I : BaseCfg has X ⦄ → let f = collectFromBase (collect ⦃ I ⦄) in
+    x ∈ f (l ∣ r) → x ∈ f l ⊎ x ∈ f r
+∈-collect-++⁻ {X = X} l r rewrite collectFromBase-++ {X = X} l r = L.Mem.∈-++⁻ _
+
+∈-collect-++⁺ˡ : ∀ l r {x : X} → ⦃ I : BaseCfg has X ⦄ → let f = collectFromBase (collect ⦃ I ⦄) in
+    x ∈ f l → x ∈ f (l ∣ r)
+∈-collect-++⁺ˡ {X = X} l r rewrite collectFromBase-++ {X = X} l r = L.Mem.∈-++⁺ˡ
+
+∈-collect-++⁺ʳ : ∀ l r {x : X} → ⦃ I : BaseCfg has X ⦄ → let f = collectFromBase (collect ⦃ I ⦄) in
+    x ∈ f r → x ∈ f (l ∣ r)
+∈-collect-++⁺ʳ {X = X} l r rewrite collectFromBase-++ {X = X} l r = L.Mem.∈-++⁺ʳ _
 
 instance
   HNᵃᶜ : Action has Name
@@ -106,112 +124,218 @@ instance
   ... | x ▷ᵈ _           = [ inj₁ x ]
   ... | xs , _ ▷ᵈˢ x     = map inj₁ (x ∷ xs)
 
-  HDᶜᶠ : Configuration has DepositRef
-  HDᶜᶠ .collect cf with cf
-  ... | ⟨ A has v ⟩at x = [ A , v , x ]
-  ... | l ∣ r           = collect l ++ collect r
-  ... | _               = []
+  -- HBC⇒HC′ : ⦃ BaseCfg has X ⦄ → Cfg′ has X
+  -- HBC⇒HC′ = collectFromList
 
-  HNᶜᶠ : Configuration has Name
-  HNᶜᶠ .collect c with c
-  -- secrets
-  ... | ⟨ _ ∶ s ♯ _ ⟩   = [ inj₁ s ]
-  ... | _ ∶ s ♯ _       = [ inj₁ s ]
-  -- names
-  ... | ⟨ _ ,   _ ⟩at x = [ inj₂ x ]
-  ... | ⟨ _ has _ ⟩at x = [ inj₂ x ]
-  -- other
-  ... | l ∣ r           = collect l ++ collect r
-  ... | _               = []
-  -- ... | ∅ᶜ              = []
-  -- ... | ` ad            = []
-  -- ... | ` (⟨ G ⟩ _)     = collect G
-  -- ... | _ auth[ ac ]    = []
+  -- HC′⇒HC : ⦃ Cfg′ has X ⦄ → Cfg has X
+  -- HC′⇒HC ⦃ hx ⦄ .collect = collect ⦃ hx ⦄ ∘ to
 
-  HAᶜᶠ : Configuration has Action
-  HAᶜᶠ .collect c with c
-  ... | _ auth[ a ] = [ a ]
-  ... | l ∣ r       = collect l ++ collect r
-  ... | _           = []
+  HBC⇒HC : ⦃ BaseCfg has X ⦄ → Cfg has X
+  HBC⇒HC .collect = collectFromBase (collect ⦃ it ⦄)
+
+  HDᶜᶠ : BaseCfg has DepositRef
+  HDᶜᶠ .collect = λ where
+    (⟨ A has v ⟩at x) → [ A , v , x ]
+    _                 → []
+
+  HNᶜᶠ : BaseCfg has Name
+  HNᶜᶠ .collect = λ where
+    -- secrets
+    (⟨ _ ∶ s ♯ _ ⟩)   → [ inj₁ s ]
+    (_ ∶ s ♯ _)       → [ inj₁ s ]
+    -- names
+    (⟨ _ ,   _ ⟩at x) → [ inj₂ x ]
+    (⟨ _ has _ ⟩at x) → [ inj₂ x ]
+    _                 → []
+
+  HAᶜᶠ : BaseCfg has Action
+  HAᶜᶠ .collect = λ where
+    (_ auth[ a ]) → [ a ]
+    _             → []
 
   -- ** See `authorizedHonAds` below
-  -- HAᶜᶠ : Configuration has Advertisement
-  -- HAᶜᶠ .collect c with c
-  -- ... | ` ad  = [ ad ]
-  -- ... | l ∣ r = collect l ++ collect r
-  -- ... | _     = []
+  HAᵇᶜᶠ : BaseCfg has Advertisement
+  HAᵇᶜᶠ .collect = λ where
+    (A auth[ ♯▷ ad ]) → if does (A ∈? Hon) then [ ad ] else []
+    _                 → []
 
-  Hᶜᶠ⇒Hᵗᶜᶠ : ∀ {X : Set} ⦃ _ : Configuration has X ⦄ → TimedConfiguration has X
-  Hᶜᶠ⇒Hᵗᶜᶠ .collect (Γ at _) = collect Γ
+  Hᶜᶠ⇒Hᵗᶜᶠ : ⦃ Cfg has X ⦄ → Cfgᵗ has X
+  Hᶜᶠ⇒Hᵗᶜᶠ ⦃ hx ⦄ .collect = collect ⦃ hx ⦄ ∘ cfg
+
+authorizedActions : ⦃ _ :  X has Action ⦄ → X → List Action
+authorizedActions = collect
 
 advertisements : ⦃ _ :  X has Advertisement ⦄ → X → List Advertisement
 advertisements = collect
-
--- authorizedActions : ⦃ _ :  X has Action ⦄ → X → List Action
--- authorizedActions = collect
+authorizedHonAds = advertisements
 
 -- authorizedAds : ⦃ _ :  X has Action ⦄ → X → List Advertisement
--- authorizedAds = mapMaybe (case_of λ{ (♯▷ ad) → just ad; _ → nothing })
+-- authorizedAds = mapMaybe (λ where (♯▷ ad) → just ad; _ → nothing)
 --               ∘ authorizedActions
 
-authorizedHonAds : Configuration → List Advertisement
-authorizedHonAds (A auth[ ♯▷ ad ])
- with does (A ∈? Hon)
-... | true  = [ ad ]
-... | false = []
-authorizedHonAds (l ∣ r) = authorizedHonAds l ++ authorizedHonAds r
-authorizedHonAds _       = []
-
-instance
-  HAdᶜᶠ : Configuration has Advertisement
-  HAdᶜᶠ .collect = authorizedHonAds
-
-secretsOfᶜᶠ : Participant → Configuration → Secrets
+secretsOfᶜᶠ : Participant → Cfg → Secrets
 secretsOfᶜᶠ A = {- Set'.nub ∘-} go
   where
-    go : Configuration → Secrets
+    go : Cfg → Secrets
     go (⟨ B ∶ a ♯ _ ⟩) = if A == B then [ a ] else []
     go (l ∣ r)         = go l ++ go r
     go _               = []
 
-committedParticipants : Configuration → Advertisement → List Participant
-committedParticipants (p auth[ (♯▷ ad′) ]) ad = if ad == ad′ then [ p ] else []
-committedParticipants (l ∣ r) ad = committedParticipants l ad ++ committedParticipants r ad
-committedParticipants _       _  = []
+committedParticipants : Advertisement → Cfg → List Participant
+committedParticipants ad = collect
+  module ∣committedParticipants∣ where
+    instance
+      go : BaseCfg has Participant
+      go .collect = λ where
+        (p auth[ (♯▷ ad′) ]) → if ad == ad′ then [ p ] else []
+        _                    → []
 
 module _ (A∈ : A ∈ Hon) where
   committed⇒authAd :
-      A ∈ committedParticipants Γ ad
+      A ∈ committedParticipants ad Γ
     → ad ∈ authorizedHonAds Γ
   -- committed⇒authAd {Γ} {ad} P
-  committed⇒authAd {p auth[ ♯▷ ad′ ]} {ad} P
+  committed⇒authAd {ad} {p auth[ ♯▷ ad′ ]} P
     with ad ≟ ad′ | P
   ... | no _    | ()
   ... | yes ad≡ | here refl
     rewrite dec-true (A ∈? Hon) A∈
     = here ad≡
-  committed⇒authAd {l ∣ r} {ad} P with L.Mem.∈-++⁻ (committedParticipants l ad) P
-  ... | inj₁ ∈l = L.Mem.∈-++⁺ˡ (committed⇒authAd {Γ = l} ∈l)
-  ... | inj₂ ∈r = L.Mem.∈-++⁺ʳ _ (committed⇒authAd {Γ = r} ∈r)
+  committed⇒authAd {ad} {l ∣ r} P
+    with ∈-collect-++⁻ l r ⦃ ∣committedParticipants∣.go ad ⦄  P
+  ... | inj₁ ∈l = ∈-collect-++⁺ˡ l r (committed⇒authAd {Γ = l} ∈l)
+  ... | inj₂ ∈r = ∈-collect-++⁺ʳ l r (committed⇒authAd {Γ = r} ∈r)
 
-record HasInitial (A : Set) : Set where
-  field
-    isInitial : A → Bool
+-- ** Collections of equivalent configurations.
 
-  Initial : A → Set
-  Initial = T ∘ isInitial
+-- ≈⇒names↭ : _≈_ {A = Cfg} ⇒² _↭⦅ names ⦆_
+≈⇒names↭ : Γ ≈ Γ′ → Γ ↭⦅ names ⦆ Γ′
+≈⇒names↭ = collectFromList↭ (collect ⦃ it ⦄)
 
-  Initial? : ∀ x → Dec (Initial x)
-  Initial? _ = dec
+≈⇒ads↭   : Γ ≈ Γ′ → Γ ↭⦅ advertisements ⦆ Γ′
+≈⇒ads↭ = collectFromList↭ (collect ⦃ it ⦄)
 
-open HasInitial ⦃ ... ⦄ public
+≈⇒namesʳ↭ : Γ ≈ Γ′ → Γ ↭⦅ namesʳ ⦆ Γ′
+≈⇒namesʳ↭ {Γ}{Γ′} eq = mapMaybe-↭ isInj₂ $ ≈⇒names↭ {Γ}{Γ′} eq
 
-instance
-  HI-Cfg : HasInitial Configuration
-  HI-Cfg .isInitial = λ where
-    (⟨ _ has _ ⟩at _) → true
-    (l ∣ r)           → isInitial l ∧ isInitial r
-    _                 → false
+≈⇒namesˡ↭ : Γ ≈ Γ′ → Γ ↭⦅ namesˡ ⦆ Γ′
+≈⇒namesˡ↭ {Γ}{Γ′} eq = mapMaybe-↭ isInj₁ $ ≈⇒names↭ {Γ}{Γ′} eq
 
-  HI-TCfg : HasInitial TimedConfiguration
-  HI-TCfg .isInitial (Γ at t) = isInitial Γ ∧ (t == 0)
+∈-resp-≈ : ∀ {Z Z′ A : Set} → ⦃ _ : A has Z ⦄ → ⦃ _ : ISetoid A ⦄
+  → (f : ∀ {X} → ⦃ X has Z ⦄ → X → List Z′)
+  → (∀ {a a′ : A} → a ≈ a′ → a ↭⦅ f ⦆ a′)
+  → ∀ (z : Z′) → (λ ◆ → z ∈ f ◆) Respects _≈_
+∈-resp-≈ _ ≈⇒↭ x = L.Perm.∈-resp-↭ ∘ ≈⇒↭
+
+∈ads-resp-≈    = ∈-resp-≈ advertisements (λ {Γ}{Γ′} → ≈⇒ads↭    {Γ}{Γ′})
+∈names-resp-≈  = ∈-resp-≈ names          (λ {Γ}{Γ′} → ≈⇒names↭  {Γ}{Γ′})
+∈namesˡ-resp-≈ = ∈-resp-≈ namesˡ         (λ {Γ}{Γ′} → ≈⇒namesˡ↭ {Γ}{Γ′})
+∈namesʳ-resp-≈ = ∈-resp-≈ namesʳ         (λ {Γ}{Γ′} → ≈⇒namesʳ↭ {Γ}{Γ′})
+
+--- ** name helpers
+
+deposit∈Γ⇒namesʳ : ∀ {Γ}
+  → ⟨ A has v ⟩at x ∈ᶜ Γ
+  → x ∈ namesʳ Γ
+deposit∈Γ⇒namesʳ {A} {v} {x} {` _} (here ())
+deposit∈Γ⇒namesʳ {A} {v} {x} {⟨ _ , _ ⟩at _} (here ())
+deposit∈Γ⇒namesʳ {A} {v} {x} {⟨ _ has _ ⟩at .x} (here refl) = here refl
+deposit∈Γ⇒namesʳ {A} {v} {x} {_ auth[ _ ]} (here ())
+deposit∈Γ⇒namesʳ {A} {v} {x} {⟨ _ ∶ _ ♯ _ ⟩} (here ())
+deposit∈Γ⇒namesʳ {A} {v} {x} {_ ∶ _ ♯ _} (here ())
+deposit∈Γ⇒namesʳ {A} {v} {x} {l ∣ r} d∈
+  with ∈-cfgToList-++⁻ l r d∈
+... | inj₁ d∈ˡ = let _ , x∈ , d≡ = ∈-mapMaybe⁻ isInj₂ (deposit∈Γ⇒namesʳ {Γ = l} d∈ˡ)
+                 in ∈-mapMaybe⁺ isInj₂ (∈-collect-++⁺ˡ l r x∈) d≡
+... | inj₂ d∈ʳ = let _ , x∈ , d≡ = ∈-mapMaybe⁻ isInj₂ (deposit∈Γ⇒namesʳ {Γ = r} d∈ʳ)
+                 in ∈-mapMaybe⁺ isInj₂ (∈-collect-++⁺ʳ l r x∈) d≡
+
+namesʳ-∥map-helper : ∀ (ds : List (Participant × Value × Id))
+  → map (proj₂ ∘ proj₂) ds
+  ⊆ namesʳ (|| map (λ{ (Bᵢ , vᵢ , xᵢ) → ⟨ Bᵢ has vᵢ ⟩at xᵢ }) ds)
+namesʳ-∥map-helper (_ ∷ []) (here refl) = here refl
+namesʳ-∥map-helper (_ ∷ _ ∷ _) (here refl) = here refl
+namesʳ-∥map-helper ((Bᵢ , vᵢ , xᵢ) ∷ ds@(_ ∷ _)) (there d∈) = there $ (namesʳ-∥map-helper ds) d∈
+
+n≡ : ∀ {A : Set} {P Q : A → Cfg}
+  → (∀ x → Null $ namesʳ (Q x) )
+  → (xs : List A)
+  → namesʳ (|| map (λ x → P x ∣ Q x) xs)
+  ≡ namesʳ (|| map P xs)
+n≡ ∀x [] = refl
+n≡ {P = P}{Q} ∀x (x₁ ∷ []) = P∣Q≡
+  where
+    P∣Q≡ : namesʳ (P x₁ ∣ Q x₁) ≡ namesʳ (P x₁)
+    P∣Q≡ rewrite collectFromBase-++ {X = Name} (P x₁) (Q x₁)
+               | mapMaybe-++ isInj₂ (names $ P x₁) (names $ Q x₁)
+               | ∀x x₁
+               | L.++-identityʳ (namesʳ $ P x₁)
+               = refl
+n≡ {P = P}{Q} ∀x (x₁ ∷ xs@(_ ∷ _)) =
+  begin
+    namesʳ (|| (P x₁ ∣ Q x₁ ∷ map (λ x → P x ∣ Q x) xs))
+  ≡⟨⟩
+    namesʳ (P x₁ ∣ Q x₁ ∣ || map (λ x → P x ∣ Q x) xs)
+  ≡⟨ cong filter₂ $ collectFromBase-++ (P x₁ ∣ Q x₁) (|| map (λ x → P x ∣ Q x) xs) ⟩
+    filter₂ (names (P x₁ ∣ Q x₁) ++ names (|| map (λ x → P x ∣ Q x) xs))
+  ≡⟨ mapMaybe-++ isInj₂ (names $ P x₁ ∣ Q x₁) (names $ || map (λ x → P x ∣ Q x) xs) ⟩
+    namesʳ (P x₁ ∣ Q x₁) ++ namesʳ (|| map (λ x → P x ∣ Q x) xs)
+  ≡⟨ cong (_++ namesʳ (|| map (λ x → P x ∣ Q x) xs)) P∣Q≡ ⟩
+    namesʳ (P x₁) ++ namesʳ (|| map (λ x → P x ∣ Q x) xs)
+  ≡⟨ cong (namesʳ (P x₁) ++_) rec ⟩
+    namesʳ (P x₁) ++ namesʳ (|| map P xs)
+  ≡⟨ (sym $ mapMaybe-++ isInj₂ (names $ P x₁) (names $ || map P xs)) ⟩
+    filter₂ (names (P x₁) ++ names (|| map P xs))
+  ≡⟨ cong filter₂ $ sym $ collectFromBase-++ (P x₁) (|| map P xs) ⟩
+    namesʳ (|| (P x₁ ∷ map P xs))
+  ∎
+  where
+    open ≡-Reasoning
+
+    P∣Q≡ : namesʳ (P x₁ ∣ Q x₁) ≡ namesʳ (P x₁)
+    P∣Q≡ rewrite collectFromBase-++ {X = Name} (P x₁) (Q x₁)
+               | mapMaybe-++ isInj₂ (names $ P x₁) (names $ Q x₁)
+               | ∀x x₁
+               | L.++-identityʳ (namesʳ $ P x₁)
+               = refl
+
+    rec : namesʳ (|| map (λ x → P x ∣ Q x) xs) ≡ namesʳ (|| map P xs)
+    rec = n≡ {P = P}{Q} ∀x xs
+
+namesʳ-∥map-helper′ : ∀ (ds : List (Participant × Value × Id)) → let xs = map (proj₂ ∘ proj₂) ds in
+  xs ⊆ namesʳ (|| map (λ{ (i , Aᵢ , vᵢ , xᵢ) → ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ] }) (enumerate ds))
+namesʳ-∥map-helper′ {y = y} ds {x} x∈ = qed
+  where
+    PVI = Participant × Value × Id
+    x̂ = map (proj₂ ∘ proj₂) ds
+    eds = enumerate ds
+
+    P : PVI → Cfg
+    P (Aᵢ , vᵢ , xᵢ) = ⟨ Aᵢ has vᵢ ⟩at xᵢ
+
+    P′ : ∀ {A : Set} → A × PVI → Cfg
+    P′ = P ∘ proj₂
+
+    Q P∣Q : Index ds × PVI → Cfg
+    Q (i , Aᵢ , vᵢ , xᵢ) = Aᵢ auth[ x̂ , ‼-map {xs = ds} i ▷ᵈˢ y ]
+    P∣Q x = P′ x ∣ Q x
+
+    h : namesʳ (|| map P∣Q eds)
+      ≡ namesʳ (|| map P′ eds)
+    h = n≡ {A = Index ds × PVI} {P = P′} {Q = Q} (λ _ → refl) eds
+
+    -- [BUG] if I replace `enumerate ds` with `eds` I get an error!?
+    h′ : ∀ (ds : List PVI) → map P′ (enumerate ds) ≡ map P ds
+    h′ [] = refl
+    h′ (pvi ∷ ds) = cong (_ ∷_) qed
+      where
+        rec : map P′ (zip (L.tabulate {n = length ds} (fsuc ∘ id)) ds)
+            ≡ map (P′ ∘ map₁ fsuc) (zip (L.tabulate {n = length ds} id) ds)
+        rec = map∘zip∘tabulate⟨fsuc⟩≈map⟨fsuc⟩∘zip∘tabulate {m = length ds} ds {P = P′} {f = id}
+
+        qed : map P′ (zip (L.tabulate {n = length ds} fsuc) ds)
+            ≡ map P ds
+        qed = trans rec (h′ ds)
+
+    qed : x ∈ namesʳ (|| map P∣Q eds)
+    qed rewrite h | h′ ds = namesʳ-∥map-helper ds x∈

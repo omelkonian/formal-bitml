@@ -19,6 +19,8 @@ open import Prelude.Functor
 open import Prelude.Foldable
 open import Prelude.Traversable
 open import Prelude.Monad
+open import Prelude.Validity
+open import Prelude.Decidable
 
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (∣_∣)
@@ -74,22 +76,21 @@ record ValidAdvertisement (ad : Advertisement) : Set where
 
 open ValidAdvertisement public
 
-validAd? : ∀ (ad : Advertisement) → Dec (ValidAdvertisement ad)
-validAd? (⟨ G ⟩ C)
-  with unique? (names G)
-     | names C ⊆? names G
-     | all? (λ{ (xs , as , p) → unique? xs ×-dec (secrets p ⊆? as)}) (putComponents C)
-     | participants G ++ participants C ⊆? persistentParticipants G
-     | T? (splitsOK G C)
-... | no ¬names-uniq | _ | _ | _ | _     = no $ ¬names-uniq ∘ names-uniq
-... | _ | no ¬names-⊆ | _ | _ | _        = no $ ¬names-⊆ ∘ names-⊆
-... | _ | _ | no ¬names-put | _ | _      = no $ ¬names-put ∘ names-put
-... | _ | _ | _ | no ¬participants-⊆ | _ = no $ ¬participants-⊆ ∘ participants-⊆
-... | _ | _ | _ | _ | no ¬splits-OK      = no $ ¬splits-OK ∘ splits-OK
-... | yes p₁ | yes p₂ | yes p₃ | yes p₄ | yes p₅ = yes record
-  { names-uniq = p₁
-  ; names-⊆ = p₂
-  ; names-put = p₃
-  ; participants-⊆ = p₄
-  ; splits-OK = p₅
-  }
+instance
+  𝕍Ad : Validable Advertisement
+  𝕍Ad .Valid = ValidAdvertisement
+
+  Dec-𝕍Ad : Valid ⁇¹
+  Dec-𝕍Ad {x = ⟨ G ⟩ C} .dec
+    with unique? (names G)
+       | names C ⊆? names G
+       | all? (λ{ (xs , as , p) → unique? xs ×-dec (secrets p ⊆? as)}) (putComponents C)
+       | participants G ++ participants C ⊆? persistentParticipants G
+       | T? (splitsOK G C)
+  ... | no ¬names-uniq | _ | _ | _ | _     = no $ ¬names-uniq ∘ names-uniq
+  ... | _ | no ¬names-⊆ | _ | _ | _        = no $ ¬names-⊆ ∘ names-⊆
+  ... | _ | _ | no ¬names-put | _ | _      = no $ ¬names-put ∘ names-put
+  ... | _ | _ | _ | no ¬participants-⊆ | _ = no $ ¬participants-⊆ ∘ participants-⊆
+  ... | _ | _ | _ | _ | no ¬splits-OK      = no $ ¬splits-OK ∘ splits-OK
+  ... | yes p₁ | yes p₂ | yes p₃ | yes p₄ | yes p₅ = yes λ where
+    .names-uniq → p₁; .names-⊆ → p₂; .names-put → p₃; .participants-⊆ → p₄; .splits-OK → p₅

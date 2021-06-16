@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- Denotational semantics of predicates.
 ------------------------------------------------------------------------
-open import Prelude.Init hiding (_+_; _<?_)
+open import Prelude.Init hiding (_+_)
 open Integer using (_+_; _-_; _<?_)
 open import Prelude.Lists
 open import Prelude.DecEq

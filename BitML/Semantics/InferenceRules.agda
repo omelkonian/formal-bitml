@@ -9,6 +9,7 @@ open import Prelude.DecEq
 open import Prelude.Sets
 open import Prelude.Nary hiding (⟦_⟧)
 open import Prelude.Setoid
+open import Prelude.Ord
 
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
@@ -42,7 +43,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 
       --——————————————————————————————————————————————————————————————————————
       ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ Γ
-        —[ auth-join[ A , x ↔ y ] ]→
+        —[ auth-join⦅ A , x ↔ y ⦆ ]→
       ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
 
 
@@ -50,7 +51,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 
       --——————————————————————————————————————————————————————————————————————
       ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
-        —[ join[ x ↔ y ] ]→
+        —[ join⦅ x ↔ y ⦆ ]→
       ⟨ A has (v + v′) ⟩at z ∣ Γ
 
 
@@ -58,7 +59,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 
       --——————————————————————————————————————————————————————————————————————
       ⟨ A has (v + v′) ⟩at x ∣ Γ
-        —[ auth-divide[ A , x ▷ v , v′ ] ]→
+        —[ auth-divide⦅ A , x ▷ v , v′ ⦆ ]→
       ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
 
 
@@ -66,7 +67,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 
       --——————————————————————————————————————————————————————————————————————
       ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
-        —[ divide[ x ▷ v , v′ ] ]→
+        —[ divide⦅ x ▷ v , v′ ⦆ ]→
       ⟨ A has v ⟩at y ∣ ⟨ A has v′ ⟩at y′ ∣ Γ
 
 
@@ -74,7 +75,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 
       --——————————————————————————————————————————————————————————————————————
       ⟨ A has v ⟩at x ∣ Γ
-        —[ auth-donate[ A , x ▷ᵈ B ] ]→
+        —[ auth-donate⦅ A , x ▷ᵈ B ⦆ ]→
       ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
 
 
@@ -82,7 +83,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 
       --——————————————————————————————————————————————————————————————————————
       ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
-        —[ donate[ x ▷ᵈ B ] ]→
+        —[ donate⦅ x ▷ᵈ B ⦆ ]→
       ⟨ B has v ⟩at y ∣ Γ
 
 
@@ -96,7 +97,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       in
       --——————————————————————————————————————————————————————————————————————
       Δ ∣ Γ
-        —[ auth-destroy[ Aj , xs , j′ ] ]→
+        —[ auth-destroy⦅ Aj , xs , j′ ⦆ ]→
       Δ ∣ Aj auth[ xs , j′ ▷ᵈˢ y ] ∣ Γ
 
 
@@ -109,7 +110,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       in
       --——————————————————————————————————————————————————————————————————————
       Δ ∣ Γ
-        —[ destroy[ xs ] ]→
+        —[ destroy⦅ xs ⦆ ]→
       Γ
 
   ------------------------------------------------------------
@@ -121,7 +122,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
     → Any (_∈ Hon) (participants G) -- at least one honest participant
     → deposits ad ⊆ deposits Γ      -- all persistent deposits in place
       --——————————————————————————————————————————————————————————————————————
-    → Γ —[ advertise[ ad ] ]→ ` ad ∣ Γ
+    → Γ —[ advertise⦅ ad ⦆ ]→ ` ad ∣ Γ
 
 
   [C-AuthCommit] : let ⟨ G ⟩ _ = ad in
@@ -136,17 +137,17 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
     → (A ∈ Hon → All Is-just ms)  -- honest participants commit to valid lengths
       --——————————————————————————————————————————————————————————————————————
     → ` ad ∣ Γ
-        —[ auth-commit[ A , ad , secrets ] ]→
+        —[ auth-commit⦅ A , ad , secrets ⦆ ]→
       ` ad ∣ Γ ∣ Δ ∣ A auth[ ♯▷ ad ]
 
 
   [C-AuthInit] : let ⟨ G ⟩ _ = ad; partG = nub-participants G in
 
-      partG ⊆ committedParticipants Γ ad -- all participants have committed their secrets
+      partG ⊆ committedParticipants ad Γ -- all participants have committed their secrets
     → (A , v , x) ∈ persistentDeposits G -- G = A :! v @ x | ...
       --——————————————————————————————————————————————————————————————————————
     → ` ad ∣ Γ
-        —[ auth-init[ A , ad , x ] ]→
+        —[ auth-init⦅ A , ad , x ⦆ ]→
       ` ad ∣ Γ ∣ A auth[ x ▷ˢ ad ]
 
 
@@ -160,7 +161,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       --——————————————————————————————————————————————————————————————————————
       ` ad ∣ Γ ∣ || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xi ▷ˢ ad ] }) toSpend
                ∣ || map _auth[ ♯▷ ad ] partG
-        —[ init[ G , C ] ]→
+        —[ init⦅ G , C ⦆ ]→
       ⟨ C , sum vs ⟩at x ∣ Γ
 
 
@@ -173,7 +174,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
     → let (vs , cs , _) = unzip₃ vcis in
       --——————————————————————————————————————————————————————————————————————
       ⟨ [ split (zip vs cs) ] , sum vs ⟩at y ∣ Γ
-        —[ split[ y ] ]→
+        —[ split⦅ y ⦆ ]→
       || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis ∣ Γ
 
 
@@ -181,7 +182,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 
       --——————————————————————————————————————————————————————————————————————
       ⟨ A ∶ a ♯ just n ⟩ ∣ Γ
-        —[ auth-rev[ A , a ] ]→
+        —[ auth-rev⦅ A , a ⦆ ]→
       A ∶ a ♯ n ∣ Γ
 
 
@@ -199,7 +200,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       ⟦ p ⟧ Δ ≡ just true -- predicate is true
       --——————————————————————————————————————————————————————————————————————
     → ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ (Γ ∣ ΔΓ′)
-        —[ put[ xs , as , y ] ]→
+        —[ put⦅ xs , as , y ⦆ ]→
       ⟨ c , v + sum vs ⟩at z ∣ ΔΓ′
 
 
@@ -207,7 +208,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 
       --——————————————————————————————————————————————————————————————————————
       ⟨ [ withdraw A ] , v ⟩at y ∣ Γ
-        —[ withdraw[ A , v , y ] ]→
+        —[ withdraw⦅ A , v , y ⦆ ]→
       ⟨ A has v ⟩at x ∣ Γ
 
 
@@ -217,12 +218,12 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       A ∈ authDecorations d -- D ≡ A : D′
       --——————————————————————————————————————————————————————————————————————
     → ⟨ c , v ⟩at x ∣ Γ
-        —[ auth-control[ A , x ▷ d ] ]→
+        —[ auth-control⦅ A , x ▷ d ⦆ ]→
       ⟨ c , v ⟩at x ∣ A auth[ x ▷ d ] ∣ Γ
 
 
   -- T0D0 linearize, i.e. introduce new label and produce intermediate configuration:
-  -- ⟨ c , v ⟩at x ∣ Δ ∣ Γ —[ choice[c , i] ]→ ⟨ [ d′ ] , v ⟩at x ∣ Γ
+  -- ⟨ c , v ⟩at x ∣ Δ ∣ Γ —[ choice⦅ c , i ⦆ ]→ ⟨ [ d′ ] , v ⟩at x ∣ Γ
   [C-Control] :
     ∀ {i : Index c} → let d  = c ‼ i; d′ = removeTopDecorations d in
 
@@ -271,7 +272,7 @@ data _—[_]→ₜ_ : TimedConfiguration → Label → TimedConfiguration → Se
 
       δ > 0
       --——————————————————————————————————————————————————————————————————————
-    → Γ at t —[ delay[ δ ] ]→ₜ Γ at (t + δ)
+    → Γ at t —[ delay⦅ δ ⦆ ]→ₜ Γ at (t + δ)
 
 
   [Timeout] :
@@ -291,8 +292,13 @@ open import Prelude.Closures
 open UpToLabelledReflexiveTransitiveClosure _—[_]→_ public
 open UpToLabelledReflexiveTransitiveClosure _—[_]→ₜ_ public
   renaming ( begin_ to beginₜ_; _∎ to _∎ₜ
-           ; _—→⟨_⟩_⊢_ to _—→ₜ⟨_⟩_⊢_; _—→⟨_⟩_ to _—→ₜ⟨_⟩_
-           ; _—[_]↠_ to _—[_]↠ₜ_
-           ; _←[_]—_ to _←ₜ[_]—_
-           ; _↞[_]—_ to _↞ₜ[_]_
+           ; _—→⟨_⟩_⊢_ to _—→ₜ⟨_⟩_⊢_; _—→⟨_⟩_ to _—→ₜ⟨_⟩_; _`—→⟨_⟩_⊢_ to _`—→ₜ⟨_⟩_⊢_
+           ; _—→_ to _—→ₜ_
+           ; _—[_]↠_ to _—[_]↠ₜ_; _—↠_ to _—↠ₜ_
+           ; _—[_]↠⁺_ to _—[_]↠⁺ₜ_; _—↠⁺_ to _—↠⁺ₜ_
+           ; _⟨_⟩←—_⊢_ to _⟨_⟩←—ₜ_⊢_; _⟨_⟩←—_ to _⟨_⟩←—ₜ_; _`⟨_⟩←—_⊢_ to _`⟨_⟩←—ₜ_⊢_
+           ; _←[_]—_ to _←[_]—ₜ_; _←—_ to _←—ₜ_
+           ; _↞[_]—_ to _↞[_]—ₜ_; _↞—_ to _↞—ₜ_
+           ; _⁺↞[_]—_ to _⁺↞[_]—ₜ_; _⁺↞—_ to _⁺↞—ₜ_
+           ; viewLeft to viewLeftₜ; viewRight to viewRightₜ; view↔ to view↔ₜ
            )
