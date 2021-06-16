@@ -11,6 +11,8 @@ open import Prelude.Collections
 open import Prelude.Applicative
 open import Prelude.Semigroup
 open import Prelude.Nary
+open import Prelude.Decidable
+open import Prelude.General
 
 open import BitML.BasicTypes
 
@@ -25,13 +27,11 @@ open import BitML.Contracts.Helpers Participant Honest
 open import BitML.Semantics.Action Participant Honest
 open import BitML.Semantics.Configurations.Types Participant Honest
 
--------------------------------------------------------------------
-
 -- Re-ordering configurations
 cfgToList : Configuration → List Configuration
-cfgToList ∅ᶜ       = []
+cfgToList ∅ᶜ      = []
 cfgToList (l ∣ r) = cfgToList l ++ cfgToList r
-cfgToList c        = [ c ]
+cfgToList c       = [ c ]
 
 infix 3 _≈_
 _≈_ : Rel₀ Configuration
@@ -41,9 +41,57 @@ infix 3 _≈?_
 _≈?_ : Decidable² {A = Configuration} _≈_
 c ≈? c′ = cfgToList c ↭? cfgToList c′
 
-infix 4 _∈ᶜ_
-_∈ᶜ_ : Rel₀ Configuration
+infix 4 _∈ᶜ_ _∉ᶜ_
+_∈ᶜ_ _∉ᶜ_ : Rel₀ Configuration
 c ∈ᶜ c′ = c ∈ cfgToList c′
+c ∉ᶜ c′ = ¬ c ∈ᶜ c′
+
+∈ᶜ-resp-≈ : Γ ≈ Γ′ → Γ₀ ∈ᶜ Γ → Γ₀ ∈ᶜ Γ′
+∈ᶜ-resp-≈ = L.Perm.∈-resp-↭
+
+∈ᶜ-bringToFront : Δ ∈ᶜ Γ₀ → ∃[ Γ ] (Γ₀ ≈ Δ ∣ Γ)
+∈ᶜ-bringToFront {Δ}{Γ₀} Δ∈
+  with Γ₀ | cfgToList Γ₀ | inspect cfgToList Γ₀ | Δ | Δ∈
+... | ` x | .(` x) ∷ [] | ≡[ refl ] | .(` x) | here refl = ∅ᶜ , ↭-refl
+... | ⟨ A , v ⟩at x | .(⟨ A , v ⟩at x) ∷ [] | ≡[ refl ] | .(⟨ A , v ⟩at x) | here refl = ∅ᶜ , ↭-refl
+... | ⟨ A has v ⟩at x | .(⟨ A has v ⟩at x) ∷ [] | ≡[ refl ] | .(⟨ A has v ⟩at x) | here refl = ∅ᶜ , ↭-refl
+... | A auth[ x ] | .(A auth[ x ]) ∷ [] | ≡[ refl ] | .(A auth[ x ]) | here refl = ∅ᶜ , ↭-refl
+... | ⟨ A ∶ a ♯ n ⟩ | .(⟨ A ∶ a ♯ n ⟩) ∷ [] | ≡[ refl ] | .(⟨ A ∶ a ♯ n ⟩) | here refl = ∅ᶜ , ↭-refl
+... | A ∶ a ♯ n | .(A ∶ a ♯ n) ∷ [] | ≡[ refl ] | .(A ∶ a ♯ n) | here refl = ∅ᶜ , ↭-refl
+... | l ∣ r | xs | ≡[ eq ] | Δ′ | Δ∈′
+  rewrite sym eq
+  with L.Mem.∈-++⁻ (cfgToList l) Δ∈′
+... | inj₁ Δ∈ˡ =
+  let l′ , l≈ = ∈ᶜ-bringToFront {Γ₀ = l} Δ∈ˡ
+  in l′ ∣ r , ⟪ (λ ◆ → cfgToList l ++ cfgToList r ↭ ◆) ⟫ sym $ L.++-assoc (cfgToList Δ′) (cfgToList l′) (cfgToList r) ~:
+              L.Perm.++⁺ʳ (cfgToList r) l≈
+... | inj₂ Δ∈ʳ =
+  let
+    r′ , r≈ = ∈ᶜ-bringToFront {Γ₀ = r} Δ∈ʳ
+    open PermutationReasoning
+  in l ∣ r′ , (begin
+    cfgToList l ++ cfgToList r
+  ↭⟨ L.Perm.++⁺ˡ (cfgToList l) r≈ ⟩
+    cfgToList l ++ (cfgToList Δ′ ++ cfgToList r′)
+  ↭⟨ (↭-sym $ L.Perm.++-assoc (cfgToList l) (cfgToList Δ′) (cfgToList r′)) ⟩
+    (cfgToList l ++ cfgToList Δ′) ++ cfgToList r′
+  ↭⟨ L.Perm.++⁺ʳ (cfgToList r′) (L.Perm.++-comm (cfgToList l) (cfgToList Δ′)) ⟩
+    (cfgToList Δ′ ++ cfgToList l) ++ cfgToList r′
+  ↭⟨ L.Perm.++-assoc (cfgToList Δ′) (cfgToList l) (cfgToList r′) ⟩
+    cfgToList Δ′ ++ cfgToList l ++ cfgToList r′
+  ∎)
+
+∉ᶜ-|| : ∀ {A : Set} {f : A → Configuration}
+  → (∀ {x} → Γ ∉ᶜ f x)
+    --———————————————————————————
+  → ∀ xs → Γ ∉ᶜ || map f xs
+∉ᶜ-|| Γ≢ [] ()
+∉ᶜ-|| Γ∉ (_ ∷ []) Γ∈ = Γ∉ Γ∈
+∉ᶜ-|| {f = f} Γ≢ (x ∷ xs@(_ ∷ _)) =
+  L.Mem.∈-++⁻ (cfgToList $ f x) >≡>
+  Sum.[ Γ≢
+      , ∉ᶜ-|| Γ≢ xs
+      ]
 
 private variable X : Set
 
@@ -146,10 +194,24 @@ module _ (A∈ : A ∈ Hon) where
   ... | inj₁ ∈l = L.Mem.∈-++⁺ˡ (committed⇒authAd {Γ = l} ∈l)
   ... | inj₂ ∈r = L.Mem.∈-++⁺ʳ _ (committed⇒authAd {Γ = r} ∈r)
 
-isInitial : Configuration → Bool
-isInitial (⟨ _ has _ ⟩at _) = true
-isInitial (l ∣ r)           = isInitial l ∧ isInitial r
-isInitial _                 = false
+record HasInitial (A : Set) : Set where
+  field
+    isInitial : A → Bool
 
-Initial : Configuration → Set
-Initial = T ∘ isInitial
+  Initial : A → Set
+  Initial = T ∘ isInitial
+
+  Initial? : ∀ x → Dec (Initial x)
+  Initial? _ = dec
+
+open HasInitial ⦃ ... ⦄ public
+
+instance
+  HI-Cfg : HasInitial Configuration
+  HI-Cfg .isInitial = λ where
+    (⟨ _ has _ ⟩at _) → true
+    (l ∣ r)           → isInitial l ∧ isInitial r
+    _                 → false
+
+  HI-TCfg : HasInitial TimedConfiguration
+  HI-TCfg .isInitial (Γ at t) = isInitial Γ ∧ (t == 0)
