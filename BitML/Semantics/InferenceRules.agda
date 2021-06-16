@@ -7,6 +7,7 @@ open import Prelude.DecLists
 open import Prelude.Membership
 open import Prelude.DecEq
 open import Prelude.Sets
+open import Prelude.Nary hiding (⟦_⟧)
 
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
@@ -30,7 +31,7 @@ open import BitML.Semantics.Predicate Participant Honest
 -- T0D0 fresh variables can be arbitrarily picked out, maybe that is wrong?
 -- solve by requiring something like `fresh α ∉ fuv(Γ)`
 
-infix -1 _—→[_]_
+infix -1 _—→[_]_ _—↛[_]_
 data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   ------------------------------
@@ -87,10 +88,10 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
   [DEP-AuthDestroy] :
     ∀ {ds : List (Participant × Value × Id)} {j : Index ds}
 
-    → let xs = map (proj₂ ∘ proj₂) ds
+    → let xs = map select₃ ds
           Aj = proj₁ (ds ‼ j)
           j′ = ‼-map {xs = ds} j
-          Δ  = || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi }) ds
+          Δ  = || map (uncurry₃ ⟨_has_⟩at_) ds
       in
       --——————————————————————————————————————————————————————————————————————
       Δ ∣ Γ
@@ -101,7 +102,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
   [DEP-Destroy] :
     ∀ {ds : List (Participant × Value × Id)}
 
-    → let xs = map (proj₂ ∘ proj₂) ds
+    → let xs = map select₃ ds
           Δ  = || map (λ{ (i , Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ] })
                       (enumerate ds)
       in
@@ -115,9 +116,9 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
   [C-Advertise] : let ⟨ G ⟩ _ = ad in
 
-      ValidAdvertisement ad              -- the advertisement is valid
+      ValidAdvertisement ad         -- the advertisement is valid
     → Any (_∈ Hon) (participants G) -- at least one honest participant
-    → deposits ad ⊆ deposits Γ           -- all persistent deposits in place
+    → deposits ad ⊆ deposits Γ      -- all persistent deposits in place
       --——————————————————————————————————————————————————————————————————————
     → Γ —→[ advertise[ ad ] ] ` ad ∣ Γ
 
@@ -126,7 +127,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
     ∀ {secrets : List (Secret × Maybe ℕ)}
 
     → let (as , ms) = unzip secrets
-          Δ         = || map (λ{ (ai , Ni) → ⟨ A ∶ ai ♯ Ni ⟩}) secrets
+          Δ         = || map (uncurry ⟨ A ∶_♯_⟩) secrets
       in
 
       as ≡ secretsOfᵖ A G         -- a₁..aₖ secrets of A in G
@@ -148,16 +149,16 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
       ` ad ∣ Γ ∣ A auth[ x ▷ˢ ad ]
 
 
-  [C-Init] : let ⟨ G ⟩ C = ad in
+  [C-Init] : let ⟨ G ⟩ C = ad; partG = nub-participants G in
 
       -- all participants have committed their secrets (guaranteed from [C-AuthInit])
 
       let toSpend = persistentDeposits G
-          vs      = map (proj₁ ∘ proj₂) toSpend
+          vs      = map select₂ toSpend
       in
       --——————————————————————————————————————————————————————————————————————
       ` ad ∣ Γ ∣ || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xi ▷ˢ ad ] }) toSpend
-               ∣ || map (_auth[ ♯▷ ad ]) (nub-participants G)
+               ∣ || map _auth[ ♯▷ ad ] partG
         —→[ init[ G , C ] ]
       ⟨ C , sum vs ⟩at x ∣ Γ
 
@@ -172,7 +173,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
       --——————————————————————————————————————————————————————————————————————
       ⟨ [ split (zip vs cs) ] , sum vs ⟩at y ∣ Γ
         —→[ split[ y ] ]
-      || map (λ{ (vi , ci , xi) → ⟨ ci , vi ⟩at xi }) vcis ∣ Γ
+      || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis ∣ Γ
 
 
   [C-AuthRev] :
@@ -189,15 +190,16 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
     → let (_ , vs , xs) = unzip₃ ds
           (_ , as , _)  = unzip₃ ss
-          Γ = || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi }) ds
-          Δ = || map (λ{ (Bi , ai , Ni) → Bi ∶ ai ♯ Ni       }) ss
+          Γ = || map (uncurry₃ ⟨_has_⟩at_) ds
+          Δ = || map (uncurry₃ _∶_♯_) ss
+          ΔΓ′ = Δ ∣ Γ′
       in
 
       ⟦ p ⟧ Δ ≡ just true -- predicate is true
       --——————————————————————————————————————————————————————————————————————
-    → ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ Γ ∣ Δ ∣ Γ′
+    → ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ (Γ ∣ ΔΓ′)
         —→[ put[ xs , as , y ] ]
-      ⟨ c , v + sum vs ⟩at z ∣ Δ ∣ Γ′
+      ⟨ c , v + sum vs ⟩at z ∣ ΔΓ′
 
 
   [C-Withdraw] :
@@ -209,9 +211,7 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
 
 
   [C-AuthControl] :
-    ∀ {i : Index c}
-
-    → let d = c ‼ i in
+    ∀ {i : Index c} → let d = c ‼ i in
 
       A ∈ authDecorations d -- D ≡ A : D′
       --——————————————————————————————————————————————————————————————————————
@@ -223,19 +223,28 @@ data _—→[_]_ : Configuration → Label → Configuration → Set where
   -- T0D0 linearize, i.e. introduce new label and produce intermediate configuration:
   -- ⟨ c , v ⟩at x ∣ Δ ∣ Γ —→[ choice[c , i] ] ⟨ [ d′ ] , v ⟩at x ∣ Γ
   [C-Control] :
-    ∀ {i : Index c}
-
-    → let d  = c ‼ i
-          d′ = removeTopDecorations d
-      in
+    ∀ {i : Index c} → let d  = c ‼ i; d′ = removeTopDecorations d in
 
       ⟨ [ d′ ] , v ⟩at x ∣ Γ ≈ L
     → L —→[ α ] Γ′ -- T0D0 replace with _—↠_?
     → cv α ≡ just x
       --——————————————————————————————————————————————————————————————————————
-    → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub (authDecorations d)) ∣ Γ
+    → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub $ authDecorations d) ∣ Γ
         —→[ α ]
       Γ′
+
+_—↛[_]_ : Configuration → Label → Configuration → Set
+Γ —↛[ α ] Γ′ = ¬ (Γ —→[ α ] Γ′)
+
+isControl : Pred₀ (Γ —→[ α ] Γ′)
+isControl ([C-Control] _ _ _) = ⊤
+isControl _ = ⊥
+
+innerL : (step : Γ —→[ α ] Γ′) → {isControl step} → Configuration
+innerL ([C-Control] {L = L} _ _ _) = L
+
+-- innerStep : (step : Γ —→[ α ] Γ′) → {isControl step} → innerL step —→[ α ] Γ′
+-- innerStep ([C-Control] {L = L} _ L→Γ′ _) = L→Γ′
 
 
 -------------------------------------------
@@ -265,16 +274,11 @@ data _—→ₜ[_]_ : TimedConfiguration → Label → TimedConfiguration → Se
 
 
   [Timeout] :
-    ∀ {i : Index c}
-
-    → let d         = c ‼ i
-          d′        = removeTopDecorations d
-          (As , ts) = decorations d
-      in
+    ∀ {i : Index c} → let d = c ‼ i; d∗ = removeTopDecorations d; As , ts = decorations d in
 
       As ≡ []                           -- no authorizations required to pick branch
     → All (_≤ t) ts                     -- all time constraints are satisfied
-    → ⟨ [ d′ ] , v ⟩at x ∣ Γ —→[ α ] Γ′ -- resulting state if we pick branch
+    → ⟨ [ d∗ ] , v ⟩at x ∣ Γ —→[ α ] Γ′ -- resulting state if we pick branch
     → cv α ≡ just x
       --——————————————————————————————————————————————————————————————————————
     → (⟨ c , v ⟩at x ∣ Γ) at t —→ₜ[ α ] Γ′ at t

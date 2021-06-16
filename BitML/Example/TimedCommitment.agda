@@ -71,10 +71,10 @@ tc-steps =
     ⟨ C tc , 1 ⟩at x₁ ∣ A ∶ a ♯ 9
   —→⟨ [C-Control] {c = C tc}
                   {Γ = A ∶ a ♯ 9}
-                  {Γ′ = ⟨ [ withdraw A ] , 1 ⟩at x₂ ∣ A ∶ a ♯ 9 ∣ ∅ᶜ}
+                  {Γ′ = ⟨ [ withdraw A ] , 1 ⟩at x₂ ∣ (A ∶ a ♯ 9 ∣ ∅ᶜ)}
                   {i = 0F}
         (toWitness {Q = ⟨ [ reveal [ a ] ⇒ [ withdraw A ] ] , 1 ⟩at x₁ ∣ A ∶ a ♯ 9
-                     ≈? ⟨ [ reveal [ a ] ⇒ [ withdraw A ] ] , 1 ⟩at x₁ ∣ ∅ᶜ ∣ A ∶ a ♯ 9 ∣ ∅ᶜ} tt)
+                     ≈? ⟨ [ reveal [ a ] ⇒ [ withdraw A ] ] , 1 ⟩at x₁ ∣ (∅ᶜ ∣ A ∶ a ♯ 9 ∣ ∅ᶜ)} tt)
         ([C-PutRev] {ds = []} {ss = [ A , a , 9 ]} refl)
         refl
     ⟩

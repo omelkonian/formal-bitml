@@ -47,9 +47,12 @@ C-PutRev :
         (_ , as , _)  = unzip₃ ss
         Γ = || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi}) ds
         Δ = || map (λ{ (Bi , ai , Ni) → Bi ∶ ai ♯ Ni}) ss
+        ΔΓ′ = Δ ∣ Γ′
     in
     {p₁ : True (⟦ p ⟧ Δ ≟ just true)}
-  → ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ Γ ∣ Δ ∣ Γ′ —→[ put[ xs , as , y ] ] ⟨ c , v + sum vs ⟩at z ∣ Δ ∣ Γ′
+  → ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ (Γ ∣ ΔΓ′)
+      —→[ put[ xs , as , y ] ]
+    ⟨ c , v + sum vs ⟩at z ∣ ΔΓ′
 C-PutRev {ds = ds} {ss = ss} {p₁ = p₁} = [C-PutRev] {ds = ds} {ss = ss} (toWitness p₁)
 
 C-AuthControl :
