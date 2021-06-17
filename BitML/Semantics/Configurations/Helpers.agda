@@ -13,6 +13,7 @@ open import Prelude.Semigroup
 open import Prelude.Nary
 open import Prelude.Decidable
 open import Prelude.General
+open import Prelude.Setoid
 
 open import BitML.BasicTypes
 
@@ -33,13 +34,12 @@ cfgToList ∅ᶜ      = []
 cfgToList (l ∣ r) = cfgToList l ++ cfgToList r
 cfgToList c       = [ c ]
 
-infix 3 _≈_
-_≈_ : Rel₀ Configuration
-c ≈ c′ = cfgToList c ↭ cfgToList c′
+instance
+  IS-Cfg : ISetoid Configuration
+  IS-Cfg ._≈_ c c′ = cfgToList c ↭ cfgToList c′
 
-infix 3 _≈?_
-_≈?_ : Decidable² {A = Configuration} _≈_
-c ≈? c′ = cfgToList c ↭? cfgToList c′
+  IDS-Cfg : IDecSetoid Configuration
+  IDS-Cfg ._≈?_ c c′ = cfgToList c ↭? cfgToList c′
 
 infix 4 _∈ᶜ_ _∉ᶜ_
 _∈ᶜ_ _∉ᶜ_ : Rel₀ Configuration
