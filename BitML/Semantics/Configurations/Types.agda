@@ -80,29 +80,28 @@ Cfgᵗ = TimedConfiguration
 
 -- Alternative representation as list of atomic/base configurations.
 data BaseCfg : Set where
-  ∅ᶜ : BaseCfg
-  `_ : (ad : Advertisement) → BaseCfg
-  ⟨_,_⟩at_ : (c : Contracts) → (v : Value) → (x : Id) → BaseCfg
-  ⟨_has_⟩at_ : (A : Participant) → (v : Value) → (x : Id) → BaseCfg
-  _auth[_] : (A : Participant) → (a : Action) → BaseCfg
-  ⟨_∶_♯_⟩ : (A : Participant) → (s : Secret) → (mn : Maybe ℕ) → BaseCfg
-  _∶_♯_ : (A : Participant) → (s : Secret) → (n : ℕ) → BaseCfg
+  ``_ : (ad : Advertisement) → BaseCfg
+  `⟨_,_⟩at_ : (c : Contracts) → (v : Value) → (x : Id) → BaseCfg
+  `⟨_has_⟩at_ : (A : Participant) → (v : Value) → (x : Id) → BaseCfg
+  _`auth[_] : (A : Participant) → (a : Action) → BaseCfg
+  `⟨_∶_♯_⟩ : (A : Participant) → (s : Secret) → (mn : Maybe ℕ) → BaseCfg
+  _`∶_♯_ : (A : Participant) → (s : Secret) → (n : ℕ) → BaseCfg
 unquoteDecl DecEqᵇᶜᶠ = DERIVE DecEq [ quote BaseCfg , DecEqᵇᶜᶠ ]
 
 variable Γ¹ Γ¹′ Γ¹″ Δ¹ Δ¹′ Δ¹″ : BaseCfg
 
 Cfg′ = List BaseCfg
+pattern `∅ᶜ = []
 
 instance
   BaseCfg↝Cfg : BaseCfg ↝ Cfg
   BaseCfg↝Cfg .to = λ where
-    ∅ᶜ → ∅ᶜ
-    (` ad) → ` ad
-    (⟨ c , v ⟩at x) → ⟨ c , v ⟩at x
-    (⟨ A has v ⟩at x) → ⟨ A has v ⟩at x
-    (A auth[ a ]) → A auth[ a ]
-    ⟨ A ∶ s ♯ mn ⟩ → ⟨ A ∶ s ♯ mn ⟩
-    (A ∶ s ♯ n) → A ∶ s ♯ n
+    (`` ad) → ` ad
+    (`⟨ c , v ⟩at x) → ⟨ c , v ⟩at x
+    (`⟨ A has v ⟩at x) → ⟨ A has v ⟩at x
+    ( A `auth[ a ]) → A auth[ a ]
+    `⟨ A ∶ s ♯ mn ⟩ → ⟨ A ∶ s ♯ mn ⟩
+    (A `∶ s ♯ n) → A ∶ s ♯ n
 
   Cfg′↝Cfg : Cfg′ ↝ Cfg
   Cfg′↝Cfg .to = ||_ ∘ map to
@@ -110,10 +109,10 @@ instance
   Cfg↝Cfg′ : Cfg ↝ Cfg′
   Cfg↝Cfg′ .to = λ where
     ∅ᶜ → []
-    (` ad) → [ ` ad ]
-    (⟨ c , v ⟩at x) → [ ⟨ c , v ⟩at x ]
-    (⟨ A has v ⟩at x) → [ ⟨ A has v ⟩at x ]
-    (A auth[ a ]) → [ A auth[ a ] ]
-    ⟨ A ∶ s ♯ mn ⟩ → [ ⟨ A ∶ s ♯ mn ⟩ ]
-    (A ∶ s ♯ n) → [ A ∶ s ♯ n ]
+    (` ad) → [ `` ad ]
+    (⟨ c , v ⟩at x) → [ `⟨ c , v ⟩at x ]
+    (⟨ A has v ⟩at x) → [ `⟨ A has v ⟩at x ]
+    (A auth[ a ]) → [ A `auth[ a ] ]
+    ⟨ A ∶ s ♯ mn ⟩ → [ `⟨ A ∶ s ♯ mn ⟩ ]
+    (A ∶ s ♯ n) → [ A `∶ s ♯ n ]
     (l ∣ r) → to l ++ to r

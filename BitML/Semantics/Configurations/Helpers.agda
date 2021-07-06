@@ -92,7 +92,7 @@ Initial⇒ad∉ {l ∣ r} (pˡ , pʳ) =
   Sum.[ Γ≢
       , ∉ᶜ-|| Γ≢ xs ]
 
-private variable X : Set
+private variable X Y : Set
 
 collectFromBase : (BaseCfg → List X) → (Cfg → List X)
 collectFromBase f = collectFromList f ∘ to[ Cfg′ ]
@@ -100,6 +100,17 @@ collectFromBase f = collectFromList f ∘ to[ Cfg′ ]
 collectFromBase-++ : ⦃ I : BaseCfg has X ⦄ → ∀ l r → let f = collectFromBase (collect ⦃ I ⦄) in
     f (l ∣ r) ≡ f l ++ f r
 collectFromBase-++ l r rewrite cfgToList-++ l r | concatMap-++ collect (to[ Cfg′ ] l) (to[ Cfg′ ] r) = refl
+
+mapMaybe∘collectFromBase-++ : ∀ ⦃ I : BaseCfg has X ⦄ (g : X → Maybe Y) l r → let f = collectFromBase (collect ⦃ I ⦄) in
+    mapMaybe g (f (l ∣ r)) ≡ mapMaybe g (f l) ++ mapMaybe g (f r)
+mapMaybe∘collectFromBase-++ ⦃ I ⦄ g l r = begin
+    mapMaybe g (f $ l ∣ r)
+  ≡⟨ cong (mapMaybe g) (collectFromBase-++ l r) ⟩
+    mapMaybe g (f l ++ f r)
+  ≡⟨ mapMaybe-++ g (f l) (f r) ⟩
+    mapMaybe g (f l) ++ mapMaybe g (f r)
+  ∎ where open ≡-Reasoning
+          f = collectFromBase (collect ⦃ I ⦄)
 
 ∈-collect-++⁻ : ∀ l r {x : X} → ⦃ I : BaseCfg has X ⦄ → let f = collectFromBase (collect ⦃ I ⦄) in
     x ∈ f (l ∣ r) → x ∈ f l ⊎ x ∈ f r
@@ -124,40 +135,34 @@ instance
   ... | x ▷ᵈ _           = [ inj₁ x ]
   ... | xs , _ ▷ᵈˢ x     = map inj₁ (x ∷ xs)
 
-  -- HBC⇒HC′ : ⦃ BaseCfg has X ⦄ → Cfg′ has X
-  -- HBC⇒HC′ = collectFromList
-
-  -- HC′⇒HC : ⦃ Cfg′ has X ⦄ → Cfg has X
-  -- HC′⇒HC ⦃ hx ⦄ .collect = collect ⦃ hx ⦄ ∘ to
-
   HBC⇒HC : ⦃ BaseCfg has X ⦄ → Cfg has X
   HBC⇒HC .collect = collectFromBase (collect ⦃ it ⦄)
 
   HDᶜᶠ : BaseCfg has DepositRef
   HDᶜᶠ .collect = λ where
-    (⟨ A has v ⟩at x) → [ A , v , x ]
-    _                 → []
+    (`⟨ A has v ⟩at x) → [ A , v , x ]
+    _                  → []
 
   HNᶜᶠ : BaseCfg has Name
   HNᶜᶠ .collect = λ where
     -- secrets
-    (⟨ _ ∶ s ♯ _ ⟩)   → [ inj₁ s ]
-    (_ ∶ s ♯ _)       → [ inj₁ s ]
+    (`⟨ _ ∶ s ♯ _ ⟩)   → [ inj₁ s ]
+    (_ `∶ s ♯ _)       → [ inj₁ s ]
     -- names
-    (⟨ _ ,   _ ⟩at x) → [ inj₂ x ]
-    (⟨ _ has _ ⟩at x) → [ inj₂ x ]
-    _                 → []
+    (`⟨ _ ,   _ ⟩at x) → [ inj₂ x ]
+    (`⟨ _ has _ ⟩at x) → [ inj₂ x ]
+    _                  → []
 
   HAᶜᶠ : BaseCfg has Action
   HAᶜᶠ .collect = λ where
-    (_ auth[ a ]) → [ a ]
-    _             → []
+    (_ `auth[ a ]) → [ a ]
+    _              → []
 
   -- ** See `authorizedHonAds` below
   HAᵇᶜᶠ : BaseCfg has Advertisement
   HAᵇᶜᶠ .collect = λ where
-    (A auth[ ♯▷ ad ]) → if does (A ∈? Hon) then [ ad ] else []
-    _                 → []
+    (A `auth[ ♯▷ ad ]) → if does (A ∈? Hon) then [ ad ] else []
+    _                  → []
 
   Hᶜᶠ⇒Hᵗᶜᶠ : ⦃ Cfg has X ⦄ → Cfgᵗ has X
   Hᶜᶠ⇒Hᵗᶜᶠ ⦃ hx ⦄ .collect = collect ⦃ hx ⦄ ∘ cfg
@@ -187,8 +192,8 @@ committedParticipants ad = collect
     instance
       go : BaseCfg has Participant
       go .collect = λ where
-        (p auth[ (♯▷ ad′) ]) → if ad == ad′ then [ p ] else []
-        _                    → []
+        (p `auth[ (♯▷ ad′) ]) → if ad == ad′ then [ p ] else []
+        _                     → []
 
 module _ (A∈ : A ∈ Hon) where
   committed⇒authAd :
@@ -266,8 +271,7 @@ n≡ ∀x [] = refl
 n≡ {P = P}{Q} ∀x (x₁ ∷ []) = P∣Q≡
   where
     P∣Q≡ : namesʳ (P x₁ ∣ Q x₁) ≡ namesʳ (P x₁)
-    P∣Q≡ rewrite collectFromBase-++ {X = Name} (P x₁) (Q x₁)
-               | mapMaybe-++ isInj₂ (names $ P x₁) (names $ Q x₁)
+    P∣Q≡ rewrite mapMaybe∘collectFromBase-++ isInj₂ (P x₁) (Q x₁)
                | ∀x x₁
                | L.++-identityʳ (namesʳ $ P x₁)
                = refl
@@ -276,17 +280,13 @@ n≡ {P = P}{Q} ∀x (x₁ ∷ xs@(_ ∷ _)) =
     namesʳ (|| (P x₁ ∣ Q x₁ ∷ map (λ x → P x ∣ Q x) xs))
   ≡⟨⟩
     namesʳ (P x₁ ∣ Q x₁ ∣ || map (λ x → P x ∣ Q x) xs)
-  ≡⟨ cong filter₂ $ collectFromBase-++ (P x₁ ∣ Q x₁) (|| map (λ x → P x ∣ Q x) xs) ⟩
-    filter₂ (names (P x₁ ∣ Q x₁) ++ names (|| map (λ x → P x ∣ Q x) xs))
-  ≡⟨ mapMaybe-++ isInj₂ (names $ P x₁ ∣ Q x₁) (names $ || map (λ x → P x ∣ Q x) xs) ⟩
+  ≡⟨ mapMaybe∘collectFromBase-++ isInj₂ (P x₁ ∣ Q x₁) (|| map (λ x → P x ∣ Q x) xs) ⟩
     namesʳ (P x₁ ∣ Q x₁) ++ namesʳ (|| map (λ x → P x ∣ Q x) xs)
   ≡⟨ cong (_++ namesʳ (|| map (λ x → P x ∣ Q x) xs)) P∣Q≡ ⟩
     namesʳ (P x₁) ++ namesʳ (|| map (λ x → P x ∣ Q x) xs)
   ≡⟨ cong (namesʳ (P x₁) ++_) rec ⟩
     namesʳ (P x₁) ++ namesʳ (|| map P xs)
-  ≡⟨ (sym $ mapMaybe-++ isInj₂ (names $ P x₁) (names $ || map P xs)) ⟩
-    filter₂ (names (P x₁) ++ names (|| map P xs))
-  ≡⟨ cong filter₂ $ sym $ collectFromBase-++ (P x₁) (|| map P xs) ⟩
+  ≡⟨ sym $ mapMaybe∘collectFromBase-++ isInj₂ (P x₁) (|| map P xs) ⟩
     namesʳ (|| (P x₁ ∷ map P xs))
   ∎
   where
