@@ -54,32 +54,40 @@ cfgToList = map to[ Cfg ] ∘ to[ Cfg′ ]
 cfgToList-++ : ∀ l r → cfgToList (l ∣ r) ≡ cfgToList l ++ cfgToList r
 cfgToList-++ l r = L.map-++-commute to[ Cfg ] (to[ Cfg′ ] l) (to[ Cfg′ ] r)
 
-∈-cfgToList-++⁻ : ∀ l r → Γ₀ ∈ cfgToList (l ∣ r) → Γ₀ ∈ cfgToList l ⊎ Γ₀ ∈ cfgToList r
-∈-cfgToList-++⁻ l r rewrite cfgToList-++ l r = L.Mem.∈-++⁻ (cfgToList l)
+∈ᶜ-++⁻ : ∀ l r → Γ₀ ∈ cfgToList (l ∣ r) → Γ₀ ∈ cfgToList l ⊎ Γ₀ ∈ cfgToList r
+∈ᶜ-++⁻ l r rewrite cfgToList-++ l r = L.Mem.∈-++⁻ (cfgToList l)
 
-∈-cfgToList-++⁺ˡ : ∀ l r → Γ₀ ∈ cfgToList l → Γ₀ ∈ cfgToList (l ∣ r)
-∈-cfgToList-++⁺ˡ l r rewrite cfgToList-++ l r = L.Mem.∈-++⁺ˡ
+∈ᶜ-++⁺ˡ : ∀ l r → Γ₀ ∈ cfgToList l → Γ₀ ∈ cfgToList (l ∣ r)
+∈ᶜ-++⁺ˡ l r rewrite cfgToList-++ l r = L.Mem.∈-++⁺ˡ
 
-∈-cfgToList-++⁺ʳ : ∀ l r → Γ₀ ∈ cfgToList r → Γ₀ ∈ cfgToList (l ∣ r)
-∈-cfgToList-++⁺ʳ l r rewrite cfgToList-++ l r = L.Mem.∈-++⁺ʳ (cfgToList l)
+∈ᶜ-++⁺ʳ : ∀ l r → Γ₀ ∈ cfgToList r → Γ₀ ∈ cfgToList (l ∣ r)
+∈ᶜ-++⁺ʳ l r rewrite cfgToList-++ l r = L.Mem.∈-++⁺ʳ (cfgToList l)
 
 infix 4 _∈ᶜ_ _∉ᶜ_
 _∈ᶜ_ _∉ᶜ_ : Rel₀ Cfg
 c ∈ᶜ c′ = c ∈ cfgToList c′
 c ∉ᶜ c′ = ¬ c ∈ᶜ c′
 
-Initial⇒ad∉ : Initial Γ → ` ad ∉ᶜ Γ
-Initial⇒ad∉ {⟨ _ has _ ⟩at _} _ = contradict
-Initial⇒ad∉ {l ∣ r} (pˡ , pʳ) =
-  ∈-cfgToList-++⁻ l r >≡>
-  Sum.[ Initial⇒ad∉ pˡ
-      , Initial⇒ad∉ pʳ ]
+_≢deposit : Cfg → Set
+_≢deposit = λ where
+  (⟨ _ has _ ⟩at _) → ⊥
+  _                 → ⊤
+
+Initial⇒∉ : ⦃ Γ₀ ≢deposit ⦄ → Initial Γ → Γ₀ ∉ᶜ Γ
+Initial⇒∉ {Γ = ⟨ _ has _ ⟩at _} ⦃ () ⦄ _ (here refl)
+Initial⇒∉ {Γ = l ∣ r} ⦃ ≢dep ⦄ (pˡ , pʳ) =
+  ∈ᶜ-++⁻ l r >≡>
+  Sum.[ Initial⇒∉ ⦃ ≢dep ⦄ pˡ
+      , Initial⇒∉ ⦃ ≢dep ⦄ pʳ ]
 
 ∈ᶜ-resp-≈ : Γ ≈ Γ′ → Γ₀ ∈ᶜ Γ → Γ₀ ∈ᶜ Γ′
 ∈ᶜ-resp-≈ {Γ}{Γ′}{Γ₀} Γ≈Γ′ c∈
   with Γ¹ , Γ¹∈ , Γ₀≡ ← L.Mem.∈-map⁻ to[ Cfg ] c∈
   with Γ¹∈′ ← L.Perm.∈-resp-↭ Γ≈Γ′ Γ¹∈
   = ⟪ _∈ cfgToList Γ′ ⟫ Γ₀≡ ~: L.Mem.∈-map⁺ to[ Cfg ] Γ¹∈′
+
+∉ᶜ-resp-≈ : Γ ≈ Γ′ → Γ₀ ∉ᶜ Γ → Γ₀ ∉ᶜ Γ′
+∉ᶜ-resp-≈ {Γ}{Γ′}{Γ₀} Γ≈ c∉ = c∉ ∘ ∈ᶜ-resp-≈ {Γ′}{Γ} (↭-sym Γ≈)
 
 ∉ᶜ-|| : ∀ {A : Set} {f : A → Cfg}
   → (∀ {x} → Γ ∉ᶜ f x)
@@ -88,7 +96,7 @@ Initial⇒ad∉ {l ∣ r} (pˡ , pʳ) =
 ∉ᶜ-|| Γ≢ [] ()
 ∉ᶜ-|| Γ∉ (_ ∷ []) Γ∈ = Γ∉ Γ∈
 ∉ᶜ-|| {f = f} Γ≢ (x ∷ xs@(_ ∷ _)) =
-  ∈-cfgToList-++⁻ (f x) (|| map f xs) >≡>
+  ∈ᶜ-++⁻ (f x) (|| map f xs) >≡>
   Sum.[ Γ≢
       , ∉ᶜ-|| Γ≢ xs ]
 
@@ -195,6 +203,18 @@ committedParticipants ad = collect
         (p `auth[ (♯▷ ad′) ]) → if ad == ad′ then [ p ] else []
         _                     → []
 
+committed⇒authCommit :
+   A ∈ committedParticipants ad Γ
+   --—————————————————————————————
+ → A auth[ ♯▷ ad ] ∈ᶜ Γ
+committed⇒authCommit {ad = ad} {Γ = _ auth[ ♯▷ ad′ ]} A∈
+  with ad ≟ ad′ | A∈
+... | yes refl | here refl = here refl
+committed⇒authCommit {A}{ad} {Γ = l ∣ r} A∈
+  with ∈-collect-++⁻ l r ⦃ ∣committedParticipants∣.go ad ⦄ A∈
+... | inj₁ A∈ˡ = ∈ᶜ-++⁺ˡ l r (committed⇒authCommit {Γ = l} A∈ˡ)
+... | inj₂ A∈ʳ = ∈ᶜ-++⁺ʳ l r (committed⇒authCommit {Γ = r} A∈ʳ)
+
 module _ (A∈ : A ∈ Hon) where
   committed⇒authAd :
       A ∈ committedParticipants ad Γ
@@ -210,6 +230,25 @@ module _ (A∈ : A ∈ Hon) where
     with ∈-collect-++⁻ l r ⦃ ∣committedParticipants∣.go ad ⦄  P
   ... | inj₁ ∈l = ∈-collect-++⁺ˡ l r (committed⇒authAd {Γ = l} ∈l)
   ... | inj₂ ∈r = ∈-collect-++⁺ʳ l r (committed⇒authAd {Γ = r} ∈r)
+
+committedSingle≡ : committedParticipants ad (A auth[ ♯▷ ad ]) ≡ [ A ]
+committedSingle≡ {ad} rewrite ≟-refl _≟_ ad = refl
+
+committedPartG≡ : ∀ ps → committedParticipants ad (|| map (_auth[ ♯▷ ad ]) ps) ≡ ps
+committedPartG≡ [] = refl
+committedPartG≡ (_ ∷ []) = committedSingle≡
+committedPartG≡ {ad} (p ∷ ps@(_ ∷ _)) =
+  begin
+    committedParticipants ad (|| (p auth[ ♯▷ ad ] ∷ map (_auth[ ♯▷ ad ]) ps))
+  ≡⟨⟩
+    committedParticipants ad (|| (p auth[ ♯▷ ad ] ∷ map (_auth[ ♯▷ ad ]) ps))
+  ≡⟨ collectFromBase-++ ⦃ ∣committedParticipants∣.go ad ⦄ (p auth[ ♯▷ ad ]) (|| map (_auth[ ♯▷ ad ]) ps) ⟩
+    committedParticipants ad (p auth[ ♯▷ ad ]) ++ committedParticipants ad (|| map (_auth[ ♯▷ ad ]) ps)
+  ≡⟨ cong (_++ committedParticipants ad (|| map (_auth[ ♯▷ ad ]) ps)) committedSingle≡ ⟩
+    p ∷ committedParticipants ad (|| map (_auth[ ♯▷ ad ]) ps)
+  ≡⟨ cong (p ∷_) (committedPartG≡ ps) ⟩
+    p ∷ ps
+  ∎ where open ≡-Reasoning
 
 -- ** Collections of equivalent configurations.
 
@@ -249,62 +288,62 @@ deposit∈Γ⇒namesʳ {A} {v} {x} {_ auth[ _ ]} (here ())
 deposit∈Γ⇒namesʳ {A} {v} {x} {⟨ _ ∶ _ ♯ _ ⟩} (here ())
 deposit∈Γ⇒namesʳ {A} {v} {x} {_ ∶ _ ♯ _} (here ())
 deposit∈Γ⇒namesʳ {A} {v} {x} {l ∣ r} d∈
-  with ∈-cfgToList-++⁻ l r d∈
+  with ∈ᶜ-++⁻ l r d∈
 ... | inj₁ d∈ˡ = let _ , x∈ , d≡ = ∈-mapMaybe⁻ isInj₂ (deposit∈Γ⇒namesʳ {Γ = l} d∈ˡ)
                  in ∈-mapMaybe⁺ isInj₂ (∈-collect-++⁺ˡ l r x∈) d≡
 ... | inj₂ d∈ʳ = let _ , x∈ , d≡ = ∈-mapMaybe⁻ isInj₂ (deposit∈Γ⇒namesʳ {Γ = r} d∈ʳ)
                  in ∈-mapMaybe⁺ isInj₂ (∈-collect-++⁺ʳ l r x∈) d≡
 
-namesʳ-∥map-helper : ∀ (ds : List (Participant × Value × Id))
-  → map (proj₂ ∘ proj₂) ds
-  ⊆ namesʳ (|| map (λ{ (Bᵢ , vᵢ , xᵢ) → ⟨ Bᵢ has vᵢ ⟩at xᵢ }) ds)
-namesʳ-∥map-helper (_ ∷ []) (here refl) = here refl
-namesʳ-∥map-helper (_ ∷ _ ∷ _) (here refl) = here refl
-namesʳ-∥map-helper ((Bᵢ , vᵢ , xᵢ) ∷ ds@(_ ∷ _)) (there d∈) = there $ (namesʳ-∥map-helper ds) d∈
+namesʳ-∥map-authDestroy : ∀ (ds : List (Participant × Value × Id))
+  → map (proj₂ ∘ proj₂) ds ⊆ namesʳ (|| map (uncurry₃ ⟨_has_⟩at_) ds)
+namesʳ-∥map-authDestroy (_ ∷ []) (here refl) = here refl
+namesʳ-∥map-authDestroy (_ ∷ _ ∷ _) (here refl) = here refl
+namesʳ-∥map-authDestroy ((Bᵢ , vᵢ , xᵢ) ∷ ds@(_ ∷ _)) (there d∈) = there $ (namesʳ-∥map-authDestroy ds) d∈
 
-n≡ : ∀ {A : Set} {P Q : A → Cfg}
-  → (∀ x → Null $ namesʳ (Q x) )
-  → (xs : List A)
-  → namesʳ (|| map (λ x → P x ∣ Q x) xs)
-  ≡ namesʳ (|| map P xs)
-n≡ ∀x [] = refl
-n≡ {P = P}{Q} ∀x (x₁ ∷ []) = P∣Q≡
-  where
-    P∣Q≡ : namesʳ (P x₁ ∣ Q x₁) ≡ namesʳ (P x₁)
-    P∣Q≡ rewrite mapMaybe∘collectFromBase-++ isInj₂ (P x₁) (Q x₁)
-               | ∀x x₁
-               | L.++-identityʳ (namesʳ $ P x₁)
-               = refl
-n≡ {P = P}{Q} ∀x (x₁ ∷ xs@(_ ∷ _)) =
-  begin
-    namesʳ (|| (P x₁ ∣ Q x₁ ∷ map (λ x → P x ∣ Q x) xs))
-  ≡⟨⟩
-    namesʳ (P x₁ ∣ Q x₁ ∣ || map (λ x → P x ∣ Q x) xs)
-  ≡⟨ mapMaybe∘collectFromBase-++ isInj₂ (P x₁ ∣ Q x₁) (|| map (λ x → P x ∣ Q x) xs) ⟩
-    namesʳ (P x₁ ∣ Q x₁) ++ namesʳ (|| map (λ x → P x ∣ Q x) xs)
-  ≡⟨ cong (_++ namesʳ (|| map (λ x → P x ∣ Q x) xs)) P∣Q≡ ⟩
-    namesʳ (P x₁) ++ namesʳ (|| map (λ x → P x ∣ Q x) xs)
-  ≡⟨ cong (namesʳ (P x₁) ++_) rec ⟩
-    namesʳ (P x₁) ++ namesʳ (|| map P xs)
-  ≡⟨ sym $ mapMaybe∘collectFromBase-++ isInj₂ (P x₁) (|| map P xs) ⟩
-    namesʳ (|| (P x₁ ∷ map P xs))
-  ∎
-  where
-    open ≡-Reasoning
+private
+  n≡ : ∀ {A : Set} {P Q : A → Cfg}
+    → (∀ x → Null $ namesʳ (Q x) )
+    → (xs : List A)
+    → namesʳ (|| map (λ x → P x ∣ Q x) xs)
+    ≡ namesʳ (|| map P xs)
+  n≡ ∀x [] = refl
+  n≡ {P = P}{Q} ∀x (x₁ ∷ []) = P∣Q≡
+    where
+      P∣Q≡ : namesʳ (P x₁ ∣ Q x₁) ≡ namesʳ (P x₁)
+      P∣Q≡ rewrite mapMaybe∘collectFromBase-++ isInj₂ (P x₁) (Q x₁)
+                | ∀x x₁
+                | L.++-identityʳ (namesʳ $ P x₁)
+                = refl
+  n≡ {P = P}{Q} ∀x (x₁ ∷ xs@(_ ∷ _)) =
+    begin
+      namesʳ (|| (P x₁ ∣ Q x₁ ∷ map (λ x → P x ∣ Q x) xs))
+    ≡⟨⟩
+      namesʳ (P x₁ ∣ Q x₁ ∣ || map (λ x → P x ∣ Q x) xs)
+    ≡⟨ mapMaybe∘collectFromBase-++ isInj₂ (P x₁ ∣ Q x₁) (|| map (λ x → P x ∣ Q x) xs) ⟩
+      namesʳ (P x₁ ∣ Q x₁) ++ namesʳ (|| map (λ x → P x ∣ Q x) xs)
+    ≡⟨ cong (_++ namesʳ (|| map (λ x → P x ∣ Q x) xs)) P∣Q≡ ⟩
+      namesʳ (P x₁) ++ namesʳ (|| map (λ x → P x ∣ Q x) xs)
+    ≡⟨ cong (namesʳ (P x₁) ++_) rec ⟩
+      namesʳ (P x₁) ++ namesʳ (|| map P xs)
+    ≡⟨ sym $ mapMaybe∘collectFromBase-++ isInj₂ (P x₁) (|| map P xs) ⟩
+      namesʳ (|| (P x₁ ∷ map P xs))
+    ∎
+    where
+      open ≡-Reasoning
 
-    P∣Q≡ : namesʳ (P x₁ ∣ Q x₁) ≡ namesʳ (P x₁)
-    P∣Q≡ rewrite collectFromBase-++ {X = Name} (P x₁) (Q x₁)
-               | mapMaybe-++ isInj₂ (names $ P x₁) (names $ Q x₁)
-               | ∀x x₁
-               | L.++-identityʳ (namesʳ $ P x₁)
-               = refl
+      P∣Q≡ : namesʳ (P x₁ ∣ Q x₁) ≡ namesʳ (P x₁)
+      P∣Q≡ rewrite collectFromBase-++ {X = Name} (P x₁) (Q x₁)
+                | mapMaybe-++ isInj₂ (names $ P x₁) (names $ Q x₁)
+                | ∀x x₁
+                | L.++-identityʳ (namesʳ $ P x₁)
+                = refl
 
-    rec : namesʳ (|| map (λ x → P x ∣ Q x) xs) ≡ namesʳ (|| map P xs)
-    rec = n≡ {P = P}{Q} ∀x xs
+      rec : namesʳ (|| map (λ x → P x ∣ Q x) xs) ≡ namesʳ (|| map P xs)
+      rec = n≡ {P = P}{Q} ∀x xs
 
-namesʳ-∥map-helper′ : ∀ (ds : List (Participant × Value × Id)) → let xs = map (proj₂ ∘ proj₂) ds in
+namesʳ-∥map-destroy : ∀ (ds : List (Participant × Value × Id)) → let xs = map (proj₂ ∘ proj₂) ds in
   xs ⊆ namesʳ (|| map (λ{ (i , Aᵢ , vᵢ , xᵢ) → ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ] }) (enumerate ds))
-namesʳ-∥map-helper′ {y = y} ds {x} x∈ = qed
+namesʳ-∥map-destroy {y = y} ds {x} x∈ = qed
   where
     PVI = Participant × Value × Id
     x̂ = map (proj₂ ∘ proj₂) ds
@@ -338,4 +377,11 @@ namesʳ-∥map-helper′ {y = y} ds {x} x∈ = qed
         qed = trans rec (h′ ds)
 
     qed : x ∈ namesʳ (|| map P∣Q eds)
-    qed rewrite h | h′ ds = namesʳ-∥map-helper ds x∈
+    qed rewrite h | h′ ds = namesʳ-∥map-authDestroy ds x∈
+
+namesʳ-∥map-authCommit : ∀ {secrets : List (Secret × Maybe ℕ)} → let (as , ms) = unzip secrets in
+    as ⊆ namesˡ (|| map (uncurry ⟨ A ∶_♯_⟩) secrets)
+namesʳ-∥map-authCommit {secrets = `∅ᶜ} ()
+namesʳ-∥map-authCommit {secrets = (_ , _) ∷ []} (here refl) = here refl
+namesʳ-∥map-authCommit {secrets = (_ , _) ∷ ss@(_ ∷ _)} (here refl) = here refl
+namesʳ-∥map-authCommit {secrets = _ ∷ ss@(_ ∷ _)} (there a∈) = there (namesʳ-∥map-authCommit {secrets = ss} a∈)

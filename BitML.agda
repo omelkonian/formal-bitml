@@ -7,5 +7,4 @@ open import BitML.BasicTypes public
 open import BitML.Predicate public
 open import BitML.Contracts Participant Honest public
 open import BitML.Semantics Participant Honest public
-open import BitML.Semantics.Derived Participant Honest public
-  using (hₜ)
+open import BitML.Properties Participant Honest public

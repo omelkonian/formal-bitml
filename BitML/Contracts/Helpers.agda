@@ -10,6 +10,7 @@ open import Prelude.DecEq
 open import Prelude.Membership
 open import Prelude.Collections
 open import Prelude.Bifunctor
+open import Prelude.General
 
 open import BitML.BasicTypes
 open import BitML.Predicate
@@ -82,7 +83,8 @@ instance
   ... | p₁ ∣∣ p₂    = collect p₁ ++ collect p₂
 
   HPᵃ : Advertisement has Participant
-  HPᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
+  -- HPᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
+  HPᵃ .collect = collect ∘ G
 
 participants nub-participants : ⦃ _ :  X has Participant ⦄ → X → List Participant
 participants = collect
@@ -119,7 +121,8 @@ instance
   ... | p₁ ∣∣ p₂    = collect p₁ ++ collect p₂
 
   HNᵃ : Advertisement has Name
-  HNᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
+  -- HNᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
+  HNᵃ .collect = collect ∘ G
 
 names : ⦃ _ :  X has Name ⦄ → X → Names
 names = collect
@@ -166,7 +169,8 @@ instance
   HSᵖ .collect = filter₁ ∘ collect {B = Name}
 
   HSᵃ : Advertisement has Secret
-  HSᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
+  -- HSᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
+  HSᵃ .collect = collect ∘ G
 
 secrets : ⦃ _ :  X has Secret ⦄ → X → Secrets
 secrets = collect
@@ -263,6 +267,22 @@ secretsOfᵖ A = go
     ... | no  _ = []
     go (l ∣∣ r )     = go l ++ go r
     go _             = []
+
+namesˡ⇒part : a ∈ namesˡ g → Σ Participant (_∈ nub-participants g)
+namesˡ⇒part {a}{A :secret .a} (here refl) = -, here refl
+namesˡ⇒part {a}{l ∣∣ r} a∈
+  rewrite mapMaybe-++ isInj₁ (names l) (names r)
+  with L.Mem.∈-++⁻ (namesˡ l) a∈
+... | inj₁ a∈ˡ = map₂′ (∈-nub⁺ ∘ L.Mem.∈-++⁺ˡ {xs = participants l} ∘ ∈-nub⁻) $ namesˡ⇒part {g = l} a∈ˡ
+... | inj₂ a∈ʳ = map₂′ (∈-nub⁺ ∘ L.Mem.∈-++⁺ʳ (participants l) ∘ ∈-nub⁻) $ namesˡ⇒part {g = r} a∈ʳ
+
+names⊆secretsOf : (a∈ : a ∈ namesˡ g) → a ∈ secretsOfᵖ (proj₁ $ namesˡ⇒part {g = g} a∈) g
+names⊆secretsOf {a}{g = A :secret .a} (here refl) rewrite ≟-refl _≟_ A = here refl
+names⊆secretsOf {a}{g = l ∣∣ r} a∈
+  rewrite mapMaybe-++ isInj₁ (names l) (names r)
+  with L.Mem.∈-++⁻ (namesˡ l) a∈
+... | inj₁ a∈ˡ = L.Mem.∈-++⁺ˡ (names⊆secretsOf {g = l} a∈ˡ)
+... | inj₂ a∈ʳ = L.Mem.∈-++⁺ʳ _ (names⊆secretsOf {g = r} a∈ʳ)
 
 -- Deposits
 
@@ -461,6 +481,7 @@ subtermsᵃ  (⟨ _ ⟩ c) = subtermsᶜ  c
 subtermsᵃ⁺ (⟨ _ ⟩ c) = subtermsᶜ⁺ c
 
 postulate
+  subtermsᶜ⁺-refl : ds ⊆ subtermsᶜ⁺ ds
   subtermsᶜ′-trans : ds ⊆ subtermsᶜ′ ds′ → subtermsᶜ′ ds ⊆ subtermsᶜ′ ds′
 -- subtermsᶜ′-trans ds⊆ = {!!}
 

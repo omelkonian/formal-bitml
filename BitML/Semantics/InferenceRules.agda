@@ -47,7 +47,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
 
 
-  [DEP-Join] :
+  [DEP-Join] : -- T0D0: z fresh
 
       --——————————————————————————————————————————————————————————————————————
       ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
@@ -63,7 +63,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
 
 
-  [DEP-Divide] :
+  [DEP-Divide] : -- T0D0: y/y′ fresh
 
       --——————————————————————————————————————————————————————————————————————
       ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
@@ -79,7 +79,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
 
 
-  [DEP-Donate] :
+  [DEP-Donate] : -- T0D0: y fresh
 
       --——————————————————————————————————————————————————————————————————————
       ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
@@ -87,7 +87,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       ⟨ B has v ⟩at y ∣ Γ
 
 
-  [DEP-AuthDestroy] :
+  [DEP-AuthDestroy] : -- T0D0: y fresh (except in destroy authorizations for xs)
     ∀ {ds : List (Participant × Value × Id)} {j : Index ds}
 
     → let xs = map select₃ ds
@@ -116,11 +116,11 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
   ------------------------------------------------------------
   -- ii) Rules for contract advertisements and stipulation
 
-  [C-Advertise] : let ⟨ G ⟩ _ = ad in
+  [C-Advertise] : let ⟨ G ⟩ _ = ad; partG = nub-participants G in
 
-      ValidAdvertisement ad         -- the advertisement is valid
-    → Any (_∈ Hon) (participants G) -- at least one honest participant
-    → deposits ad ⊆ deposits Γ      -- all persistent deposits in place
+      ValidAdvertisement ad    -- the advertisement is valid
+    → Any (_∈ Hon) partG       -- at least one honest participant
+    → deposits ad ⊆ deposits Γ -- all persistent deposits in place
       --——————————————————————————————————————————————————————————————————————
     → Γ —[ advertise⦅ ad ⦆ ]→ ` ad ∣ Γ
 
@@ -151,6 +151,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       ` ad ∣ Γ ∣ A auth[ x ▷ˢ ad ]
 
 
+  -- T0D0: x fresh
   [C-Init] : let ⟨ G ⟩ C = ad; partG = nub-participants G in
 
       -- all participants have committed their secrets (guaranteed from [C-AuthInit])
@@ -168,7 +169,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
   ---------------------------------------------------
   -- iii) Rules for executing active contracts
 
-  [C-Split] :
+  [C-Split] : -- T0D0: ys fresh
     ∀ {vcis : List (Value × Contracts × Id)}
 
     → let (vs , cs , _) = unzip₃ vcis in
@@ -186,7 +187,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       A ∶ a ♯ n ∣ Γ
 
 
-  [C-PutRev] :
+  [C-PutRev] : -- T0D0: z fresh
     ∀ {ds : List (Participant × Value × Id)}
       {ss : List (Participant × Secret × ℕ)}
 
@@ -204,7 +205,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       ⟨ c , v + sum vs ⟩at z ∣ ΔΓ′
 
 
-  [C-Withdraw] :
+  [C-Withdraw] : -- T0D0: x fresh
 
       --——————————————————————————————————————————————————————————————————————
       ⟨ [ withdraw A ] , v ⟩at y ∣ Γ

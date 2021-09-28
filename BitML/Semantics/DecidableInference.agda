@@ -32,7 +32,7 @@ open import BitML.Semantics.InferenceRules Participant Honest
 
 C-Advertise :
   ∀ {p₁ : True (Valid? ad)}
-    {p₂ : True (any? (_∈? Hon) (participants (G ad)))}
+    {p₂ : True (any? (_∈? Hon) (nub-participants (G ad)))}
     {p₃ : True (deposits ad ⊆? deposits Γ)}
   → Γ —[ advertise⦅ ad ⦆ ]→ ` ad ∣ Γ
 C-Advertise {p₁ = p₁} {p₂} {p₃} = [C-Advertise] (toWitness p₁) (toWitness p₂) (toWitness p₃)
