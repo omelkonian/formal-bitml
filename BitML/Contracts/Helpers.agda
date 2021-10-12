@@ -59,11 +59,11 @@ participantsℂ = mkCollect go
   where
     go : ∀ e → (∀ e′ → e′ ≺ C e → List Participant) → List Participant
     go c f with c
-    ... | put _ &reveal _ if _ ⇒ cs = f (CS cs) it
+    ... | put _ &reveal _ if _ ⇒ cs = f (CS cs) ≺-put -- it
     ... | withdraw p                = [ p ]
-    ... | split vcs                 = f (VCS vcs) it
-    ... | p ⇒ c′                    = p ∷ f (C c′) it
-    ... | after _ ⇒ c′              = f (C c′) it
+    ... | split vcs                 = f (VCS vcs) ≺-split -- it
+    ... | p ⇒ c′                    = p ∷ f (C c′) ≺-auth -- it
+    ... | after _ ⇒ c′              = f (C c′) ≺-after -- it
 
 instance
   HPᶜ : Contract has Participant
@@ -97,11 +97,11 @@ namesℂ = mkCollect go
   where
     go : ∀ e → (∀ e′ → e′ ≺ C e → List Name) → List Name
     go c f with c
-    ... | put xs &reveal as if _ ⇒ cs = map inj₂ xs ++ map inj₁ as ++ f (CS cs) it
+    ... | put xs &reveal as if _ ⇒ cs = map inj₂ xs ++ map inj₁ as ++ f (CS cs) ≺-put -- it
     ... | withdraw _                  = []
-    ... | split vcs                   = f (VCS vcs) it
-    ... | _ ⇒ c′                      = f (C c′) it
-    ... | after _ ⇒ c′                = f (C c′) it
+    ... | split vcs                   = f (VCS vcs) ≺-split -- it
+    ... | _ ⇒ c′                      = f (C c′) ≺-auth -- it
+    ... | after _ ⇒ c′                = f (C c′) ≺-after -- it
 
 instance
   HNᶜ : Contract has Name
@@ -182,11 +182,11 @@ putComponentsℂ = mkCollect go
   where
     go : ∀ c → (∀ c′ → c′ ≺ C c → List PutComponent) → List PutComponent
     go c f with c
-    ... | put xs &reveal as if p ⇒ cs = (xs , as , p) ∷ f (CS cs) it
+    ... | put xs &reveal as if p ⇒ cs = (xs , as , p) ∷ f (CS cs) ≺-put -- it
     ... | withdraw _                  = []
-    ... | split vcs                   = f (VCS vcs) it
-    ... | _ ⇒ c′                      = f (C c′) it
-    ... | after _ ⇒ c′                = f (C c′) it
+    ... | split vcs                   = f (VCS vcs) ≺-split -- it
+    ... | _ ⇒ c′                      = f (C c′) ≺-auth -- it
+    ... | after _ ⇒ c′                = f (C c′) ≺-after -- it
 
 instance
   HPCᶜ : Contract has PutComponent
@@ -441,10 +441,10 @@ subterms⁺ = mkCollect go
   where
     go : ∀ c → (∀ c′ → c′ ≺ C c → Contracts) → Contracts
     go c f with c
-    ... | _       ⇒ d                = f (C d) it
-    ... | after _ ⇒ d                = f (C d) it
-    ... | split vcs                  = c ∷ f (VCS vcs) it
-    ... | put _ &reveal _ if _ ⇒ cs  = c ∷ f (CS cs) it
+    ... | _       ⇒ d                = f (C d) ≺-auth -- it
+    ... | after _ ⇒ d                = f (C d) ≺-after -- it
+    ... | split vcs                  = c ∷ f (VCS vcs) ≺-split -- it
+    ... | put _ &reveal _ if _ ⇒ cs  = c ∷ f (CS cs) ≺-put -- it
     ... | withdraw _                 = c ∷ []
 
 subterms′ (C c) with c
