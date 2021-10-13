@@ -66,7 +66,7 @@ private
       --————————————————————————————————————
     → ` ad ∉ᶜ Γ′
   ¬Join ad∉ step@([C-Control] _ L→Γ′ _) = ¬Join (¬Control ad∉ step) L→Γ′
-  ¬Join ad∉ ([DEP-Join] {A}{v}{x}{v′}{y}{Γ}{z}) ad∈
+  ¬Join ad∉ ([DEP-Join] {z}{x}{y}{Γ}{A}{v}{v′} _) ad∈
     with L.Mem.∈-++⁻ [ ⟨ A has v + v′ ⟩at z ] ad∈
   ... | inj₁ (here ())
   ... | inj₂ ad∈Γ = ad∉ $ L.Mem.∈-++⁺ʳ (cfgToList $ ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ]) ad∈Γ
@@ -90,7 +90,7 @@ private
       --————————————————————————————————————
     → ` ad ∉ᶜ Γ′
   ¬Divide ad∉ step@([C-Control] _ L→Γ′ _) = ¬Divide (¬Control ad∉ step) L→Γ′
-  ¬Divide ad∉ ([DEP-Divide] {A}{v}{v′}{x}{Γ}{y}{y′}) ad∈
+  ¬Divide ad∉ ([DEP-Divide] {x}{Γ}{y}{y′}{A}{v}{v′} _) ad∈
     with L.Mem.∈-++⁻ (cfgToList $ ⟨ A has v ⟩at y ∣ ⟨ A has v′ ⟩at y′) ad∈
   ... | inj₁ ad∈ˡ = case ad∈ˡ of λ where
     (here ())
@@ -115,7 +115,7 @@ private
       --————————————————————————————————————
     → ` ad ∉ᶜ Γ′
   ¬Donate ad∉ step@([C-Control] _ L→Γ′ _) = ¬Donate (¬Control ad∉ step) L→Γ′
-  ¬Donate ad∉ ([DEP-Donate] {A}{v}{x}{B}{Γ}{y}) =
+  ¬Donate ad∉ ([DEP-Donate] {y}{x}{Γ}{A}{v}{B} _) =
     L.Mem.∈-++⁻ [ ⟨ B has v ⟩at y ] >≡>
     Sum.[ (λ{ (here ()) })
         , ad∉ ∘ L.Mem.∈-++⁺ʳ (cfgToList $ ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ])
@@ -127,7 +127,7 @@ private
       --————————————————————————————————————
     → ` ad ∉ᶜ Γ′
   ¬AuthDestroy ad∉ step@([C-Control] _ L→Γ′ _) = ¬AuthDestroy (¬Control ad∉ step) L→Γ′
-  ¬AuthDestroy ad∉ ([DEP-AuthDestroy] {Γ}{y}{ds}{j}) =
+  ¬AuthDestroy ad∉ ([DEP-AuthDestroy] {y}{Γ}{ds}{j} _) =
     let xs = map select₃ ds
         Aj = proj₁ (ds ‼ j)
         j′ = ‼-map {xs = ds} j
@@ -202,7 +202,7 @@ private
       --————————————————————————————————————
     → ` ad ∉ᶜ Γ′
   ¬Init ad∉ step@([C-Control] _ L→Γ′ _) = ¬Init (¬Control ad∉ step) L→Γ′
-  ¬Init ad∉ ([C-Init] {ad}{Γ}{x}) =
+  ¬Init ad∉ ([C-Init] {ad}{x}{Γ} _) =
     let toSpend = persistentDeposits $ G ad
         vs      = map (proj₁ ∘ proj₂) toSpend
 
@@ -222,7 +222,7 @@ private
       --————————————————————————————————————
     → ` ad ∉ᶜ Γ′
   ¬Split ad∉ step@([C-Control] _ L→Γ′ _) = ¬Split (¬Control ad∉ step) L→Γ′
-  ¬Split ad∉ ([C-Split] {y}{Γ}{vcis}) =
+  ¬Split ad∉ ([C-Split] {y}{Γ}{vcis} _) =
     let (vs , cs , _) = unzip₃ vcis in
     ∈ᶜ-++⁻ (|| map (uncurry₃ $ flip ⟨_,_⟩at_) vcis) Γ >≡>
     Sum.[ ∉ᶜ-|| {f = uncurry₃ $ flip ⟨_,_⟩at_} (λ{ (here ()) }) vcis
@@ -247,7 +247,7 @@ private
       --————————————————————————————————————
     → ` ad ∉ᶜ Γ′
   ¬PutRev ad∉ step@([C-Control] _ L→Γ′ _) = ¬PutRev (¬Control ad∉ step) L→Γ′
-  ¬PutRev ad∉ ([C-PutRev] {Γ′}{p}{c}{v}{y}{z}{ds}{ss} _) =
+  ¬PutRev ad∉ ([C-PutRev] {Γ′}{z}{y}{p}{c}{v} {ds}{ss} _ _) =
     let (_ , vs , xs) = unzip₃ ds
         (_ , as , _)  = unzip₃ ss
         Γ = || map (uncurry₃ ⟨_has_⟩at_) ds
@@ -265,7 +265,7 @@ private
       --————————————————————————————————————
     → ` ad ∉ᶜ Γ′
   ¬Withdraw ad∉ step@([C-Control] _ L→Γ′ _) = ¬Withdraw (¬Control ad∉ step) L→Γ′
-  ¬Withdraw ad∉ ([C-Withdraw] {A}{v}{y}{Γ}{x}) =
+  ¬Withdraw ad∉ ([C-Withdraw] {x}{y}{Γ}{A}{v} _) =
     L.Mem.∈-++⁻ [ ⟨ A has v ⟩at x ] >≡>
     Sum.[ (λ{ (here ()) })
         , ad∉ ∘ L.Mem.∈-++⁺ʳ [ ⟨ [ withdraw A ] , v ⟩at y ]

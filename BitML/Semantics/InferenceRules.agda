@@ -1,5 +1,5 @@
 -----------------------------------------------
--- Small-step semantics for the BitML calculus.
+-- Small-step semantics for the BitML calculus
 -----------------------------------------------
 open import Prelude.Init
 open import Prelude.Lists
@@ -30,8 +30,8 @@ open import BitML.Semantics.Predicate Participant Honest
 ---------------------------------------------
 -- Semantic rules for untimed configurations.
 
--- T0D0 fresh variables can be arbitrarily picked out, maybe that is wrong?
--- solve by requiring something like `fresh α ∉ fuv(Γ)`
+-- T0D0 freshness conditions are not completely accurate
+-- i.e. using `ids Γ` does not examine names in authotization
 
 infix -1 _—[_]→_ _—[_]↛_
 data _—[_]→_ : Configuration → Label → Configuration → Set where
@@ -47,10 +47,12 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
 
 
-  [DEP-Join] : -- T0D0: z fresh
+  [DEP-Join] :
+
+      z ∉ x L.∷ y ∷ ids Γ -- z fresh
 
       --——————————————————————————————————————————————————————————————————————
-      ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
+    → ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
         —[ join⦅ x ↔ y ⦆ ]→
       ⟨ A has (v + v′) ⟩at z ∣ Γ
 
@@ -63,10 +65,12 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
 
 
-  [DEP-Divide] : -- T0D0: y/y′ fresh
+  [DEP-Divide] :
+
+      All (_∉ x L.∷ ids Γ) (y ∷ y′ ∷ []) -- y, y′ fresh
 
       --——————————————————————————————————————————————————————————————————————
-      ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
+    → ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
         —[ divide⦅ x ▷ v , v′ ⦆ ]→
       ⟨ A has v ⟩at y ∣ ⟨ A has v′ ⟩at y′ ∣ Γ
 
@@ -79,26 +83,31 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
 
 
-  [DEP-Donate] : -- T0D0: y fresh
+  [DEP-Donate] :
+
+      y ∉ x L.∷ ids Γ -- y fresh
 
       --——————————————————————————————————————————————————————————————————————
-      ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
+    → ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
         —[ donate⦅ x ▷ᵈ B ⦆ ]→
       ⟨ B has v ⟩at y ∣ Γ
 
 
-  [DEP-AuthDestroy] : -- T0D0: y fresh (except in destroy authorizations for xs)
+  [DEP-AuthDestroy] :
     ∀ {ds : List (Participant × Value × Id)} {j : Index ds}
 
     → let xs = map select₃ ds
-          Aj = proj₁ (ds ‼ j)
+          Aⱼ = proj₁ (ds ‼ j)
           j′ = ‼-map {xs = ds} j
           Δ  = || map (uncurry₃ ⟨_has_⟩at_) ds
       in
+
+      y ∉ ids Γ -- y fresh (except in destroy authorizations for xs)
+
       --——————————————————————————————————————————————————————————————————————
-      Δ ∣ Γ
-        —[ auth-destroy⦅ Aj , xs , j′ ⦆ ]→
-      Δ ∣ Aj auth[ xs , j′ ▷ᵈˢ y ] ∣ Γ
+    → Δ ∣ Γ
+        —[ auth-destroy⦅ Aⱼ , xs , j′ ⦆ ]→
+      Δ ∣ Aⱼ auth[ xs , j′ ▷ᵈˢ y ] ∣ Γ
 
 
   [DEP-Destroy] :
@@ -151,16 +160,19 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       ` ad ∣ Γ ∣ A auth[ x ▷ˢ ad ]
 
 
-  -- T0D0: x fresh
   [C-Init] : let ⟨ G ⟩ C = ad; partG = nub-participants G in
 
       -- all participants have committed their secrets (guaranteed from [C-AuthInit])
 
       let toSpend = persistentDeposits G
           vs      = map select₂ toSpend
+          xs      = map select₃ toSpend
       in
+
+      x ∉ xs ++ ids Γ -- x fresh
+
       --——————————————————————————————————————————————————————————————————————
-      ` ad ∣ Γ ∣ || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xi ▷ˢ ad ] }) toSpend
+    → ` ad ∣ Γ ∣ || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xi ▷ˢ ad ] }) toSpend
                ∣ || map _auth[ ♯▷ ad ] partG
         —[ init⦅ G , C ⦆ ]→
       ⟨ C , sum vs ⟩at x ∣ Γ
@@ -169,12 +181,15 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
   ---------------------------------------------------
   -- iii) Rules for executing active contracts
 
-  [C-Split] : -- T0D0: ys fresh
+  [C-Split] :
     ∀ {vcis : List (Value × Contracts × Id)}
 
-    → let (vs , cs , _) = unzip₃ vcis in
+    → let (vs , cs , ys) = unzip₃ vcis in
+
+      All (_∉ y L.∷ ids Γ) ys -- ys fresh
+
       --——————————————————————————————————————————————————————————————————————
-      ⟨ [ split (zip vs cs) ] , sum vs ⟩at y ∣ Γ
+    → ⟨ [ split (zip vs cs) ] , sum vs ⟩at y ∣ Γ
         —[ split⦅ y ⦆ ]→
       || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis ∣ Γ
 
@@ -187,7 +202,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       A ∶ a ♯ n ∣ Γ
 
 
-  [C-PutRev] : -- T0D0: z fresh
+  [C-PutRev] :
     ∀ {ds : List (Participant × Value × Id)}
       {ss : List (Participant × Secret × ℕ)}
 
@@ -198,17 +213,21 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
           ΔΓ′ = Δ ∣ Γ′
       in
 
-      ⟦ p ⟧ Δ ≡ just true -- predicate is true
+      z ∉ y L.∷ ids (Γ ∣ ΔΓ′) -- z fresh
+    → ⟦ p ⟧ Δ ≡ just true -- predicate is true
+
       --——————————————————————————————————————————————————————————————————————
     → ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ (Γ ∣ ΔΓ′)
         —[ put⦅ xs , as , y ⦆ ]→
       ⟨ c , v + sum vs ⟩at z ∣ ΔΓ′
 
 
-  [C-Withdraw] : -- T0D0: x fresh
+  [C-Withdraw] :
+
+      x ∉ y L.∷ ids Γ -- x fresh
 
       --——————————————————————————————————————————————————————————————————————
-      ⟨ [ withdraw A ] , v ⟩at y ∣ Γ
+    → ⟨ [ withdraw A ] , v ⟩at y ∣ Γ
         —[ withdraw⦅ A , v , y ⦆ ]→
       ⟨ A has v ⟩at x ∣ Γ
 

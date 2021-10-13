@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+[C-Withdraw] {x}{y}{Γ}{A}{v} _{-# OPTIONS --allow-unsolved-metas #-}
 open import Prelude.Init
 open import Prelude.DecEq
 open import Prelude.Decidable
@@ -176,7 +176,7 @@ traceContract = {!!}
 -- --     --————————————————————————————————————
 -- --   → ` ad ∉ᶜ Γ′
 -- -- ¬Divide ad∉ step@([C-Control] _ L→Γ′ _) = ¬Divide (¬Control ad∉ step) L→Γ′
--- -- ¬Divide ad∉ ([DEP-Divide] {A}{v}{v′}{x}{Γ}{y}{y′}) ad∈
+-- -- ¬Divide ad∉ ([DEP-Divide] {x}{Γ}{y}{y′}{A}{v}{v′} _) ad∈
 -- --   with L.Mem.∈-++⁻ (cfgToList $ ⟨ A has v ⟩at y ∣ ⟨ A has v′ ⟩at y′) ad∈
 -- -- ... | inj₁ ad∈ˡ = case ad∈ˡ of λ where
 -- --   (here ())

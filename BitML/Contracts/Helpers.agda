@@ -124,24 +124,10 @@ instance
   -- HNᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
   HNᵃ .collect = collect ∘ G
 
-names : ⦃ _ :  X has Name ⦄ → X → Names
-names = collect
-
-namesˡ : ⦃ _ :  X has Name ⦄ → X → Secrets
-namesˡ = filter₁ ∘ names
-
-namesʳ : ⦃ _ :  X has Name ⦄ → X → Ids
-namesʳ = filter₂ ∘ names
-
--- secrets
--- T0D0: reuse `names` generically
-
-instance
-
-  HSᵃʳ : Arith has Secret
+  HSᵃʳ : Arith has Name
   HSᵃʳ .collect ar with ar
   ... | ` _    = []
-  ... | ∣ s ∣  = [ s ]
+  ... | ∣ s ∣  = [ inj₁ s ]
   ... | x `+ y = collect x ++ collect y
   ... | x `- y = collect x ++ collect y
 
@@ -153,27 +139,18 @@ instance
   ... | x `= y  = collect x ++ collect y
   ... | x `< y  = collect x ++ collect y
 
-  -- HN→HS : ⦃ _ : X has Name ⦄ → X has Secret
-  -- HN→HS .collect = filter₁ ∘ collect {B = Name}
 
-  HSᶜ : Contract has Secret
-  HSᶜ .collect = filter₁ ∘ collect {B = Name}
+names : ⦃ _ :  X has Name ⦄ → X → Names
+names = collect
 
-  HSᶜˢ : Contracts has Secret
-  HSᶜˢ .collect = filter₁ ∘ collect {B = Name}
+namesˡ : ⦃ _ :  X has Name ⦄ → X → Secrets
+namesˡ = filter₁ ∘ names
 
-  HSᵛᶜˢ : VContracts has Secret
-  HSᵛᶜˢ .collect = filter₁ ∘ collect {B = Name}
+namesʳ : ⦃ _ :  X has Name ⦄ → X → Ids
+namesʳ = filter₂ ∘ names
 
-  HSᵖ : Precondition has Secret
-  HSᵖ .collect = filter₁ ∘ collect {B = Name}
-
-  HSᵃ : Advertisement has Secret
-  -- HSᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
-  HSᵃ .collect = collect ∘ G
-
-secrets : ⦃ _ :  X has Secret ⦄ → X → Secrets
-secrets = collect
+secrets = namesˡ
+ids     = namesʳ
 
 -- put components
 

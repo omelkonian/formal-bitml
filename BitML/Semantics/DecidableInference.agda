@@ -52,16 +52,17 @@ C-PutRev :
         Δ = || map (λ{ (Bi , ai , Ni) → Bi ∶ ai ♯ Ni}) ss
         ΔΓ′ = Δ ∣ Γ′
     in
-    {p₁ : True (⟦ p ⟧ Δ ≟ just true)}
+    {p₀ : True $ z ∉? y L.∷ ids (Γ ∣ ΔΓ′)}
+    {p₁ : True $ ⟦ p ⟧ Δ ≟ just true}
   → ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ (Γ ∣ ΔΓ′)
       —[ put⦅ xs , as , y ⦆ ]→
     ⟨ c , v + sum vs ⟩at z ∣ ΔΓ′
-C-PutRev {ds = ds} {ss = ss} {p₁ = p₁} = [C-PutRev] {ds = ds} {ss = ss} (toWitness p₁)
+C-PutRev {ds = ds}{ss}{p₀}{p₁} = [C-PutRev] {ds = ds} {ss = ss} (toWitness p₀) (toWitness p₁)
 
 C-AuthControl :
   ∀ {i : Index c}
   → let d = c ‼ i in
-    {p₁ : True (A ∈? authDecorations d)}
+    {p₁ : True $ A ∈? authDecorations d}
   → ⟨ c , v ⟩at x ∣ Γ —[ auth-control⦅ A , x ▷ d ⦆ ]→ ⟨ c , v ⟩at x ∣ A auth[ x ▷ d ] ∣ Γ
 C-AuthControl {p₁ = p₁} = [C-AuthControl] (toWitness p₁)
 
@@ -77,9 +78,9 @@ C-AuthCommit :
   → let (as , ms) = unzip secrets
         Δ         = || map (λ{ (ai , Ni) → ⟨ A ∶ ai ♯ Ni ⟩}) secrets
     in
-    {p₁ : True (as ≟ secretsOfᵖ A (G ad))}
-  → {p₂ : True (all? (_∉? secretsOfᶜᶠ A Γ) as)}
-  → {p₃ : True ((A ∈? Hon) →? all? (M.Any.dec λ _ → yes tt) ms)}
+    {p₁ : True $ as ≟ secretsOfᵖ A (G ad)}
+  → {p₂ : True $ all? (_∉? secretsOfᶜᶠ A Γ) as}
+  → {p₃ : True $ (A ∈? Hon) →? all? (M.Any.dec λ _ → yes tt) ms}
   → ` ad ∣ Γ —[ auth-commit⦅ A , ad , secrets ⦆ ]→ ` ad ∣ Γ ∣ Δ ∣ A auth[ ♯▷ ad ]
 C-AuthCommit {p₁ = p₁} {p₂} {p₃} = [C-AuthCommit] (toWitness p₁) (toWitness p₂) (toWitness p₃)
 
@@ -94,8 +95,8 @@ C-Control :
         As = authDecorations d
     in
 
-    {p₁ : True (⟨ [ d′ ] , v ⟩at x ∣ Γ ≈? L)}
+    {p₁ : True $ ⟨ [ d′ ] , v ⟩at x ∣ Γ ≈? L}
   → L —[ α ]→ Γ′
-  → {p₂ : True (cv α ≟ just x)}
+  → {p₂ : True $ cv α ≟ just x}
   → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub (authDecorations d)) ∣ Γ —[ α ]→ Γ′
 C-Control {p₁ = p₁} L—→Γ′ {p₂} = [C-Control] (toWitness p₁) L—→Γ′ (toWitness p₂)
