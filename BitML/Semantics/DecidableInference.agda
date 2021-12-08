@@ -10,6 +10,7 @@ open import Prelude.DecEq
 open import Prelude.Sets
 open import Prelude.Setoid
 open import Prelude.Validity
+open import Prelude.Ord
 
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
@@ -20,7 +21,7 @@ module BitML.Semantics.DecidableInference
   (Honest : List⁺ Participant)
   where
 
-open import BitML.Contracts.Types Participant Honest
+open import BitML.Contracts.Types Participant Honest hiding (d)
 open import BitML.Contracts.Helpers Participant Honest
 open import BitML.Contracts.Validity Participant Honest
 open import BitML.Semantics.Action Participant Honest
@@ -89,14 +90,11 @@ C-AuthCommit {p₁ = p₁} {p₂} {p₃} = [C-AuthCommit] (toWitness p₁) (toWi
 -- Γ —→?[ α ] Γ′ = ?
 
 C-Control :
-  ∀ {i : Index c}
-  → let d  = c ‼ i
-        d′ = removeTopDecorations d
-        As = authDecorations d
-    in
+  ∀ {i : Index c} → let open ∣SELECT c i; As = authDecorations d in
 
-    {p₁ : True $ ⟨ [ d′ ] , v ⟩at x ∣ Γ ≈? L}
-  → L —[ α ]→ Γ′
+    {p₀ : True $ ¿ ¬Null (authDecorations d) ⊎ (length c > 1) ¿}
+  → {p₁ : True $ Γ ≈? L}
+  → ⟨ [ d∗ ] , v ⟩at x ∣ L —[ α ]→ Γ′
   → {p₂ : True $ cv α ≟ just x}
   → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub (authDecorations d)) ∣ Γ —[ α ]→ Γ′
-C-Control {p₁ = p₁} L—→Γ′ {p₂} = [C-Control] (toWitness p₁) L—→Γ′ (toWitness p₂)
+C-Control {p₀ = p₀}{p₁} L—→Γ′ {p₂} = [C-Control] (toWitness p₀) (toWitness p₁) L—→Γ′ (toWitness p₂)

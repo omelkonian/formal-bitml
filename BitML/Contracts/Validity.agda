@@ -11,10 +11,10 @@ open import Prelude.General
 open import Prelude.Lists
 open import Prelude.DecLists
 open import Prelude.DecEq
--- open import Prelude.Membership
 open import Prelude.Sets
 open import Prelude.Measurable
 open import Prelude.Collections
+open import Prelude.Membership
 open import Prelude.Functor
 open import Prelude.Foldable
 open import Prelude.Traversable
@@ -94,3 +94,16 @@ instance
   ... | _ | _ | _ | _ | no ¬splits-OK      = no $ ¬splits-OK ∘ splits-OK
   ... | yes p₁ | yes p₂ | yes p₃ | yes p₄ | yes p₅ = yes λ where
     .names-uniq → p₁; .names-⊆ → p₂; .names-put → p₃; .participants-⊆ → p₄; .splits-OK → p₅
+
+
+-- Properties.
+
+Valid⇒part⊆ : let ⟨ G ⟩ C = ad in
+  Valid ad → participants C ⊆ participants G
+Valid⇒part⊆ {⟨ G ⟩ C} vad
+  = persistentParticipants⊆ {g = G}
+  ∘ vad .participants-⊆
+  ∘ ∈-++⁺ʳ (participants G)
+
+subterms′-part⊆ᵃ : Valid ad → d ∈ subtermsᵃ′ ad → participants d ⊆ participants (ad .G)
+subterms′-part⊆ᵃ {ad@(⟨ G ⟩ C)}{d} vad d∈ = Valid⇒part⊆ vad ∘ subterms′-part⊆ᶜ {ds = C} d∈

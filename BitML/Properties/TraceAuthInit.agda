@@ -8,6 +8,7 @@ open import Prelude.Lists
 open import Prelude.DecLists
 open import Prelude.Validity
 open import Prelude.Setoid
+open import Prelude.Traces
 
 module BitML.Properties.TraceAuthInit
   (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
@@ -28,30 +29,20 @@ private
   ¬Control {A}{y}{ad}
     {Γ = .(⟨ c , v ⟩at x ∣ || map _auth[ x ▷ (c ‼ i) ] (nub $ authDecorations (c ‼ i)) ∣ Γ)}
     {α}{Γ′}
-    ad∉ ([C-Control] {c}{v}{x}{Γ}{L}{.α}{.Γ′}{i} ≈L _ _)
-    = ad∉L
+    ad∉ ([C-Control] {c}{Γ}{L}{v}{x}{.α}{.Γ′}{i} _ ≈L _ _)
+    = ∈ᶜ-++⁻ (⟨ [ removeTopDecorations d_ ] , v ⟩at x) L >≡>
+      Sum.[ (λ where (here ()))
+          , ∉ᶜ-resp-≈ {Γ}{L} ≈L (ad∉ ∘ ∈ᶜ-++⁺ʳ S₀ Γ)
+          ]
     where
       d_ = c ‼ i
-      d∗ = removeTopDecorations d_
-
       S₀ = ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d_ ] (nub $ authDecorations d_)
-      S  = S₀ ∣ Γ
-      S′ = Γ′
-
-      ad∉Γ′ : A auth[ y ▷ˢ ad ] ∉ᶜ Γ
-      ad∉Γ′ ad∈Γ = ad∉ $ ∈ᶜ-++⁺ʳ S₀ Γ ad∈Γ
-
-      ad∉L : A auth[ y ▷ˢ ad ] ∉ᶜ L
-      ad∉L ad∈L with L.Mem.∈-++⁻ [ ⟨ [ d∗ ] , v ⟩at x ] (∈ᶜ-resp-≈ {L}{⟨ [ d∗ ] , v ⟩at x ∣ Γ} (↭-sym ≈L) ad∈L)
-      ... | inj₁ (here ())
-      ... | inj₂ ad∈Γ′ = ad∉Γ′ ad∈Γ′
 
   ¬AuthJoin :
       A auth[ x ▷ˢ ad ] ∉ᶜ Γ
     → Γ —[ auth-join⦅ B , x′ ↔ y ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬AuthJoin ad∉ step@([C-Control] _ L→Γ′ _) = ¬AuthJoin (¬Control ad∉ step) L→Γ′
   ¬AuthJoin ad∉ ([DEP-AuthJoin] {A}{v}{x}{v′}{y}{Γ}) ad∈
     with L.Mem.∈-++⁻ (cfgToList $ ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ]) ad∈
   ... | inj₁ ad∈ˡ = case ad∈ˡ of λ where
@@ -65,7 +56,6 @@ private
     → Γ —[ join⦅ x′ ↔ y ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬Join ad∉ step@([C-Control] _ L→Γ′ _) = ¬Join (¬Control ad∉ step) L→Γ′
   ¬Join ad∉ ([DEP-Join] {z}{x}{y}{Γ}{A}{v}{v′} _) ad∈
     with L.Mem.∈-++⁻ [ ⟨ A has v + v′ ⟩at z ] ad∈
   ... | inj₁ (here ())
@@ -76,7 +66,6 @@ private
     → Γ —[ auth-divide⦅ B , x′ ▷ v , v′ ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬AuthDivide ad∉ step@([C-Control] _ L→Γ′ _) = ¬AuthDivide (¬Control ad∉ step) L→Γ′
   ¬AuthDivide ad∉ ([DEP-AuthDivide] {A}{v}{v′}{x}{Γ}) ad∈
     with L.Mem.∈-++⁻ (cfgToList $ ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ]) ad∈
   ... | inj₁ ad∈ˡ = case ad∈ˡ of λ where
@@ -89,7 +78,6 @@ private
     → Γ —[ divide⦅ x′ ▷ v , v′ ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬Divide ad∉ step@([C-Control] _ L→Γ′ _) = ¬Divide (¬Control ad∉ step) L→Γ′
   ¬Divide ad∉ ([DEP-Divide] {x}{Γ}{y}{y′}{A}{v}{v′} _) ad∈
     with L.Mem.∈-++⁻ (cfgToList $ ⟨ A has v ⟩at y ∣ ⟨ A has v′ ⟩at y′) ad∈
   ... | inj₁ ad∈ˡ = case ad∈ˡ of λ where
@@ -102,7 +90,6 @@ private
     → Γ —[ auth-donate⦅ A′ , x′ ▷ᵈ B ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬AuthDonate ad∉ step@([C-Control] _ L→Γ′ _) = ¬AuthDonate (¬Control ad∉ step) L→Γ′
   ¬AuthDonate ad∉ ([DEP-AuthDonate] {A}{v}{x}{Γ}{B}) =
     L.Mem.∈-++⁻ (cfgToList $ ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ]) >≡>
     Sum.[ (λ{ (here ()); (there (here ())) })
@@ -114,7 +101,6 @@ private
     → Γ —[ donate⦅ x′ ▷ᵈ B ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬Donate ad∉ step@([C-Control] _ L→Γ′ _) = ¬Donate (¬Control ad∉ step) L→Γ′
   ¬Donate ad∉ ([DEP-Donate] {y}{x}{Γ}{A}{v}{B} _) =
     L.Mem.∈-++⁻ [ ⟨ B has v ⟩at y ] >≡>
     Sum.[ (λ{ (here ()) })
@@ -126,7 +112,6 @@ private
     → Γ —[ auth-destroy⦅ B , xs , j′ ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬AuthDestroy ad∉ step@([C-Control] _ L→Γ′ _) = ¬AuthDestroy (¬Control ad∉ step) L→Γ′
   ¬AuthDestroy ad∉ ([DEP-AuthDestroy] {y}{Γ}{ds}{j} _) =
     let xs = map select₃ ds
         Aj = proj₁ (ds ‼ j)
@@ -146,7 +131,6 @@ private
     → Γ —[ destroy⦅ xs ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬Destroy ad∉ step@([C-Control] _ L→Γ′ _) = ¬Destroy (¬Control ad∉ step) L→Γ′
   ¬Destroy ad∉ ([DEP-Destroy] {y}{Γ}{ds}) =
     let xs = map select₃ ds
         Δ  = || map (λ{ (i , Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ] })
@@ -158,7 +142,6 @@ private
     → Γ —[ advertise⦅ ad′ ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬Advertise ad∉ step@([C-Control] _ L→Γ′ _) = ¬Advertise (¬Control ad∉ step) L→Γ′
   ¬Advertise {ad′ = ad′} ad∉ ([C-Advertise] {ad = .ad′}{Γ} vad hon⁺ d⊆) =
     ∈ᶜ-++⁻ (` ad′) Γ >≡>
     Sum.[ contradict
@@ -171,7 +154,6 @@ private
     → Γ —[ auth-init⦅ A′ , ad′ , x′ ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬AuthInit ad∉ ¬eq step@([C-Control] _ L→Γ′ _) = ¬AuthInit (¬Control ad∉ step) ¬eq L→Γ′
   ¬AuthInit ad∉ ¬eq ([C-AuthInit] {ad}{Γ}{A}{v}{x} _ _) =
     ∈ᶜ-++⁻ (` ad ∣ Γ) (A auth[ x ▷ˢ ad ]) >≡>
     Sum.[ ad∉
@@ -183,7 +165,6 @@ private
     → Γ —[ auth-commit⦅ B , ad′ , secrets ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬AuthCommit ad∉ step@([C-Control] _ L→Γ′ _) = ¬AuthCommit (¬Control ad∉ step) L→Γ′
   ¬AuthCommit ad∉ ([C-AuthCommit] {ad}{A}{Γ}{secrets} _ _ _) =
     let (as , ms) = unzip secrets
         Δ         = || map (uncurry ⟨ A ∶_♯_⟩) secrets
@@ -201,7 +182,6 @@ private
     → Γ —[ init⦅ G , C ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬Init ad∉ step@([C-Control] _ L→Γ′ _) = ¬Init (¬Control ad∉ step) L→Γ′
   ¬Init ad∉ ([C-Init] {ad}{x}{Γ} _) =
     let toSpend = persistentDeposits $ G ad
         vs      = map (proj₁ ∘ proj₂) toSpend
@@ -221,7 +201,7 @@ private
     → Γ —[ split⦅ y ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬Split ad∉ step@([C-Control] _ L→Γ′ _) = ¬Split (¬Control ad∉ step) L→Γ′
+  ¬Split ad∉ step@([C-Control] _ _ L→Γ′ _) = ¬Split (¬Control ad∉ step) L→Γ′
   ¬Split ad∉ ([C-Split] {y}{Γ}{vcis} _) =
     let (vs , cs , _) = unzip₃ vcis in
     ∈ᶜ-++⁻ (|| map (uncurry₃ $ flip ⟨_,_⟩at_) vcis) Γ >≡>
@@ -234,7 +214,6 @@ private
     → Γ —[ auth-rev⦅ B , a ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬AuthRev ad∉ step@([C-Control] _ L→Γ′ _) = ¬AuthRev (¬Control ad∉ step) L→Γ′
   ¬AuthRev ad∉ ([C-AuthRev] {A}{a}{n}{Γ}) =
     L.Mem.∈-++⁻ [ A ∶ a ♯ n ] >≡>
     Sum.[ (λ{ (here ()) })
@@ -246,7 +225,7 @@ private
     → Γ —[ put⦅ xs , as , y ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬PutRev ad∉ step@([C-Control] _ L→Γ′ _) = ¬PutRev (¬Control ad∉ step) L→Γ′
+  ¬PutRev ad∉ step@([C-Control] _ _ L→Γ′ _) = ¬PutRev (¬Control ad∉ step) L→Γ′
   ¬PutRev ad∉ ([C-PutRev] {Γ′}{z}{y}{p}{c}{v} {ds}{ss} _ _) =
     let (_ , vs , xs) = unzip₃ ds
         (_ , as , _)  = unzip₃ ss
@@ -264,7 +243,7 @@ private
     → Γ —[ withdraw⦅ B , v , y ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬Withdraw ad∉ step@([C-Control] _ L→Γ′ _) = ¬Withdraw (¬Control ad∉ step) L→Γ′
+  ¬Withdraw ad∉ step@([C-Control] _ _ L→Γ′ _) = ¬Withdraw (¬Control ad∉ step) L→Γ′
   ¬Withdraw ad∉ ([C-Withdraw] {x}{y}{Γ}{A}{v} _) =
     L.Mem.∈-++⁻ [ ⟨ A has v ⟩at x ] >≡>
     Sum.[ (λ{ (here ()) })
@@ -276,17 +255,12 @@ private
     → Γ —[ auth-control⦅ B , x′ ▷ d ⦆ ]→ Γ′
       --————————————————————————————————————
     → A auth[ x ▷ˢ ad ] ∉ᶜ Γ′
-  ¬AuthControl ad∉ step@([C-Control] _ L→Γ′ _) = ¬AuthControl (¬Control ad∉ step) L→Γ′
   ¬AuthControl ad∉ ([C-AuthControl] {c}{A}{v}{x}{Γ}{i} _) =
     let d = c ‼ i in
     L.Mem.∈-++⁻ (cfgToList $ ⟨ c , v ⟩at x ∣ A auth[ x ▷ d ]) >≡>
     Sum.[ (λ{ (here ()); (there (here ())) })
         , ad∉ ∘ L.Mem.∈-++⁺ʳ [ ⟨ c , v ⟩at x ]
         ]
-
-  ¬Delay : Γ —[ delay⦅ δ ⦆ ]↛ Γ′
-  ¬Delay ([C-Control] _ _ cv≡) = contradict cv≡
-
 
   h :
       A auth[ x ▷ˢ ad ] ∉ᶜ Γ
@@ -315,10 +289,8 @@ private
   ... | delay⦅ _ ⦆                   = ⊥-elim $ ¬Delay step
   ... | auth-init⦅ A′ , ad′ , x′ ⦆
     with ¿ (A′ ≡ A) × (ad′ ≡ ad) × (x′ ≡ x) ¿
-  ... | no ¬eq
-      = ⊥-elim $ ¬AuthInit ad∉ ¬eq step ad∈
-  ... | yes (refl , refl , refl)
-      = case step of λ{ ([C-AuthInit] {ad = .ad} {A = .A} {x = .x} _ _) → refl }
+  ... | no ¬eq = ⊥-elim $ ¬AuthInit ad∉ ¬eq step ad∈
+  ... | yes (refl , refl , refl) = refl
 
   hᵗ :
       A auth[ x ▷ˢ ad ] ∉ᶜ Γ
@@ -334,31 +306,18 @@ private
 traceAuthInit :
     A auth[ x ▷ˢ ad ] ∉ᶜ Γ₀
   → A auth[ x ▷ˢ ad ] ∈ᶜ Γ
-  → Γ₀ —[ αs ]↠ Γ
-    --————————————————————————————
-  → auth-init⦅ A , ad , x ⦆ ∈ αs
-traceAuthInit auth∉ auth∈ (_ ∎) = ⊥-elim $ auth∉ auth∈
-
-traceAuthInit {A}{x}{ad}{Γ₀}{Γ}{α ∷ αs} auth∉ auth∈ (_—→⟨_⟩_⊢_ .Γ₀ {Γ₀′}{M}{M′}{Γ} Γ₀→M (Γ₀≈ , M≈) M↠)
-  = case ¿ A auth[ x ▷ˢ ad ] ∈ᶜ M′ ¿ of λ where
-      (yes auth∈M′) → (λ{ refl → here refl }) $ h (∉ᶜ-resp-≈ {Γ₀}{Γ₀′} Γ₀≈ auth∉) auth∈M′ Γ₀→M
-      (no  auth∉M′) → there $ traceAuthInit (auth∉M′ ∘ ∈ᶜ-resp-≈ {M}{M′} M≈) auth∈ M↠
-
-traceAuthInitₜ :
-    A auth[ x ▷ˢ ad ] ∉ᶜ Γ₀
-  → A auth[ x ▷ˢ ad ] ∈ᶜ Γ
   → Γ₀ at t —[ αs ]↠ₜ Γ at t′
     --————————————————————————————
   → auth-init⦅ A , ad , x ⦆ ∈ αs
-traceAuthInitₜ auth∉ auth∈ (_ ∎ₜ) = ⊥-elim $ auth∉ auth∈
-traceAuthInitₜ {A}{x}{ad}{Γ₀}{Γ}{t}{α ∷ αs}{t′} auth∉ auth∈
+traceAuthInit auth∉ auth∈ (_ ∎ₜ) = ⊥-elim $ auth∉ auth∈
+traceAuthInit {A}{x}{ad}{Γ₀}{Γ}{t}{α ∷ αs}{t′} auth∉ auth∈
   (_—→ₜ⟨_⟩_⊢_ .(Γ₀ at t) {Γ₀′ at _}{M at _}{M′ at _}{Γ at t′} Γ₀→M ((refl , Γ₀≈) , (refl , M≈)) M↠)
   = case ¿ A auth[ x ▷ˢ ad ] ∈ᶜ M′ ¿ of λ where
       (yes auth∈M′) → (λ{ refl → here refl }) $ hᵗ (∉ᶜ-resp-≈ {Γ₀}{Γ₀′} Γ₀≈ auth∉) auth∈M′ Γ₀→M
-      (no  auth∉M′) → there $ traceAuthInitₜ (auth∉M′ ∘ ∈ᶜ-resp-≈ {M}{M′} M≈) auth∈ M↠
+      (no  auth∉M′) → there $ traceAuthInit (auth∉M′ ∘ ∈ᶜ-resp-≈ {M}{M′} M≈) auth∈ M↠
 
-ℍ[C-AuthInit]⦅_↝_⦆ : Cfg → Cfg → Participant → Ad → Id → Set
-ℍ[C-AuthInit]⦅ Γ ↝ Γ′ ⦆ A ad x = ∃ λ Γ₁ → Σ Value λ v → let ⟨ G ⟩ _ = ad; partG = nub-participants G in
+ℍ[C-AuthInit]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Participant × Ad × Id → Set
+ℍ[C-AuthInit]⦅ Γ ↝ Γ′ ⦆⦅ A , ad , x ⦆ = ∃ λ Γ₁ → Σ Value λ v → let ⟨ G ⟩ _ = ad; partG = nub-participants G in
     (Γ ≡ ` ad ∣ Γ₁)
   × (Γ′ ≡ ` ad ∣ Γ₁ ∣ A auth[ x ▷ˢ ad ])
     --
@@ -368,18 +327,22 @@ traceAuthInitₜ {A}{x}{ad}{Γ₀}{Γ}{t}{α ∷ αs}{t′} auth∉ auth∈
 auth-init⇒ :
     Γ —[ auth-init⦅ A , ad , x ⦆ ]→ Γ′
     --—————————————————————————————————
-  → ℍ[C-AuthInit]⦅ Γ ↝ Γ′ ⦆ A ad x
+  → ℍ[C-AuthInit]⦅ Γ ↝ Γ′ ⦆⦅ A , ad , x ⦆
 auth-init⇒ ([C-AuthInit] {Γ = Γ} {v = v} p⊆ A∈) = Γ , v , refl , refl , p⊆ , A∈
 
 auth-init⇒∗ :
     (tr : Γₜ —[ αs ]↠ₜ Γₜ′)
   → auth-init⦅ A , ad , z ⦆ ∈ αs
-    --—————————————————————————————
-  → ∃ λ x → ∃ λ x′ → ∃ λ y → ∃ λ y′ →
-        (x ∈ allStates tr)
-      × (y ∈ allStates tr)
-      × (x ≈ x′ × y ≈ y′)
-      × ℍ[C-AuthInit]⦅ x′ ↝ y′ ⦆ A ad z
-auth-init⇒∗ {ad = ad} Γ↠ α∈
-  with _ , _ , _ , _ , x∈ , y∈ , ((_ , x≈) , (_ , y≈)) , [Action] Γ→ refl ← zoom Γ↠ α∈
-     = -, -, -, -, L.Mem.∈-map⁺ cfg x∈ , L.Mem.∈-map⁺ cfg y∈ , (x≈ , y≈) , auth-init⇒ Γ→
+    --————————————————————————————————————————
+  → ∃[ tr ∋ ℍ[C-AuthInit]⦅_↝_⦆⦅ A , ad , z ⦆ ]
+auth-init⇒∗ Γ↠ α∈
+  with _ , _ , _ , _ , xy∈ , ((_ , x≈) , (_ , y≈)) , [Action] Γ→ refl ← zoom Γ↠ α∈
+     = -, -, -, -, L.Mem.∈-map⁺ (map₁₂ cfg) xy∈ , (x≈ , y≈) , auth-init⇒ Γ→
+
+traceAuthInit∗ :
+    Initial Γ₀
+  → A auth[ x ▷ˢ ad ] ∈ᶜ Γ
+  → (tr : Γ₀ at t —[ αs ]↠ₜ Γ at t′)
+    --———————————————————————————————
+  → ∃[ tr ∋ ℍ[C-AuthInit]⦅_↝_⦆⦅ A , ad , x ⦆ ]
+traceAuthInit∗ init ad∈ Γ↠ = auth-init⇒∗ Γ↠ $ traceAuthInit (Initial⇒∉ init) ad∈ Γ↠

@@ -66,7 +66,7 @@ open TimedConfiguration public
 
 unquoteDecl DecEqᵗᶜᶠ = DERIVE DecEq [ quote TimedConfiguration , DecEqᵗᶜᶠ ]
 
-variable Γₜ Γₜ′ Γₜ″ : TimedConfiguration
+variable Γₜ Γₜ′ Γₜ″ Γₜ₀ Γₜ₀′ Γₜ₀″ Δₜ Δₜ′ Δₜ″ : TimedConfiguration
 
 infix  11 ⟨_,_⟩at_
 infix  10 ⟨_has_⟩at_

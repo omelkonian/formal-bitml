@@ -11,6 +11,6 @@ jobs:
         with:
           agda-version: 2.6.2
           stdlib-version: 1.7
-          libraries: omelkonian/formal-prelude#b0d8
+          libraries: omelkonian/formal-prelude#7101
           main: BitML
           token: ${{ secrets.GITHUB_TOKEN }}

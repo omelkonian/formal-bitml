@@ -23,13 +23,13 @@ Time = ℕ
 variable
   n : ℕ
 
-  v v′ : Value
-  vs vs′ : Values
+  v v′ v″ : Value
+  vs vs′ vs″ : Values
 
-  a a′ : Secret
-  as as′ : Secrets
+  a a′ a″ : Secret
+  as as′ as″ : Secrets
 
-  x y z x′ y′ z′ : Id
-  xs xs′ : Ids
+  x y z x′ y′ z′ x″ y″ z″ : Id
+  xs xs′ xs″ : Ids
 
-  t t′ δ : Time
+  t δ t′ δ′ t″ δ″ : Time

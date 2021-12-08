@@ -11,6 +11,7 @@ open import Prelude.Membership
 open import Prelude.Collections
 open import Prelude.Bifunctor
 open import Prelude.General
+open import Prelude.Validity
 
 open import BitML.BasicTypes
 open import BitML.Predicate
@@ -21,18 +22,40 @@ module BitML.Contracts.Helpers
   (Honest : List⁺ Participant)
   where
 
-open import BitML.Contracts.Types     Participant Honest
-  hiding (C)
+open import BitML.Contracts.Types Participant Honest hiding (C; d)
 open import BitML.Contracts.Induction Participant Honest
-
--- T0D0 use Set'.nub on all results? or only on use-sites
 
 PutComponent = Ids × Secrets × Predicate
 
-private variable X : Set
+removeTopDecorations : Contract → Contract
+removeTopDecorations (_       ⇒ d) = removeTopDecorations d
+removeTopDecorations (after _ ⇒ d) = removeTopDecorations d
+removeTopDecorations d             = d
+
+removeTopDecorations-idemp : Alg≡.IdempotentFun removeTopDecorations
+removeTopDecorations-idemp = λ where
+  (_ ⇒ d)       → removeTopDecorations-idemp d
+  (after _ ⇒ d) → removeTopDecorations-idemp d
+  (withdraw _)               → refl
+  (put _ &reveal _ if _ ⇒ _) → refl
+  (split _)                  → refl
+
+----------------------
+-- ** Module "macros"
+
+-- selecting a sub-contract and stripping decorations
+module ∣SELECT (c : Contracts) (i : Index c) where
+  d  = c ‼ i
+  d∗ = removeTopDecorations d
+
+open import BitML.Contracts.Types Participant Honest using (d)
 
 ----------------
 -- ** Collectors
+
+-- T0D0 use Set'.nub on all results? or only on use-sites
+
+private variable X : Set
 
 mkCollect : (∀ e → (∀ e′ → e′ ≺ C e → List X) → List X) → ℂ → List X
 mkCollect {X = X} mk = ≺-rec _ go
@@ -383,10 +406,26 @@ authDecorations = proj₁ ∘ decorations
 timeDecorations : Contract → List Time
 timeDecorations = proj₂ ∘ decorations
 
-removeTopDecorations : Contract → Contract
-removeTopDecorations (_       ⇒ d) = removeTopDecorations d
-removeTopDecorations (after _ ⇒ d) = removeTopDecorations d
-removeTopDecorations d             = d
+auth⊆part : authDecorations d ⊆ participants d
+auth⊆part {d = d₀} with d₀
+... | put _ &reveal _ if _ ⇒ _ = λ ()
+... | withdraw _               = λ ()
+... | split _                  = λ ()
+... | p ⇒ d                    = λ{ (here refl) → here refl; (there p∈)  → there $ auth⊆part {d = d} p∈ }
+... | after _ ⇒ d              = auth⊆part {d = d}
+
+decorations∘remove≡[] : decorations⊎ (removeTopDecorations d) ≡ []
+decorations∘remove≡[] {_ ⇒ d}       = decorations∘remove≡[] {d}
+decorations∘remove≡[] {after _ ⇒ d} = decorations∘remove≡[] {d}
+decorations∘remove≡[] {withdraw _} = refl
+decorations∘remove≡[] {split _} = refl
+decorations∘remove≡[] {put _ &reveal _ if _ ⇒ _} = refl
+
+authDecorations∘remove≡[] : Null $ authDecorations $ removeTopDecorations d
+authDecorations∘remove≡[] {d} rewrite decorations∘remove≡[] {d} = refl
+
+timeDecorations∘remove≡[] : Null $ authDecorations $ removeTopDecorations d
+timeDecorations∘remove≡[] {d} rewrite decorations∘remove≡[] {d} = refl
 
 infix 0 _≡⋯∶_
 _≡⋯∶_ : Rel₀ Contract
@@ -453,14 +492,69 @@ subtermsᵛ⁺ = subterms⁺ ∘ VCS
 subtermsᵛ  = subterms  ∘ VCS
 -- {-# DISPLAY subterms′ (VCS vcs) = subtermsᵛ′ vcs #-}
 
-subtermsᵃ subtermsᵃ⁺ : Advertisement → List Contract
-subtermsᵃ  (⟨ _ ⟩ c) = subtermsᶜ  c
+subtermsᵃ′ subtermsᵃ⁺ subtermsᵃ : Advertisement → List Contract
+subtermsᵃ′ (⟨ _ ⟩ c) = subtermsᶜ′ c
 subtermsᵃ⁺ (⟨ _ ⟩ c) = subtermsᶜ⁺ c
+subtermsᵃ  (⟨ _ ⟩ c) = subtermsᶜ  c
 
-postulate
-  subtermsᶜ⁺-refl : ds ⊆ subtermsᶜ⁺ ds
-  subtermsᶜ′-trans : ds ⊆ subtermsᶜ′ ds′ → subtermsᶜ′ ds ⊆ subtermsᶜ′ ds′
--- subtermsᶜ′-trans ds⊆ = {!!}
+{-
+_ : subtermsᵈ⁺ (put xs &reveal as if p ⇒ c) ≡ (put xs &reveal as if p ⇒ c) ∷ subtermsᶜ⁺ c
+_ = refl
+
+_ : subtermsᵈ⁺ (A ⇒ d) ≡ subtermsᵈ⁺ d
+_ = refl
+
+_ : subtermsᵈ⁺ (split vcs) ≡ split vcs ∷ subtermsᵛ⁺ vcs
+_ = refl
+
+subterms⊆ : ∀ 𝕔 → subterms⁺ 𝕔 ⊆ subterms′ 𝕔
+subterms⊆ (C (put x &reveal x₁ if x₂ ⇒ x₃)) = {!!}
+subterms⊆ (C (withdraw x)) = {!!}
+subterms⊆ (C (split x)) = {!!}
+subterms⊆ (C (x ⇒ c)) = {!!}
+subterms⊆ (C (after x ⇒ c)) = {!!}
+subterms⊆ (CS  cs)  = {!!}
+subterms⊆ (VCS vcs) = {!!}
+
+subterms⊆∗ : removeTopDecorations d ∈ subtermsᶜ′ [ removeTopDecorations d ]
+subterms⊆∗ {put x &reveal x₁ if x₂ ⇒ x₃} = here refl
+subterms⊆∗ {withdraw x} = here refl
+subterms⊆∗ {split x} = here refl
+subterms⊆∗ {x ⇒ d} rewrite L.++-identityʳ (subtermsᵈ′ d) = there (∈-++⁺ˡ {!subterms⊆∗ {d}!})
+subterms⊆∗ {after x ⇒ d} = there {!!}
+
+mutual
+  subterms⁺⊆ᵈ′ : subtermsᵈ⁺ d ⊆ removeTopDecorations d ∷ subtermsᵈ′ d
+  subterms⁺⊆ᵈ′ {put _ &reveal _ if _ ⇒ c} = λ where
+    (here refl) → here refl
+    (there x∈)  → there (subterms⁺⊆ᶜ′ {c} x∈)
+  subterms⁺⊆ᵈ′ {withdraw _} = λ where
+    (here refl) → here refl
+  subterms⁺⊆ᵈ′ {split vcs} = λ where
+    (here refl) → here refl
+    (there x∈)  → there (subterms⁺⊆ᵛ′ {vcs} x∈)
+  subterms⁺⊆ᵈ′ {_ ⇒ d} = subterms⁺⊆ᵈ′ {d}
+  subterms⁺⊆ᵈ′ {after _ ⇒ d} = subterms⁺⊆ᵈ′ {d}
+
+  subterms⁺⊆ᶜ′ : subtermsᶜ⁺ c ⊆ subtermsᶜ′ c
+  subterms⁺⊆ᶜ′ {[]} = id
+  subterms⁺⊆ᶜ′ {d ∷ ds} =
+    begin⊆ subtermsᶜ⁺ (d ∷ ds) ≡⟨⟩
+          subtermsᵈ⁺ d ++ subtermsᶜ⁺ ds ⊆⟨ {!!} ⟩
+          (d∗ ∷ subtermsᵈ′ d) ++ subtermsᶜ′ ds
+          d ∷ subtermsᵈ′ d ++ subtermsᶜ′ ds ≡⟨⟩
+          subtermsᶜ′ (d ∷ ds) ⊆∎
+    where open ⊆-Reasoning Contract renaming (begin_ to begin⊆_; _∎ to _⊆∎)
+
+  subterms⁺⊆ᵛ′ : subtermsᵛ⁺ vcs ⊆ subtermsᵛ′ vcs
+  subterms⁺⊆ᵛ′ {[]} = id
+  subterms⁺⊆ᵛ′ {(v , c) ∷ vcs} =
+    begin⊆ subtermsᵛ⁺ ((v , c) ∷ vcs) ≡⟨⟩
+           subtermsᶜ⁺ c ++ subtermsᵛ⁺ vcs ⊆⟨ {!!} ⟩
+           subtermsᶜ′ c ++ subtermsᵛ′ vcs ≡⟨⟩
+           subtermsᵛ′ ((v , c) ∷ vcs) ⊆∎
+    where open ⊆-Reasoning Contract renaming (begin_ to begin⊆_; _∎ to _⊆∎)
+-}
 
 h-subᵈ :
     d ∈ subtermsᵈ′ d′
@@ -504,6 +598,17 @@ h-subᵛ {d} {(_ , cs) ∷ vcs} d∈
 ... | inj₁ d∈ˡ = ∈-++⁺ˡ $ h-subᶜ {ds = cs} d∈ˡ
 ... | inj₂ d∈ʳ = ∈-++⁺ʳ (subtermsᶜ⁺ cs) $ h-subᵛ {vcs = vcs} d∈ʳ
 
+h-sub∗ : subtermsᵈ′ (removeTopDecorations d) ⊆ subtermsᵈ′ d
+h-sub∗ {_ ⇒ d} = h-sub∗ {d}
+h-sub∗ {after _ ⇒ d} = h-sub∗ {d}
+h-sub∗ {put _ &reveal _ if _ ⇒ _} = id
+h-sub∗ {withdraw _} = id
+h-sub∗ {split _} = id
+
+h-sub‼ : ∀ {i : Index c} → subtermsᵈ′ (removeTopDecorations (c ‼ i)) ⊆ subtermsᶜ′ c
+h-sub‼ {d ∷ _} {0F}     = there ∘ ∈-++⁺ˡ                ∘ h-sub∗ {d}
+h-sub‼ {d ∷ c} {fsuc i} = there ∘ ∈-++⁺ʳ (subtermsᵈ′ d) ∘ h-sub‼ {c}{i}
+
 -- Lemmas about `subterms`
 
 ↦-∈ : ∀ {R : Contract → Set}
@@ -522,55 +627,93 @@ h-subᵛ {d} {(_ , cs) ∷ vcs} d∈
 ... | inj₁ x∈ˡ = f (here refl) x∈ˡ
 ... | inj₂ x∈ʳ = ↦-∈ᵛ (f ∘ there) x∈ʳ
 
-subterms⊆ᶜˢ : ds ⊆ subterms′ (CS ds)
-subterms⊆ᶜˢ {ds = d ∷ ds} (here refl) = here refl
-subterms⊆ᶜˢ {ds = d ∷ ds} (there d∈)  = there $ ∈-++⁺ʳ (subterms′ $ C d) (subterms⊆ᶜˢ d∈)
+mutual
+  subterms⊆ᶜˢ : ds ⊆ subterms′ (CS ds)
+  subterms⊆ᶜˢ {ds = d ∷ ds} (here refl) = here refl
+  subterms⊆ᶜˢ {ds = d ∷ ds} (there d∈)  = there $ ∈-++⁺ʳ (subterms′ $ C d) (subterms⊆ᶜˢ d∈)
 
-subterms⊆ᵛᶜˢ : (v , ds) ∈ vcs → ds ⊆ subterms′ (VCS vcs)
-subterms⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} (here refl) = ∈-++⁺ˡ ∘ subterms⊆ᶜˢ
-subterms⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} (there p)   = ∈-++⁺ʳ (subterms′ (CS ds)) ∘ subterms⊆ᵛᶜˢ p
+  subterms⊆ᵛᶜˢ : (v , ds) ∈ vcs → ds ⊆ subterms′ (VCS vcs)
+  subterms⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} (here refl) = ∈-++⁺ˡ ∘ subterms⊆ᶜˢ
+  subterms⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} (there p)   = ∈-++⁺ʳ (subterms′ (CS ds)) ∘ subterms⊆ᵛᶜˢ p
 
-subterms′-names⊆ᶜ : d ∈ subterms′ (C d′) → names d ⊆ names d′
-subterms′-names⊆ᶜˢ : d ∈ subterms′ (CS ds) → names d ⊆ names ds
-subterms′-names⊆ᵛᶜˢ : d ∈ subterms′ (VCS vcs) → names d ⊆ names vcs
+  subterms⊆ᵛᶜˢ′ : c ∈ map proj₂ vcs → subtermsᶜ′ c ⊆ subtermsᵈ′ (split vcs)
+  subterms⊆ᵛᶜˢ′ {vcs = (v , cs) ∷ _}   (here refl) = ∈-++⁺ˡ
+  subterms⊆ᵛᶜˢ′ {vcs = (v , cs) ∷ vcs} (there c∈)  = ∈-++⁺ʳ _ ∘ subterms⊆ᵛᶜˢ′ {vcs = vcs} c∈
 
-subterms′-names⊆ᶜ {d′ = put xs &reveal as if _ ⇒ ds} x∈ =
-  ∈-++⁺ʳ (map inj₂ xs) ∘ ∈-++⁺ʳ (map inj₁ as) ∘ subterms′-names⊆ᶜˢ {ds = ds} x∈
-subterms′-names⊆ᶜ {d′ = withdraw _} ()
-subterms′-names⊆ᶜ {d′ = split vcs}    = subterms′-names⊆ᵛᶜˢ {vcs = vcs}
-subterms′-names⊆ᶜ {d′ = _ ⇒ d′}       = subterms′-names⊆ᶜ {d′ = d′}
-subterms′-names⊆ᶜ {d′ = after _ ⇒ d′} = subterms′-names⊆ᶜ {d′ = d′}
+  subterms⊆ᵛᶜⁱˢ : ∀ {vcis : List (Value × Contracts × Id)} → let (vs , cs , ys) = unzip₃ vcis in
+      c ∈ cs
+    → subtermsᶜ′ c ⊆ subtermsᵈ′ (split $ zip vs cs)
+  subterms⊆ᵛᶜⁱˢ {vcis = (v , cs , _) ∷ _}    (here refl)
+    = ∈-++⁺ˡ
+  subterms⊆ᵛᶜⁱˢ {vcis = (v , cs , _) ∷ vcis} (there c∈)
+    = ∈-++⁺ʳ _ ∘ subterms⊆ᵛᶜⁱˢ {vcis = vcis} c∈
 
-subterms′-names⊆ᶜˢ {ds = d ∷ ds} (here refl) = ∈-++⁺ˡ
-subterms′-names⊆ᶜˢ {ds = d ∷ ds} (there p)
-  with ∈-++⁻ _ p
-... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-names⊆ᶜˢ {ds = ds} p′
-... | inj₁ p′ = ∈-++⁺ˡ ∘ subterms′-names⊆ᶜ {d′ = d} p′
+mutual
+  subterms′-names⊆ᶜ : d ∈ subterms′ (C d′) → names d ⊆ names d′
+  subterms′-names⊆ᶜ {d′ = d} with d
+  ... | put xs &reveal as if _ ⇒ ds = λ x∈ → ∈-++⁺ʳ (map inj₂ xs) ∘ ∈-++⁺ʳ (map inj₁ as) ∘ subterms′-names⊆ᶜˢ {ds = ds} x∈
+  ... | withdraw _                  = λ ()
+  ... | split vcs                   = subterms′-names⊆ᵛᶜˢ {vcs = vcs}
+  ... | _ ⇒ d′                      = subterms′-names⊆ᶜ {d′ = d′}
+  ... | after _ ⇒ d′                = subterms′-names⊆ᶜ {d′ = d′}
 
-subterms′-names⊆ᵛᶜˢ {vcs = (_ , []) ∷ vcs} p = ∈-++⁺ʳ _ ∘ subterms′-names⊆ᵛᶜˢ {vcs = vcs} p
-subterms′-names⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} p
-  with ∈-++⁻ (subterms′ (CS ds)) p
-... | inj₁ p′ = ∈-++⁺ˡ ∘ subterms′-names⊆ᶜˢ {ds = ds} p′
-... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-names⊆ᵛᶜˢ {vcs = vcs} p′
+  subterms′-names⊆ᶜˢ : d ∈ subterms′ (CS ds) → names d ⊆ names ds
+  subterms′-names⊆ᶜˢ {ds = d ∷ ds} (here refl) = ∈-++⁺ˡ
+  subterms′-names⊆ᶜˢ {ds = d ∷ ds} (there p)
+    with ∈-++⁻ _ p
+  ... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-names⊆ᶜˢ {ds = ds} p′
+  ... | inj₁ p′ = ∈-++⁺ˡ ∘ subterms′-names⊆ᶜ {d′ = d} p′
 
-subterms′-putComponents⊆ᶜ : d ∈ subterms′ (C d′) → putComponents d ⊆ putComponents d′
-subterms′-putComponents⊆ᶜˢ : d ∈ subterms′ (CS ds) → putComponents d ⊆ putComponents ds
-subterms′-putComponents⊆ᵛᶜˢ : d ∈ subterms′ (VCS vcs) → putComponents d ⊆ putComponents vcs
+  subterms′-names⊆ᵛᶜˢ : d ∈ subterms′ (VCS vcs) → names d ⊆ names vcs
+  subterms′-names⊆ᵛᶜˢ {vcs = (_ , []) ∷ vcs} p = ∈-++⁺ʳ _ ∘ subterms′-names⊆ᵛᶜˢ {vcs = vcs} p
+  subterms′-names⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} p
+    with ∈-++⁻ (subterms′ (CS ds)) p
+  ... | inj₁ p′ = ∈-++⁺ˡ ∘ subterms′-names⊆ᶜˢ {ds = ds} p′
+  ... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-names⊆ᵛᶜˢ {vcs = vcs} p′
 
-subterms′-putComponents⊆ᶜ {d′ = put xs &reveal as if _ ⇒ ds} x∈ = there ∘ subterms′-putComponents⊆ᶜˢ {ds = ds} x∈
-subterms′-putComponents⊆ᶜ {d′ = withdraw _} ()
-subterms′-putComponents⊆ᶜ {d′ = split vcs}    = subterms′-putComponents⊆ᵛᶜˢ {vcs = vcs}
-subterms′-putComponents⊆ᶜ {d′ = _ ⇒ d′}       = subterms′-putComponents⊆ᶜ {d′ = d′}
-subterms′-putComponents⊆ᶜ {d′ = after _ ⇒ d′} = subterms′-putComponents⊆ᶜ {d′ = d′}
+mutual
+  subterms′-putComponents⊆ᶜ : d ∈ subterms′ (C d′) → putComponents d ⊆ putComponents d′
+  subterms′-putComponents⊆ᶜ {d′ = d} with d
+  ... | put _ &reveal _ if _ ⇒ ds = λ x∈ → there ∘ subterms′-putComponents⊆ᶜˢ {ds = ds} x∈
+  ... | withdraw _                = λ ()
+  ... | split vcs                 = subterms′-putComponents⊆ᵛᶜˢ {vcs = vcs}
+  ... | _ ⇒ d′                    = subterms′-putComponents⊆ᶜ {d′ = d′}
+  ... | after _ ⇒ d′              = subterms′-putComponents⊆ᶜ {d′ = d′}
 
-subterms′-putComponents⊆ᶜˢ {ds = d ∷ ds} (here refl) = ∈-++⁺ˡ
-subterms′-putComponents⊆ᶜˢ {ds = d ∷ ds} (there p)
-  with ∈-++⁻ _ p
-... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-putComponents⊆ᶜˢ {ds = ds} p′
-... | inj₁ p′ = ∈-++⁺ˡ ∘ subterms′-putComponents⊆ᶜ {d′ = d} p′
+  subterms′-putComponents⊆ᶜˢ : d ∈ subterms′ (CS ds) → putComponents d ⊆ putComponents ds
+  subterms′-putComponents⊆ᶜˢ {ds = _ ∷ _}  (here refl) = ∈-++⁺ˡ
+  subterms′-putComponents⊆ᶜˢ {ds = d ∷ ds} (there p)
+    with ∈-++⁻ _ p
+  ... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-putComponents⊆ᶜˢ {ds = ds} p′
+  ... | inj₁ p′ = ∈-++⁺ˡ ∘ subterms′-putComponents⊆ᶜ {d′ = d} p′
 
-subterms′-putComponents⊆ᵛᶜˢ {vcs = (_ , []) ∷ vcs} p = ∈-++⁺ʳ _ ∘ subterms′-putComponents⊆ᵛᶜˢ {vcs = vcs} p
-subterms′-putComponents⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} p
-  with ∈-++⁻ (subterms′ (CS ds)) p
-... | inj₁ p′ = ∈-++⁺ˡ ∘ subterms′-putComponents⊆ᶜˢ {ds = ds} p′
-... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-putComponents⊆ᵛᶜˢ {vcs = vcs} p′
+  subterms′-putComponents⊆ᵛᶜˢ : d ∈ subterms′ (VCS vcs) → putComponents d ⊆ putComponents vcs
+  subterms′-putComponents⊆ᵛᶜˢ {vcs = (_ , []) ∷ vcs} p = ∈-++⁺ʳ _ ∘ subterms′-putComponents⊆ᵛᶜˢ {vcs = vcs} p
+  subterms′-putComponents⊆ᵛᶜˢ {vcs = (_ , ds) ∷ vcs} p
+    with ∈-++⁻ (subterms′ (CS ds)) p
+  ... | inj₁ p′ = ∈-++⁺ˡ ∘ subterms′-putComponents⊆ᶜˢ {ds = ds} p′
+  ... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-putComponents⊆ᵛᶜˢ {vcs = vcs} p′
+
+mutual
+  -- [T0D0] rename superscripts to align with constructor names C/CS/VCS
+  subterms′-part⊆ᵈ : d ∈ subtermsᵈ′ d′ → participants d ⊆ participants d′
+  subterms′-part⊆ᵈ {d′ = d} with d
+  ... | put _ &reveal _ if _ ⇒ ds = subterms′-part⊆ᶜ {ds = ds}
+  ... | withdraw _                = λ ()
+  ... | split vcs                 = subterms′-part⊆ᵛ {vcs = vcs}
+  ... | _ ⇒ d′                    = λ x∈ → there ∘ subterms′-part⊆ᵈ {d′ = d′} x∈
+  ... | after _ ⇒ d′              = subterms′-part⊆ᵈ {d′ = d′}
+
+  subterms′-part⊆ᶜ : d ∈ subtermsᶜ′ ds → participants d ⊆ participants ds
+  subterms′-part⊆ᶜ {ds = d ∷ ds} (here refl) = ∈-++⁺ˡ
+  subterms′-part⊆ᶜ {ds = d ∷ ds} (there p)
+    with ∈-++⁻ _ p
+  ... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-part⊆ᶜ {ds = ds} p′
+  ... | inj₁ p′ = ∈-++⁺ˡ   ∘ subterms′-part⊆ᵈ {d′ = d} p′
+
+  subterms′-part⊆ᵛ : d ∈ subtermsᵛ′ vcs → participants d ⊆ participants vcs
+  subterms′-part⊆ᵛ {vcs = (_ , []) ∷ vcs} p = ∈-++⁺ʳ _ ∘ subterms′-part⊆ᵛ {vcs = vcs} p
+  subterms′-part⊆ᵛ {vcs = (_ , ds) ∷ vcs} p
+    with ∈-++⁻ (subterms′ (CS ds)) p
+  ... | inj₁ p′ = ∈-++⁺ˡ   ∘ subterms′-part⊆ᶜ {ds = ds} p′
+  ... | inj₂ p′ = ∈-++⁺ʳ _ ∘ subterms′-part⊆ᵛ {vcs = vcs} p′

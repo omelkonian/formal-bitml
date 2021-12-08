@@ -10,6 +10,7 @@ open import Prelude.Sets
 open import Prelude.Nary hiding (⟦_⟧)
 open import Prelude.Setoid
 open import Prelude.Ord
+open import Prelude.General
 
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
@@ -20,7 +21,7 @@ module BitML.Semantics.InferenceRules
   (Honest : List⁺ Participant)
   where
 
-open import BitML.Contracts Participant Honest
+open import BitML.Contracts Participant Honest hiding (d)
 open import BitML.Semantics.Action Participant Honest
 open import BitML.Semantics.Configurations.Types Participant Honest
 open import BitML.Semantics.Configurations.Helpers Participant Honest
@@ -31,7 +32,7 @@ open import BitML.Semantics.Predicate Participant Honest
 -- Semantic rules for untimed configurations.
 
 -- T0D0 freshness conditions are not completely accurate
--- i.e. using `ids Γ` does not examine names in authotization
+-- i.e. using `ids Γ` does not examine names in authorization
 
 infix -1 _—[_]→_ _—[_]↛_
 data _—[_]→_ : Configuration → Label → Configuration → Set where
@@ -114,7 +115,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
     ∀ {ds : List (Participant × Value × Id)}
 
     → let xs = map select₃ ds
-          Δ  = || map (λ{ (i , Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ] })
+          Δ  = || map (λ{ (i , Aᵢ , vᵢ , xᵢ) → ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ] })
                       (enumerate ds)
       in
       --——————————————————————————————————————————————————————————————————————
@@ -172,7 +173,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       x ∉ xs ++ ids Γ -- x fresh
 
       --——————————————————————————————————————————————————————————————————————
-    → ` ad ∣ Γ ∣ || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xi ▷ˢ ad ] }) toSpend
+    → ` ad ∣ Γ ∣ || map (λ{ (Aᵢ , vᵢ , xᵢ) → ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xᵢ ▷ˢ ad ] }) toSpend
                ∣ || map _auth[ ♯▷ ad ] partG
         —[ init⦅ G , C ⦆ ]→
       ⟨ C , sum vs ⟩at x ∣ Γ
@@ -243,12 +244,13 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 
 
   -- T0D0 linearize, i.e. introduce new label and produce intermediate configuration:
-  -- ⟨ c , v ⟩at x ∣ Δ ∣ Γ —[ choice⦅ c , i ⦆ ]→ ⟨ [ d′ ] , v ⟩at x ∣ Γ
+  -- ⟨ c , v ⟩at x ∣ Δ ∣ Γ —[ choice⦅ c , i ⦆ ]→ ⟨ [ d∗ ] , v ⟩at x ∣ Γ
   [C-Control] :
-    ∀ {i : Index c} → let d  = c ‼ i; d′ = removeTopDecorations d in
+    ∀ {i : Index c} → let open ∣SELECT c i in
 
-      ⟨ [ d′ ] , v ⟩at x ∣ Γ ≈ L
-    → L —[ α ]→ Γ′ -- T0D0 replace with _—↠_?
+      ¬Null (authDecorations d) ⊎ (length c > 1)
+    → Γ ≈ L
+    → ⟨ [ d∗ ] , v ⟩at x ∣ L —[ α ]→ Γ′ -- T0D0 replace with _—↠_?
     → cv α ≡ just x
       --——————————————————————————————————————————————————————————————————————
     → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub $ authDecorations d) ∣ Γ
@@ -259,15 +261,21 @@ _—[_]↛_ : Configuration → Label → Configuration → Set
 Γ —[ α ]↛ Γ′ = ¬ (Γ —[ α ]→ Γ′)
 
 isControl : Pred₀ (Γ —[ α ]→ Γ′)
-isControl ([C-Control] _ _ _) = ⊤
+isControl ([C-Control] _ _ _ _) = ⊤
 isControl _ = ⊥
 
+isWithdraw : Pred₀ (Γ —[ α ]→ Γ′)
+isWithdraw ([C-Withdraw] _) = ⊤
+isWithdraw _ = ⊥
+
 innerL : (step : Γ —[ α ]→ Γ′) → {isControl step} → Configuration
-innerL ([C-Control] {L = L} _ _ _) = L
+-- innerL ([C-Control] {L = L} _ _ _ _) = L
+innerL ([C-Control] {c}{L = L}{v}{x} {i = i} _ _ _ _) = ⟨ [ removeTopDecorations (c ‼ i) ] , v ⟩at x ∣ L
 
 -- innerStep : (step : Γ —[ α ]→ Γ′) → {isControl step} → innerL step —[ α ]→ Γ′
 -- innerStep ([C-Control] {L = L} _ L→Γ′ _) = L→Γ′
 
+-- cv⇒fresh : (step : Γ —[ α ]→ Γ′) → Is-just {isControl step} → Configuration
 
 -------------------------------------------
 -- Semantic rules for timed configurations.
@@ -296,9 +304,9 @@ data _—[_]→ₜ_ : TimedConfiguration → Label → TimedConfiguration → Se
 
 
   [Timeout] :
-    ∀ {i : Index c} → let d = c ‼ i; d∗ = removeTopDecorations d; As , ts = decorations d in
+    ∀ {i : Index c} → let open ∣SELECT c i; As , ts = decorations d in
 
-      As ≡ []                           -- no authorizations required to pick branch
+      Null As                           -- no authorizations required to pick branch
     → All (_≤ t) ts                     -- all time constraints are satisfied
     → ⟨ [ d∗ ] , v ⟩at x ∣ Γ —[ α ]→ Γ′ -- resulting state if we pick branch
     → cv α ≡ just x

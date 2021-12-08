@@ -7,7 +7,6 @@ open import Prelude.DecEq
 open import Prelude.Lists
 open import Prelude.DecLists
 open import Prelude.Membership
-open import Prelude.Sets
 open import Prelude.Collections
 open import Prelude.Applicative
 open import Prelude.Semigroup
@@ -49,8 +48,16 @@ instance
   HI-TCfg : HasInitial Cfgᵗ
   HI-TCfg .Initial (Γ at t) = Initial Γ × (t ≡ 0)
 
+≈ᵗ-refl : Γₜ ≈ Γₜ
+≈ᵗ-refl = refl , ↭-refl
+
+-- T0D0: find general scheme
+-- ∙ list-like things + map-commuting ~> membership lemmas
 cfgToList : Cfg → List Cfg
 cfgToList = map to[ Cfg ] ∘ to[ Cfg′ ]
+
+toCfg′↭ : Γ ≈ Γ′ → to[ Cfg′ ] Γ ↭ to[ Cfg′ ] Γ′
+toCfg′↭ Γ≈ = Γ≈
 
 cfgToList-++ : ∀ l r → cfgToList (l ∣ r) ≡ cfgToList l ++ cfgToList r
 cfgToList-++ l r = L.map-++-commute to[ Cfg ] (to[ Cfg′ ] l) (to[ Cfg′ ] r)
@@ -68,6 +75,23 @@ infix 4 _∈ᶜ_ _∉ᶜ_
 _∈ᶜ_ _∉ᶜ_ : Rel₀ Cfg
 c ∈ᶜ c′ = c ∈ cfgToList c′
 c ∉ᶜ c′ = ¬ c ∈ᶜ c′
+
+infix 4 _⊆ᶜ_ _⊈ᶜ_
+_⊆ᶜ_ _⊈ᶜ_ : Rel₀ Cfg
+c ⊆ᶜ c′ = cfgToList c ⊆ cfgToList c′
+c ⊈ᶜ c′ = ¬ c ⊆ᶜ c′
+
+⊆ᶜ-refl : Reflexive _⊆ᶜ_
+⊆ᶜ-refl = id
+
+⊆ᶜ-trans : Transitive _⊆ᶜ_
+⊆ᶜ-trans Γ⊆ Γ⊆′ = Γ⊆′ ∘ Γ⊆
+
+⊆ᶜ-++⁺ˡ : ∀ l r → Δ ⊆ᶜ l → Δ ⊆ᶜ l ∣ r
+⊆ᶜ-++⁺ˡ l r = ∈ᶜ-++⁺ˡ l r ∘_
+
+⊆ᶜ-++⁺ʳ : ∀ l r → Δ ⊆ᶜ r → Δ ⊆ᶜ l ∣ r
+⊆ᶜ-++⁺ʳ l r = ∈ᶜ-++⁺ʳ l r ∘_
 
 _≢deposit : Cfg → Set
 _≢deposit = λ where
@@ -90,6 +114,27 @@ Initial⇒∉ {Γ = l ∣ r} ⦃ ≢dep ⦄ (pˡ , pʳ) =
 ∉ᶜ-resp-≈ : Γ ≈ Γ′ → Γ₀ ∉ᶜ Γ → Γ₀ ∉ᶜ Γ′
 ∉ᶜ-resp-≈ {Γ}{Γ′}{Γ₀} Γ≈ c∉ = c∉ ∘ ∈ᶜ-resp-≈ {Γ′}{Γ} (↭-sym Γ≈)
 
+-- ∈ᶜ-||⁺ : ∀ {A : Set} {f : A → Cfg} xs
+--   → (∃ λ x → (x ∈ xs) × (Γ ∈ᶜ f x))
+--     --———————————————————————————
+--   → Γ ∈ᶜ || map f xs
+-- ∈ᶜ-||⁺ {f = f} []                (_ , ()        , _)
+-- ∈ᶜ-||⁺ {f = f} (.x ∷ [])         (x , here refl , Γ∈) = Γ∈
+-- ∈ᶜ-||⁺ {f = f} (.x ∷ xs@(_ ∷ _)) (x , here refl , Γ∈) = ∈ᶜ-++⁺ˡ (f x) (|| map f xs) Γ∈
+-- ∈ᶜ-||⁺ {f = f} (x  ∷ xs@(_ ∷ _)) (y , there y∈  , Γ∈) = ∈ᶜ-++⁺ʳ (f x) (|| map f xs) (∈ᶜ-||⁺ xs (y , y∈ , Γ∈))
+
+∈ᶜ-||⇒⊆ᶜ : ∀ {A : Set} {f : A → Cfg} {x} xs
+  → x ∈ xs
+  → || map f xs ⊆ᶜ Γ
+    --———————————————————————————
+  → f x ⊆ᶜ Γ
+∈ᶜ-||⇒⊆ᶜ                 []               ()          _
+∈ᶜ-||⇒⊆ᶜ                 (x ∷ [])         (here refl) Γ⊆ = Γ⊆
+∈ᶜ-||⇒⊆ᶜ {Γ = Γ} {f = f} (x ∷ xs@(_ ∷ _)) x∈ Γ⊆ =
+  case x∈ of λ where
+    (here refl) → Γ⊆ ∘ ∈ᶜ-++⁺ˡ (f x) (|| map f xs)
+    (there x∈)  → ∈ᶜ-||⇒⊆ᶜ {Γ = Γ} xs x∈ (Γ⊆ ∘ ∈ᶜ-++⁺ʳ (f x) (|| map f xs))
+
 ∉ᶜ-|| : ∀ {A : Set} {f : A → Cfg}
   → (∀ {x} → Γ ∉ᶜ f x)
     --———————————————————————————
@@ -110,7 +155,8 @@ collectFromBase-++ : ⦃ I : BaseCfg has X ⦄ → ∀ l r → let f = collectFr
     f (l ∣ r) ≡ f l ++ f r
 collectFromBase-++ l r rewrite cfgToList-++ l r | concatMap-++ collect (to[ Cfg′ ] l) (to[ Cfg′ ] r) = refl
 
-mapMaybe∘collectFromBase-++ : ∀ ⦃ I : BaseCfg has X ⦄ (g : X → Maybe Y) l r → let f = collectFromBase (collect ⦃ I ⦄) in
+mapMaybe∘collectFromBase-++ : ∀ ⦃ I : BaseCfg has X ⦄ (g : X → Maybe Y) l r →
+  let f = collectFromBase (collect ⦃ I ⦄) in
     mapMaybe g (f (l ∣ r)) ≡ mapMaybe g (f l) ++ mapMaybe g (f r)
 mapMaybe∘collectFromBase-++ ⦃ I ⦄ g l r = begin
     mapMaybe g (f $ l ∣ r)
@@ -186,6 +232,30 @@ authorizedHonAds = advertisements
 -- authorizedAds : ⦃ _ :  X has Action ⦄ → X → List Advertisement
 -- authorizedAds = mapMaybe (λ where (♯▷ ad) → just ad; _ → nothing)
 --               ∘ authorizedActions
+
+ids-++ : ∀ l r → ids (l ∣ r) ≡ ids l ++ ids r
+ids-++ = mapMaybe∘collectFromBase-++ isInj₂
+
+∈-ids-++⁻ : ∀ l r {x : Id} → x ∈ ids (l ∣ r) → (x ∈ ids l) ⊎ (x ∈ ids r)
+∈-ids-++⁻ l r rewrite ids-++ l r = L.Mem.∈-++⁻ (ids l)
+
+∈-ids-++⁺ˡ : ∀ l r → ids l ⊆ ids (l ∣ r)
+∈-ids-++⁺ˡ l r rewrite ids-++ l r = L.Mem.∈-++⁺ˡ
+
+∈-ids-++⁺ʳ : ∀ l r → ids r ⊆ ids (l ∣ r)
+∈-ids-++⁺ʳ l r rewrite ids-++ l r = L.Mem.∈-++⁺ʳ (ids l)
+
+secrets-++ : ∀ l r → secrets (l ∣ r) ≡ secrets l ++ secrets r
+secrets-++ = mapMaybe∘collectFromBase-++ isInj₁
+
+∈-secrets-++⁻ : ∀ l r {x : Id} → x ∈ secrets (l ∣ r) → (x ∈ secrets l) ⊎ (x ∈ secrets r)
+∈-secrets-++⁻ l r rewrite secrets-++ l r = L.Mem.∈-++⁻ (secrets l)
+
+∈-secrets-++⁺ˡ : ∀ l r → secrets l ⊆ secrets (l ∣ r)
+∈-secrets-++⁺ˡ l r rewrite secrets-++ l r = L.Mem.∈-++⁺ˡ
+
+∈-secrets-++⁺ʳ : ∀ l r → secrets r ⊆ secrets (l ∣ r)
+∈-secrets-++⁺ʳ l r rewrite secrets-++ l r = L.Mem.∈-++⁺ʳ (secrets l)
 
 secretsOfᶜᶠ : Participant → Cfg → Secrets
 secretsOfᶜᶠ A = {- Set'.nub ∘-} go
@@ -386,3 +456,46 @@ namesʳ-∥map-authCommit {secrets = `∅ᶜ} ()
 namesʳ-∥map-authCommit {secrets = (_ , _) ∷ []} (here refl) = here refl
 namesʳ-∥map-authCommit {secrets = (_ , _) ∷ ss@(_ ∷ _)} (here refl) = here refl
 namesʳ-∥map-authCommit {secrets = _ ∷ ss@(_ ∷ _)} (there a∈) = there (namesʳ-∥map-authCommit {secrets = ss} a∈)
+
+x∈vcis⇒¬fresh : ∀ {vcis : List (Value × Contracts × Id)}
+  → ⟨ c , v ⟩at x ∈ᶜ || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis
+    --—————————————————————————————————————————————————
+  → x ∈ select₃ (unzip₃ vcis)
+x∈vcis⇒¬fresh {vcis = _ ∷ []}         = λ where
+  (here refl) → here refl
+x∈vcis⇒¬fresh {vcis = _ ∷ vs@(_ ∷ _)} = λ where
+  (here refl) → here refl
+  (there c∈)  → there $ x∈vcis⇒¬fresh {vcis = vs} c∈
+
+c∈vcis⇒ : ∀ {vcis : List (Value × Contracts × Id)}
+  → ⟨ c , v ⟩at x ∈ᶜ || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis
+    --—————————————————————————————————————————————————
+  → c ∈ proj₁ (proj₂ $ unzip₃ vcis)
+c∈vcis⇒ {vcis = _ ∷ []}         = λ where
+  (here refl) → here refl
+c∈vcis⇒ {vcis = _ ∷ vs@(_ ∷ _)} = λ where
+  (here refl) → here refl
+  (there c∈)  → there $ c∈vcis⇒ {vcis = vs} c∈
+
+c∈vcis⇒′ : ∀ {vcis : List (Value × Contracts × Id)} →
+  let
+    (vs , cs , _) = unzip₃ vcis
+    vcs = zip vs cs
+  in
+    ⟨ c , v ⟩at x ∈ᶜ || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis
+    ───────────────────────────────────────────────────────
+    c ∈ map proj₂ vcs
+c∈vcis⇒′ {vcis = _ ∷ []}         = λ where
+  (here refl) → here refl
+c∈vcis⇒′ {vcis = _ ∷ vs@(_ ∷ _)} = λ where
+  (here refl) → here refl
+  (there c∈)  → there $ c∈vcis⇒′ {vcis = vs} c∈
+
+x∈vcis⇒ : ∀ {vcis : List (Value × Contracts × Id)}
+  → x ∈ ids (|| map (uncurry₃ $ flip ⟨_,_⟩at_) vcis)
+  → x ∈ select₃ (unzip₃ vcis)
+x∈vcis⇒ {vcis = _ ∷ []}         = λ where
+  (here refl) → here refl
+x∈vcis⇒ {vcis = _ ∷ vs@(_ ∷ _)} = λ where
+  (here refl) → here refl
+  (there c∈)  → there $ x∈vcis⇒ {vcis = vs} c∈

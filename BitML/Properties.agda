@@ -10,5 +10,6 @@ open import BitML.Properties.TraceAd Participant Honest public
 open import BitML.Properties.TraceAuthCommit Participant Honest public
 open import BitML.Properties.TraceAuthInit Participant Honest public
 open import BitML.Properties.TraceInit Participant Honest public
-
--- open import BitML.Properties.TraceContract Participant Honest public
+open import BitML.Properties.TraceAuthControl Participant Honest public
+open import BitML.Properties.Lifetime Participant Honest public
+open import BitML.Properties.TraceContract Participant Honest public
