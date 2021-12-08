@@ -11,7 +11,6 @@ open import Prelude.Membership
 open import Prelude.Collections
 open import Prelude.Bifunctor
 open import Prelude.General
-open import Prelude.Validity
 
 open import BitML.BasicTypes
 open import BitML.Predicate
