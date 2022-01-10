@@ -469,7 +469,7 @@ x∈vcis⇒¬fresh {vcis = _ ∷ vs@(_ ∷ _)} = λ where
 
 c∈vcis⇒ : ∀ {vcis : List (Value × Contracts × Id)}
   → ⟨ c , v ⟩at x ∈ᶜ || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis
-    --—————————————————————————————————————————————————
+    --———————————————————————————————————————————————————————
   → c ∈ proj₁ (proj₂ $ unzip₃ vcis)
 c∈vcis⇒ {vcis = _ ∷ []}         = λ where
   (here refl) → here refl
@@ -483,8 +483,8 @@ c∈vcis⇒′ : ∀ {vcis : List (Value × Contracts × Id)} →
     vcs = zip vs cs
   in
     ⟨ c , v ⟩at x ∈ᶜ || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis
-    ───────────────────────────────────────────────────────
-    c ∈ map proj₂ vcs
+    --————————————————————————————————————————————————————————
+  → c ∈ map proj₂ vcs
 c∈vcis⇒′ {vcis = _ ∷ []}         = λ where
   (here refl) → here refl
 c∈vcis⇒′ {vcis = _ ∷ vs@(_ ∷ _)} = λ where

@@ -12,6 +12,7 @@ open import Prelude.Setoid
 open import Prelude.General hiding (_⊢_)
 open import Prelude.ToN
 open import Prelude.Traces
+open import Prelude.InferenceRules
 
 module BitML.Properties.Lifetime
   (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
@@ -33,8 +34,8 @@ data _↝_ : Rel₀ Contracts where
 
   split↝ : ∀ {i : Index c} → let open ∣SELECT c i in
 
-      d∗ ≡ split vcs
-    → c′ ∈ map proj₂ vcs
+    ∙ d∗ ≡ split vcs
+    ∙ c′ ∈ map proj₂ vcs
       ────────────────────────────────────
       c ↝ c′
 

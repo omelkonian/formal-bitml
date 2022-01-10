@@ -12,6 +12,7 @@ open import Prelude.Setoid
 open import Prelude.General hiding (_⊢_)
 open import Prelude.ToN
 open import Prelude.Traces
+open import Prelude.InferenceRules
 
 module BitML.Properties.TraceContract
   (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
@@ -36,13 +37,13 @@ data ℍ[Contract]⦅_—[_]↝_⦆⦅_⦆ : Cfg → Label → Cfg → Contracts
 
   step-put :
 
-    ───────────────────────────────────────────────────
+    ──────────────────────────────────────────────────────────────────────────────────────────────────────
     ℍ[Contract]⦅ ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ Γ —[ put⦅ xs , as , y ⦆ ]↝ Γ′ ⦆⦅ c ⦆
 
   step-split :
 
     c ∈ map proj₂ vcs
-    ───────────────────────────────────────────────────
+    ─────────────────────────────────────────────────────────────────────────
     ℍ[Contract]⦅ ⟨ [ split vcs ] , v ⟩at y ∣ Γ —[ split⦅ y ⦆ ]↝ Γ′ ⦆⦅ c ⦆
 
   step-control : ∀ {i : Index c′} → let open ∣SELECT c′ i in
@@ -50,14 +51,14 @@ data ℍ[Contract]⦅_—[_]↝_⦆⦅_⦆ : Cfg → Label → Cfg → Contracts
       Γ ≈ L
     → cv α ≡ just x
     → ℍ[Contract]⦅ ⟨ [ d∗ ] , v ⟩at x ∣ L —[ α ]↝ Γ′ ⦆⦅ c ⦆
-      ───────────────────────────────────────────────────
+      ───────────────────────────────────────────────────────────────────────────────────────
       ℍ[Contract]⦅ ⟨ c′ , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub $ authDecorations d) ∣ Γ
                    —[ α ]↝ Γ′ ⦆⦅ c ⦆
 
   step-timeout : ∀ {i : Index c′} → let open ∣SELECT c′ i in
       cv α ≡ just x
     → ℍ[Contract]⦅ ⟨ [ d∗ ] , v ⟩at x ∣ Γ —[ α ]↝ Γ′ ⦆⦅ c ⦆
-      ───────────────────────────────────────────────────
+      ────────────────────────────────────────────────────────
       ℍ[Contract]⦅ ⟨ c′ , v ⟩at x ∣ Γ —[ α ]↝ Γ′ ⦆⦅ c ⦆
 
 open import BitML.Contracts Participant Honest using (d)
