@@ -1,4 +1,4 @@
-## Formalizing the Bitcoin Modelling Language (BitML) [![Build Status](https://travis-ci.com/omelkonian/formal-bitml.svg?branch=master)](https://travis-ci.com/omelkonian/formal-bitml)
+## Formalizing the Bitcoin Modelling Language (BitML) in Agda [![CI](https://github.com/omelkonian/formal-bitml/workflows/CI/badge.svg)](https://github.com/omelkonian/formal-bitml/actions)
 
 Based on:
 > Massimo Bartoletti and Roberto Zunino, 2018, January.
