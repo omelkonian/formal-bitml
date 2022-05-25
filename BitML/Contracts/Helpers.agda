@@ -276,7 +276,7 @@ namesˡ⇒part {a}{l ∣∣ r} a∈
 ... | inj₂ a∈ʳ = map₂′ (∈-nub⁺ ∘ L.Mem.∈-++⁺ʳ (participants l) ∘ ∈-nub⁻) $ namesˡ⇒part {g = r} a∈ʳ
 
 names⊆secretsOf : (a∈ : a ∈ namesˡ g) → a ∈ secretsOfᵖ (proj₁ $ namesˡ⇒part {g = g} a∈) g
-names⊆secretsOf {a}{g = A :secret .a} (here refl) rewrite ≟-refl _≟_ A = here refl
+names⊆secretsOf {a}{g = A :secret .a} (here refl) rewrite ≟-refl A = here refl
 names⊆secretsOf {a}{g = l ∣∣ r} a∈
   rewrite mapMaybe-++ isInj₁ (names l) (names r)
   with L.Mem.∈-++⁻ (namesˡ l) a∈
