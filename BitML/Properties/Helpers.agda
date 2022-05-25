@@ -10,6 +10,9 @@ open import Prelude.Bifunctor
 open import Prelude.Collections
 open import Prelude.Measurable
 open import Prelude.ToN
+open import Prelude.InferenceRules
+open import Prelude.Decidable
+open import Prelude.Coercions
 
 module BitML.Properties.Helpers
   (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
@@ -256,20 +259,107 @@ cvDestroys y∉ step cv≡ y∈
     (inj₁ y∈Δ) → L.All.lookup fresh-ys (x∈vcis⇒ {vcis = vcis} y∈Δ) (here refl)
 -}
 
-c∈⇒x∈ : ⟨ c , v ⟩at x ∈ᶜ Γ → x ∈ ids Γ
-c∈⇒x∈ {Γ = ` _}             = λ{ (here ()); (there ()) }
-c∈⇒x∈ {Γ = ⟨ _ , _ ⟩at _}   = λ{ (here refl) → here refl }
-c∈⇒x∈ {Γ = ⟨ _ has _ ⟩at _} = λ{ (here ()); (there ()) }
-c∈⇒x∈ {Γ = _ auth[ _ ]}     = λ{ (here ()); (there ()) }
-c∈⇒x∈ {Γ = ⟨ _ ∶ _ ♯ _ ⟩}   = λ{ (here ()); (there ()) }
-c∈⇒x∈ {Γ = _ ∶ _ ♯ _}       = λ{ (here ()); (there ()) }
-c∈⇒x∈ {Γ = l ∣ r} = ∈ᶜ-++⁻ l r >≡>
-  Sum.[ ∈-ids-++⁺ˡ l r ∘ c∈⇒x∈ {Γ = l}
-      , ∈-ids-++⁺ʳ l r ∘ c∈⇒x∈ {Γ = r}
-      ]
+c⇒x : ∀ {Γ : BaseCfg} → ⌞ ⟨ c , v ⟩at x ⌟ ≡ Γ → inj₂ x ∈ names Γ
+c⇒x refl = here refl
+
+c∈⇒x∈ : ∀ Γ →
+  ⟨ c , v ⟩at x ∈ᶜ Γ
+  ──────────────────
+  x ∈ ids Γ
+c∈⇒x∈ Γ = flip (∈-mapMaybe⁺ isInj₂) refl
+        ∘ ∈-concatMap⁺
+        ∘ L.Any.map c⇒x
+        ∘ ∈-Cfg′ _ Γ
+{-
+c∈⇒x∈ = λ where
+  (` _)             → contradict
+  (⟨ _ , _ ⟩at _)   → λ where (here refl) → here refl
+  (⟨ _ has _ ⟩at _) → contradict
+  (_ auth[ _ ])     → contradict
+  (⟨ _ ∶ _ ♯ _ ⟩)   → contradict
+  (_ ∶ _ ♯ _)       → contradict
+  (l ∣ r) → ∈ᶜ-++⁻ l r >≡>
+    Sum.[ ∈-ids-++⁺ˡ l r ∘ c∈⇒x∈ l
+        , ∈-ids-++⁺ʳ l r ∘ c∈⇒x∈ r
+        ]
+-}
 
 x∉⇒c∉ : x ∉ ids Γ → ⟨ c , v ⟩at x ∉ᶜ Γ
-x∉⇒c∉ {Γ = Γ} = _∘ c∈⇒x∈ {Γ = Γ}
+x∉⇒c∉ {Γ = Γ} = _∘ c∈⇒x∈ Γ
+
+module _ {c}{v}{x} where
+
+  open L.Perm
+
+  open import Prelude.Lists.PermutationsMeta
+  ∈-resp-↭∘c∈⇒x∈ : ∀ Γ Γ′
+    → (Γ≈ : Γ ≈ Γ′)
+    → (c∈ : ⟨ c , v ⟩at x ∈ᶜ Γ)
+      --————————————————————————————————————
+    → ( ∈-resp-↭ (≈⇒namesʳ↭ {Γ}{Γ′} Γ≈) -- x ∈ ids Γ′
+      ∘ c∈⇒x∈ Γ                         -- x ∈ ids Γ
+      ) c∈                              -- ⟨ c , v ⟩ₓ ∈ Γ
+    ≡ ( c∈⇒x∈ Γ′             -- x ∈ ids Γ′
+      ∘ ∈ᶜ-resp-≈ {Γ}{Γ′} Γ≈ -- ⟨ c , v ⟩ₓ ∈ Γ′
+      ) c∈                   -- ⟨ c , v ⟩ₓ ∈ Γ
+  ∈-resp-↭∘c∈⇒x∈ Γ Γ′ Γ≈ c∈ =
+    begin≡
+      ( ∈-resp-↭ (≈⇒namesʳ↭ {Γ}{Γ′} Γ≈)
+      ∘ c∈⇒x∈ Γ
+      ) c∈
+    ≡⟨⟩
+      ( ∈-resp-↭ (≈⇒namesʳ↭ {Γ}{Γ′} Γ≈) -- x ∈ ids Γ′
+      ∘ flip (∈-mapMaybe⁺ isInj₂) refl  -- x ∈ ids Γ
+      ∘ ∈-concatMap⁺                    -- inj₂ x ∈ names Γ
+      ∘ L.Any.map c⇒x                   -- Any (λ ◆ → inj₂ x ∈ names ◆) Γ
+      ∘ ∈-Cfg′ _ Γ                      -- `⟨ c , v ⟩ₓ ∈ toList Γ
+      ) c∈                              -- ⟨ c , v ⟩ₓ ∈ᶜ Γ
+    ≡⟨ ∈-resp-↭∘∈-mapMaybe⁺ isInj₂ (≈⇒names↭ {Γ}{Γ′} Γ≈) refl _ ⟩
+      ( flip (∈-mapMaybe⁺ isInj₂) refl -- x ∈ ids Γ′
+      ∘ ∈-resp-↭ (≈⇒names↭ {Γ}{Γ′} Γ≈) -- inj₂ x ∈ names Γ′
+      ∘ ∈-concatMap⁺                   -- inj₂ x ∈ names Γ
+      ∘ L.Any.map c⇒x                  -- Any (λ ◆ → inj₂ x ∈ names ◆) Γ
+      ∘ ∈-Cfg′ _ Γ                     -- `⟨ c , v ⟩ₓ ∈ toList Γ
+      ) c∈                             -- ⟨ c , v ⟩ₓ ∈ᶜ Γ
+    ≡⟨ cong (flip (∈-mapMaybe⁺ isInj₂) refl)
+            (∈-resp-↭∘∈-concatMap⁺ Γ≈ _)  ⟩
+      ( flip (∈-mapMaybe⁺ isInj₂) refl -- x ∈ ids Γ′
+      ∘ ∈-concatMap⁺                   -- inj₂ x ∈ names Γ′
+      ∘ Any-resp-↭ Γ≈                  -- Any (λ ◆ → inj₂ x ∈ names ◆) Γ′
+      ∘ L.Any.map c⇒x                  -- Any (λ ◆ → inj₂ x ∈ names ◆) Γ
+      ∘ ∈-Cfg′ _ Γ                     -- `⟨ c , v ⟩ₓ ∈ toList Γ
+      ) c∈                             -- ⟨ c , v ⟩ₓ ∈ᶜ Γ
+    ≡⟨ cong (flip (∈-mapMaybe⁺ isInj₂) refl ∘ ∈-concatMap⁺)
+            (Any-resp-↭∘Any-map c⇒x Γ≈ _) ⟩
+      ( flip (∈-mapMaybe⁺ isInj₂) refl -- x ∈ ids Γ′
+      ∘ ∈-concatMap⁺                   -- inj₂ x ∈ names Γ′
+      ∘ L.Any.map c⇒x                  -- Any (λ ◆ → inj₂ x ∈ names ◆) Γ′
+      ∘ ∈-resp-↭ Γ≈                    -- `⟨ c , v ⟩ₓ ∈ toList Γ′
+      ∘ ∈-Cfg′ _ Γ                     -- `⟨ c , v ⟩ₓ ∈ toList Γ
+      ) c∈                             -- ⟨ c , v ⟩ₓ ∈ᶜ Γ
+    ≡⟨ sym $ cong (flip (∈-mapMaybe⁺ isInj₂) refl ∘ ∈-concatMap⁺ ∘ L.Any.map c⇒x)
+           $ ∈-resp-↭∘∈-Cfg′ (⟨ c , v ⟩at x) Γ Γ′ Γ≈ c∈ ⟩
+      ( flip (∈-mapMaybe⁺ isInj₂) refl -- x ∈ ids Γ′
+      ∘ ∈-concatMap⁺                   -- inj₂ x ∈ names Γ′
+      ∘ L.Any.map c⇒x                  -- Any (λ ◆ → inj₂ x ∈ names ◆) Γ′
+      ∘ ∈-Cfg′ _ Γ′                    -- `⟨ c , v ⟩ₓ ∈ toList Γ′
+      ∘ ∈ᶜ-resp-≈ {Γ}{Γ′} Γ≈           -- ⟨ c , v ⟩ₓ ∈ toList Γ′
+      ) c∈                             -- ⟨ c , v ⟩ₓ ∈ᶜ Γ
+    ≡⟨⟩
+      ( c∈⇒x∈ Γ′
+      ∘ ∈ᶜ-resp-≈ {Γ}{Γ′} Γ≈
+      ) c∈
+    ∎≡ where open ≡-Reasoning renaming (begin_ to begin≡_; _∎ to _∎≡)
+
+  ∈ᶜ-resp-≈∘∈ᶜ-resp-≈ : ∀ Γ Γ′
+    → (Γ≈ : Γ ≈ Γ′)
+    → (c∈ : ⟨ c , v ⟩at x ∈ᶜ Γ)
+      --————————————————————————————————————
+    → ( ∈ᶜ-resp-≈ {Γ′}{Γ} (↭-sym Γ≈)
+      ∘ ∈ᶜ-resp-≈ {Γ}{Γ′} Γ≈
+      ) c∈
+    ≡ c∈
+  ∈ᶜ-resp-≈∘∈ᶜ-resp-≈ _ _ = ∈-map-resp-↭∘∈-map-resp-↭˘ to[ Cfg ]
 
 -- Collections on traces.
 private variable X : Set ℓ
