@@ -361,6 +361,41 @@ module _ {c}{v}{x} where
     ≡ c∈
   ∈ᶜ-resp-≈∘∈ᶜ-resp-≈ _ _ = ∈-map-resp-↭∘∈-map-resp-↭˘ to[ Cfg ]
 
+  ∈-resp-↭∘c∈⇒x∈∘∈ᶜ-resp-≈ : ∀ Γ Γ′ (Γ≈ : Γ ≈ Γ′)
+    → (c∈ : ⟨ c , v ⟩at x ∈ᶜ Γ)
+      --———————————————————————————————————————
+    → ( ∈-resp-↭ (≈⇒namesʳ↭ {Γ′}{Γ} (↭-sym Γ≈))
+      ∘ c∈⇒x∈ Γ′
+      ∘ ∈ᶜ-resp-≈ {Γ}{Γ′} Γ≈
+      ) c∈
+    ≡ c∈⇒x∈ Γ c∈
+  {- i.e. the following diagram commutes
+
+      ids Γ ←————— ↭ ————— ids Γ′
+        ↑                    ↑
+        ∥                    ∣
+        ∥                    ∣
+      c∈⇒x∈                c∈⇒x∈
+        ∥                    ∣
+        ∥                    ∣
+        Γ ———————— ≈ ——————→ Γ′
+  -}
+  ∈-resp-↭∘c∈⇒x∈∘∈ᶜ-resp-≈ Γ Γ′ Γ≈ c∈ =
+    begin≡
+      ( ∈-resp-↭ (≈⇒namesʳ↭ {Γ′}{Γ} (↭-sym Γ≈))
+      ∘ c∈⇒x∈ Γ′
+      ∘ ∈ᶜ-resp-≈ {Γ}{Γ′} Γ≈
+      ) c∈
+    ≡⟨ ∈-resp-↭∘c∈⇒x∈ Γ′ Γ (↭-sym Γ≈) (∈ᶜ-resp-≈ {Γ}{Γ′} Γ≈ c∈) ⟩
+      ( c∈⇒x∈ Γ
+      ∘ ∈ᶜ-resp-≈ {Γ′}{Γ} (↭-sym Γ≈)
+      ∘ ∈ᶜ-resp-≈ {Γ}{Γ′} Γ≈
+      ) c∈
+    ≡⟨ cong (c∈⇒x∈ Γ) $ ∈-map-resp-↭∘∈-map-resp-↭˘ to[ Cfg ] Γ≈ c∈ ⟩
+      c∈⇒x∈ Γ c∈
+    ∎≡ where open ≡-Reasoning renaming (begin_ to begin≡_; _∎ to _∎≡)
+
+
 -- Collections on traces.
 private variable X : Set ℓ
 

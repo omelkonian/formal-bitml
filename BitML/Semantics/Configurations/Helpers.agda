@@ -34,26 +34,36 @@ open import BitML.Semantics.Action Participant Honest
 open import BitML.Semantics.Configurations.Types Participant Honest
 
 instance
-  IS-Cfg : ISetoid Cfg
+  Setoid-Cfg : ISetoid Cfg
   -- IS-Cfg ._≈_ = _↭_ on to[ Cfg′ ]
-  IS-Cfg = λ where
+  Setoid-Cfg = λ where
     .relℓ → 0ℓ
     ._≈_ → _↭_ on to[ Cfg′ ]
 
-  IS-TCfg : ISetoid Cfgᵗ
-  IS-TCfg = λ where
+  SetoidLaws-Cfg : Setoid-Laws Cfg
+  SetoidLaws-Cfg .isEquivalence = record {IsEquivalence L.Perm.↭-isEquivalence}
+
+  Setoid-Cfgᵗ : ISetoid Cfgᵗ
+  Setoid-Cfgᵗ = λ where
     .relℓ → 0ℓ
     ._≈_ (Γ at t) (Γ′ at t′) → (t ≡ t′) × (Γ ≈ Γ′)
 
+  SetoidLaws-Cfgᵗ : Setoid-Laws Cfgᵗ
+  SetoidLaws-Cfgᵗ .isEquivalence = record
+    { refl  = refl , ↭-refl
+    ; sym   = λ where (t≡ , Γ≈) → sym t≡ , ↭-sym Γ≈
+    ; trans = λ where (t≡ , Γ≈) (≡t , ≈Γ) → trans t≡ ≡t , ↭-trans Γ≈ ≈Γ
+    }
+
   -- ** Initiality (for constructing traces)
-  HI-Cfg : HasInitial Cfg
-  HI-Cfg .Initial = λ where
+  Initial-Cfg : HasInitial Cfg
+  Initial-Cfg .Initial = λ where
     (⟨ _ has _ ⟩at _) → ⊤
     (l ∣ r)           → Initial l × Initial r
     _                 → ⊥
 
-  HI-TCfg : HasInitial Cfgᵗ
-  HI-TCfg .Initial (Γ at t) = Initial Γ × (t ≡ 0)
+  Initial-Cfgᵗ : HasInitial Cfgᵗ
+  Initial-Cfgᵗ .Initial (Γ at t) = Initial Γ × (t ≡ 0)
 
 ≈ᵗ-refl : Γₜ ≈ Γₜ
 ≈ᵗ-refl = refl , ↭-refl
