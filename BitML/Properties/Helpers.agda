@@ -289,6 +289,28 @@ x∉⇒c∉ {Γ = Γ} = _∘ c∈⇒x∈ Γ
 
 module _ {c}{v}{x} where
 
+  postulate
+    c∈⇒x∈∘∈ᶜ-++⁺ˡ : (c∈ : ⟨ c , v ⟩at x ∈ᶜ Γ)
+      --————————————————————————
+      → ( c∈⇒x∈ (Γ ∣ Γ′)
+        ∘ ∈ᶜ-++⁺ˡ Γ Γ′
+        ) c∈
+      ≡ ( ∈-ids-++⁺ˡ Γ Γ′
+        ∘ c∈⇒x∈ Γ
+        ) c∈
+  -- c∈⇒x∈∘∈ᶜ-++⁺ˡ {Γ = Γ}{Γ′} c∈
+  --   rewrite cfgToList-++ Γ Γ′
+  --   = {!!}
+
+    c∈⇒x∈∘∈ᶜ-++⁺ʳ : (c∈ : ⟨ c , v ⟩at x ∈ᶜ Γ′)
+      --————————————————————————
+      → ( c∈⇒x∈ (Γ ∣ Γ′)
+        ∘ ∈ᶜ-++⁺ʳ Γ Γ′
+        ) c∈
+      ≡ ( ∈-ids-++⁺ʳ Γ Γ′
+        ∘ c∈⇒x∈ Γ′
+        ) c∈
+
   open L.Perm
 
   open import Prelude.Lists.PermutationsMeta
@@ -394,6 +416,19 @@ module _ {c}{v}{x} where
     ≡⟨ cong (c∈⇒x∈ Γ) $ ∈-map-resp-↭∘∈-map-resp-↭˘ to[ Cfg ] Γ≈ c∈ ⟩
       c∈⇒x∈ Γ c∈
     ∎≡ where open ≡-Reasoning renaming (begin_ to begin≡_; _∎ to _∎≡)
+
+  ∈-resp-↭∘c∈⇒x∈∘∈ᶜ-resp-≈˘ : ∀ Γ Γ′ (Γ≈ : Γ′ ≈ Γ)
+    → (c∈ : ⟨ c , v ⟩at x ∈ᶜ Γ)
+      --———————————————————————————————————————
+    → ( ∈-resp-↭ (≈⇒namesʳ↭ {Γ′}{Γ} Γ≈)
+      ∘ c∈⇒x∈ Γ′
+      ∘ ∈ᶜ-resp-≈ {Γ}{Γ′} (↭-sym Γ≈)
+      ) c∈
+    ≡ c∈⇒x∈ Γ c∈
+  ∈-resp-↭∘c∈⇒x∈∘∈ᶜ-resp-≈˘ Γ Γ′ Γ≈
+    with go ← ∈-resp-↭∘c∈⇒x∈∘∈ᶜ-resp-≈ Γ Γ′ (↭-sym Γ≈)
+    rewrite L.Perm.↭-sym-involutive Γ≈
+    = go
 
 
 -- Collections on traces.
