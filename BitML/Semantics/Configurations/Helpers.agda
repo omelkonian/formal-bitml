@@ -3,7 +3,8 @@
 ------------------------------------------------------------------------
 open import Prelude.Init
 open L.Mem hiding (_∈_)
-open L.Perm using (∈-resp-↭)
+open L.Perm using (∈-resp-↭; map⁺)
+open import Prelude.Lists.PermutationsMeta
 open import Prelude.DecEq
 open import Prelude.Lists
 open import Prelude.DecLists
@@ -20,6 +21,7 @@ open import Prelude.Bifunctor
 open import Prelude.Irrelevance
 open import Prelude.Coercions
 
+
 open import BitML.BasicTypes
 
 module BitML.Semantics.Configurations.Helpers
@@ -34,11 +36,18 @@ open import BitML.Semantics.Action Participant Honest
 open import BitML.Semantics.Configurations.Types Participant Honest
 
 instance
+  Setoid-Cfg′ : ISetoid Cfg′
+  Setoid-Cfg′ = λ where
+    .relℓ → 0ℓ
+    ._≈_ → _↭_
+
+  SetoidLaws-Cfg′ : Setoid-Laws Cfg′
+  SetoidLaws-Cfg′ .isEquivalence = record {IsEquivalence L.Perm.↭-isEquivalence}
+
   Setoid-Cfg : ISetoid Cfg
-  -- IS-Cfg ._≈_ = _↭_ on to[ Cfg′ ]
   Setoid-Cfg = λ where
     .relℓ → 0ℓ
-    ._≈_ → _↭_ on to[ Cfg′ ]
+    ._≈_ → _≈_ on to[ Cfg′ ]
 
   SetoidLaws-Cfg : Setoid-Laws Cfg
   SetoidLaws-Cfg .isEquivalence = record {IsEquivalence L.Perm.↭-isEquivalence}
@@ -76,19 +85,65 @@ cfgToList = map to[ Cfg ] ∘ to[ Cfg′ ]
 cfgToList-++ : ∀ l r → cfgToList (l ∣ r) ≡ cfgToList l ++ cfgToList r
 cfgToList-++ l r = L.map-++-commute to[ Cfg ] (to[ Cfg′ ] l) (to[ Cfg′ ] r)
 
-∈ᶜ-++⁻ : ∀ l r → Γ₀ ∈ cfgToList (l ∣ r) → Γ₀ ∈ cfgToList l ⊎ Γ₀ ∈ cfgToList r
-∈ᶜ-++⁻ l r rewrite cfgToList-++ l r = ∈-++⁻ (cfgToList l)
+{-
+cfgToList-++² : ∀ l c r → cfgToList (l ∣ c ∣ r) ≡ cfgToList l ++ cfgToList c ++ cfgToList r
+cfgToList-++² l c r
+  rewrite cfgToList-++ (l ∣ c) r | cfgToList-++ l c
+        = L.++-assoc (cfgToList l) (cfgToList c) (cfgToList r)
 
-∈ᶜ-++⁺ˡ : ∀ l r → Γ₀ ∈ cfgToList l → Γ₀ ∈ cfgToList (l ∣ r)
-∈ᶜ-++⁺ˡ l r rewrite cfgToList-++ l r = ∈-++⁺ˡ
+cfgToList-++²′ : ∀ l c r → cfgToList (l ∣ (c ∣ r)) ≡ cfgToList l ++ cfgToList c ++ cfgToList r
+cfgToList-++²′ l c r
+  rewrite cfgToList-++ l (c ∣ r) | cfgToList-++ c r
+        = refl
+-}
 
-∈ᶜ-++⁺ʳ : ∀ l r → Γ₀ ∈ cfgToList r → Γ₀ ∈ cfgToList (l ∣ r)
-∈ᶜ-++⁺ʳ l r rewrite cfgToList-++ l r = ∈-++⁺ʳ (cfgToList l)
+cfgToList-assoc : ∀ l c r → cfgToList (l ∣ c ∣ r) ≡ cfgToList (l ∣ (c ∣ r))
+cfgToList-assoc l c r
+  rewrite cfgToList-++ (l ∣ c) r | cfgToList-++ l c
+        | cfgToList-++ l (c ∣ r) | cfgToList-++ c r
+        = L.++-assoc (cfgToList l) (cfgToList c) (cfgToList r)
+
+toCfg-injective : Injective≡ {A = BaseCfg} to[ Cfg ]
+toCfg-injective {x = `` _}             {`` _}             refl = refl
+toCfg-injective {x = `⟨ _ , _ ⟩at _}   {`⟨ _ , _ ⟩at _}   refl = refl
+toCfg-injective {x = `⟨ _ has _ ⟩at _} {`⟨ _ has _ ⟩at _} refl = refl
+toCfg-injective {x = _ `auth[ _ ]}     {_ `auth[ _ ]}     refl = refl
+toCfg-injective {x = `⟨ _ ∶ _ ♯ _ ⟩}   {`⟨ _ ∶ _ ♯ _ ⟩}   refl = refl
+toCfg-injective {x = _ `∶ _ ♯ _}       {_ `∶ _ ♯ _}       refl = refl
+
+toCfg′-assoc : ∀ l c r → to[ Cfg′ ] (l ∣ c ∣ r) ≡ to[ Cfg′ ] (l ∣ (c ∣ r))
+toCfg′-assoc l c r = L.map-injective toCfg-injective (cfgToList-assoc l c r)
+
+≈ᶜ-assoc : ∀ l c r → l ∣ (c ∣ r) ≈ l ∣ c ∣ r
+≈ᶜ-assoc l c r = ↭-reflexive (sym $ toCfg′-assoc l c r)
 
 infix 4 _∈ᶜ_ _∉ᶜ_
 _∈ᶜ_ _∉ᶜ_ : Rel₀ Cfg
 c ∈ᶜ c′ = c ∈ cfgToList c′
 c ∉ᶜ c′ = ¬ c ∈ᶜ c′
+
+∈ᶜ-++⁻ : ∀ l r → Γ₀ ∈ᶜ (l ∣ r) → Γ₀ ∈ᶜ l ⊎ Γ₀ ∈ᶜ r
+∈ᶜ-++⁻ l r rewrite cfgToList-++ l r = ∈-++⁻ (cfgToList l)
+
+∈ᶜ-++⁺ˡ : ∀ l r → Γ₀ ∈ᶜ l → Γ₀ ∈ᶜ (l ∣ r)
+∈ᶜ-++⁺ˡ l r rewrite cfgToList-++ l r = ∈-++⁺ˡ
+
+∈ᶜ-++⁺ʳ : ∀ l r → Γ₀ ∈ᶜ r → Γ₀ ∈ᶜ (l ∣ r)
+∈ᶜ-++⁺ʳ l r rewrite cfgToList-++ l r = ∈-++⁺ʳ (cfgToList l)
+
+destruct-∈ᶜ-++ : ∀ Γ Γ′ {x}
+  → (x∈ : x ∈ᶜ (Γ ∣ Γ′))
+    --——————————————————
+  → (∃ λ (x∈ˡ : x ∈ᶜ Γ)  → x∈ ≡ ∈ᶜ-++⁺ˡ Γ Γ′ x∈ˡ)
+  ⊎ (∃ λ (x∈ʳ : x ∈ᶜ Γ′) → x∈ ≡ ∈ᶜ-++⁺ʳ Γ Γ′ x∈ʳ)
+destruct-∈ᶜ-++ Γ Γ′ x∈ rewrite cfgToList-++ Γ Γ′ = destruct-∈-++ x∈
+
+-- destruct-∈ᶜ-++² : ∀ Γ Γ′ Γ″ {x}
+--   → (x∈ : x ∈ᶜ (Γ ∣ Γ′ ∣ Γ″))
+--     --————————————————————————————————————
+--   → (∃ λ (x∈Γ  : x ∈ᶜ Γ)  → x∈ ≡ (∈ᶜ-++⁺ˡ (Γ ∣ Γ′) Γ″ $ ∈ᶜ-++⁺ˡ Γ Γ′ x∈Γ))
+--   ⊎ (∃ λ (x∈Γ′ : x ∈ᶜ Γ′) → x∈ ≡ (∈ᶜ-++⁺ˡ (Γ ∣ Γ′) Γ″ $ ∈ᶜ-++⁺ʳ Γ Γ′ x∈Γ′))
+--   ⊎ (∃ λ (x∈Γ″ : x ∈ᶜ Γ″) → x∈ ≡ (∈ᶜ-++⁺ʳ (Γ ∣ Γ′) Γ″ x∈Γ″))
 
 infix 4 _⊆ᶜ_ _⊈ᶜ_
 _⊆ᶜ_ _⊈ᶜ_ : Rel₀ Cfg
@@ -201,8 +256,11 @@ instance
   ... | x ▷ᵈ _           = [ inj₁ x ]
   ... | xs , _ ▷ᵈˢ x     = map inj₁ (x ∷ xs)
 
-  HBC⇒HC : ⦃ BaseCfg has X ⦄ → Cfg has X
-  HBC⇒HC .collect = collectFromBase (collect ⦃ it ⦄)
+  HBC⇒HC′ : ⦃ BaseCfg has X ⦄ → Cfg′ has X
+  HBC⇒HC′ .collect = collectFromList (collect ⦃ it ⦄)
+
+  HC′⇒HC : ⦃ Cfg′ has X ⦄ → Cfg has X
+  HC′⇒HC ⦃ i ⦄ .collect = collect ⦃ i ⦄ ∘ to[ Cfg′ ]
 
   HDᶜᶠ : BaseCfg has DepositRef
   HDᶜᶠ .collect = λ where
@@ -255,6 +313,11 @@ ids-++ = mapMaybe∘collectFromBase-++ isInj₂
 
 ∈-ids-++⁺ʳ : ∀ l r → ids r ⊆ ids (l ∣ r)
 ∈-ids-++⁺ʳ l r rewrite ids-++ l r = ∈-++⁺ʳ (ids l)
+
+destruct-∈-ids-++ : ∀ l r (x∈ : x ∈ ids (l ∣ r)) →
+    (∃ λ (x∈ˡ : x ∈ ids l) → x∈ ≡ ∈-ids-++⁺ˡ l r x∈ˡ)
+  ⊎ (∃ λ (x∈ʳ : x ∈ ids r) → x∈ ≡ ∈-ids-++⁺ʳ l r x∈ʳ)
+destruct-∈-ids-++ l r x∈ rewrite ids-++ l r = destruct-∈-++ x∈
 
 secrets-++ : ∀ l r → secrets (l ∣ r) ≡ secrets l ++ secrets r
 secrets-++ = mapMaybe∘collectFromBase-++ isInj₁
@@ -360,26 +423,26 @@ committedPartG≡ {ad} (p ∷ ps@(_ ∷ _)) =
 
 --- ** name helpers
 
--- ≈⇒names↭∘↭-sym : ∀ {xs ys : List X}
---   → (f : X → List Y)
---   → (p : xs ↭ ys)
---     --——————————————————————————
---   → collectFromList↭ {xs = ys}{xs} f (↭-sym p)
---   ≡ ↭-sym (collectFromList↭ {xs = xs}{ys} f p)
--- ≈⇒names↭∘↭-sym {xs = xs}{ys} f p = {!refl!}
+↭-sym∘≈⇒names↭ :
+    (Γ≈ : Γ ≈ Γ′)
+    --——————————————————————————
+  → ↭-sym (≈⇒names↭ {Γ}{Γ′} Γ≈)
+  ≡ ≈⇒names↭ {Γ′}{Γ} (↭-sym Γ≈)
+↭-sym∘≈⇒names↭ = ↭-sym∘concatMap⁺ names
 
-postulate
-  ≈⇒names↭∘↭-sym :
-      (Γ≈ : Γ ≈ Γ′)
-      --——————————————————————————
-    → ≈⇒names↭ {Γ′}{Γ} (↭-sym Γ≈)
-    ≡ ↭-sym (≈⇒names↭ {Γ}{Γ′} Γ≈)
-
-  ≈⇒namesʳ↭∘↭-sym :
-      (Γ≈ : Γ ≈ Γ′)
-      --——————————————————————————
-    → ≈⇒namesʳ↭ {Γ′}{Γ} (↭-sym Γ≈)
-    ≡ ↭-sym (≈⇒namesʳ↭ {Γ}{Γ′} Γ≈)
+↭-sym∘≈⇒namesʳ↭ :
+    (Γ≈ : Γ ≈ Γ′)
+    --——————————————————————————
+  → ↭-sym (≈⇒namesʳ↭ {Γ}{Γ′} Γ≈)
+  ≡ ≈⇒namesʳ↭ {Γ′}{Γ} (↭-sym Γ≈)
+↭-sym∘≈⇒namesʳ↭ {Γ}{Γ′} Γ≈ =
+  begin
+    ↭-sym (≈⇒namesʳ↭ {Γ}{Γ′} Γ≈)
+  ≡⟨ ↭-sym∘mapMaybe⁺ isInj₂ $ ≈⇒names↭ {Γ}{Γ′} Γ≈ ⟩
+    mapMaybe-↭ isInj₂ (↭-sym $ ≈⇒names↭ {Γ}{Γ′} Γ≈)
+  ≡⟨ cong (mapMaybe-↭ isInj₂) $ ↭-sym∘≈⇒names↭ {Γ}{Γ′} Γ≈ ⟩
+    ≈⇒namesʳ↭ {Γ′}{Γ} (↭-sym Γ≈)
+  ∎ where open ≡-Reasoning
 
 deposit∈Γ⇒namesʳ : ∀ {Γ}
   → ⟨ A has v ⟩at x ∈ᶜ Γ
@@ -626,16 +689,12 @@ toCfg≡ (_ auth[ _ ])     (_ `auth[ _ ])     refl = refl
 toCfg≡ ⟨ _ ∶ _ ♯ _ ⟩     `⟨ _ ∶ _ ♯ _ ⟩     refl = refl
 toCfg≡ (_ ∶ _ ♯ _)       (_ `∶ _ ♯ _)       refl = refl
 
-
 ∈-Cfg′ : ∀ γ Γ
   → (γ∈ : γ ∈ᶜ Γ)
   → ⌞ γ ⊣ ∈ᶜ⇒IsBase {Γ = Γ} γ∈ ⌟ ∈ to[ Cfg′ ] Γ
 ∈-Cfg′ γ Γ γ∈ =
   let β , β∈ , eq = L.Mem.∈-map⁻ to[ Cfg ] γ∈
   in L.Any.map (trans $ toCfg≡ _ _ eq) β∈
-
-open L.Perm using (map⁺); open L.Mem using (∈-map⁻)
-open import Prelude.Lists.PermutationsMeta
 
 ∈-resp-↭∘∈-Cfg′ : ∀ γ Γ Γ′
   → (Γ≈ : Γ ≈ Γ′)
