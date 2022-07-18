@@ -67,6 +67,7 @@ instance
   -- ** Initiality (for constructing traces)
   Initial-Cfg : HasInitial Cfg
   Initial-Cfg .Initial = λ where
+    ∅ᶜ                → ⊤
     (⟨ _ has _ ⟩at _) → ⊤
     (l ∣ r)           → Initial l × Initial r
     _                 → ⊥
