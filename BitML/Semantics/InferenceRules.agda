@@ -11,6 +11,8 @@ open import Prelude.Nary hiding (⟦_⟧)
 open import Prelude.Setoid
 open import Prelude.Ord
 open import Prelude.General
+open import Prelude.InferenceRules
+open import Prelude.Split renaming (split to mkSplit)
 
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
@@ -42,205 +44,201 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 
   [DEP-AuthJoin] :
 
-      --——————————————————————————————————————————————————————————————————————
-      ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ Γ
-        —[ auth-join⦅ A , x ↔ y ⦆ ]→
-      ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
+    ────────────────────────────────────────────────────────────────────────
+    ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ Γ
+      —[ auth-join⦅ A , x ↔ y ⦆ ]→
+    ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
 
 
   [DEP-Join] :
 
-      z ∉ x L.∷ y ∷ ids Γ -- z fresh
-
-      --——————————————————————————————————————————————————————————————————————
-    → ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
-        —[ join⦅ x ↔ y ⦆ ]→
-      ⟨ A has (v + v′) ⟩at z ∣ Γ
+    z ∉ x L.∷ y ∷ ids Γ -- z fresh
+    ────────────────────────────────────────────────────────────────────────
+    ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
+      —[ join⦅ x ↔ y ⦆ ]→
+    ⟨ A has (v + v′) ⟩at z ∣ Γ
 
 
   [DEP-AuthDivide] :
 
-      --——————————————————————————————————————————————————————————————————————
-      ⟨ A has (v + v′) ⟩at x ∣ Γ
-        —[ auth-divide⦅ A , x ▷ v , v′ ⦆ ]→
-      ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
+    ────────────────────────────────────────────────────────
+    ⟨ A has (v + v′) ⟩at x ∣ Γ
+      —[ auth-divide⦅ A , x ▷ v , v′ ⦆ ]→
+    ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
 
 
   [DEP-Divide] :
 
-      All (_∉ x L.∷ ids Γ) (y ∷ y′ ∷ []) -- y, y′ fresh
-
-      --——————————————————————————————————————————————————————————————————————
-    → ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
-        —[ divide⦅ x ▷ v , v′ ⦆ ]→
-      ⟨ A has v ⟩at y ∣ ⟨ A has v′ ⟩at y′ ∣ Γ
+    All (_∉ x L.∷ ids Γ) (y ∷ y′ ∷ []) -- y, y′ fresh
+    ────────────────────────────────────────────────────────
+    ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
+      —[ divide⦅ x ▷ v , v′ ⦆ ]→
+    ⟨ A has v ⟩at y ∣ ⟨ A has v′ ⟩at y′ ∣ Γ
 
 
   [DEP-AuthDonate] :
 
-      --——————————————————————————————————————————————————————————————————————
-      ⟨ A has v ⟩at x ∣ Γ
-        —[ auth-donate⦅ A , x ▷ᵈ B ⦆ ]→
-      ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
+    ──────────────────────────────────────
+    ⟨ A has v ⟩at x ∣ Γ
+      —[ auth-donate⦅ A , x ▷ᵈ B ⦆ ]→
+    ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
 
 
   [DEP-Donate] :
 
-      y ∉ x L.∷ ids Γ -- y fresh
-
-      --——————————————————————————————————————————————————————————————————————
-    → ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
-        —[ donate⦅ x ▷ᵈ B ⦆ ]→
-      ⟨ B has v ⟩at y ∣ Γ
+    y ∉ x L.∷ ids Γ -- y fresh
+    ──────────────────────────────────────
+    ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
+      —[ donate⦅ x ▷ᵈ B ⦆ ]→
+    ⟨ B has v ⟩at y ∣ Γ
 
 
   [DEP-AuthDestroy] :
-    ∀ {ds : List (Participant × Value × Id)} {j : Index ds}
+    ∀ {ds : List (Participant × Value × Id)} {j : Index ds} →
 
-    → let xs = map select₃ ds
-          Aⱼ = proj₁ (ds ‼ j)
-          j′ = ‼-map {xs = ds} j
-          Δ  = || map (uncurry₃ ⟨_has_⟩at_) ds
-      in
+    let xs = map select₃ ds
+        Aⱼ = (ds ‼ j) .proj₁
+        j′ = ‼-map {xs = ds} j
+        Δ  = || map (uncurry₃ ⟨_has_⟩at_) ds
+    in
 
-      y ∉ ids Γ -- y fresh (except in destroy authorizations for xs)
-
-      --——————————————————————————————————————————————————————————————————————
-    → Δ ∣ Γ
-        —[ auth-destroy⦅ Aⱼ , xs , j′ ⦆ ]→
-      Δ ∣ Aⱼ auth[ xs , j′ ▷ᵈˢ y ] ∣ Γ
+    y ∉ ids Γ -- y fresh (except in destroy authorizations for xs)
+    ──────────────────────────────────────────────────────────────
+    Δ ∣ Γ
+      —[ auth-destroy⦅ Aⱼ , xs , j′ ⦆ ]→
+    Δ ∣ Aⱼ auth[ xs , j′ ▷ᵈˢ y ] ∣ Γ
 
 
   [DEP-Destroy] :
-    ∀ {ds : List (Participant × Value × Id)}
+    ∀ {ds : List (Participant × Value × Id)} →
 
-    → let xs = map select₃ ds
-          Δ  = || map (λ{ (i , Aᵢ , vᵢ , xᵢ) → ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ] })
-                      (enumerate ds)
-      in
-      --——————————————————————————————————————————————————————————————————————
-      Δ ∣ Γ
-        —[ destroy⦅ xs ⦆ ]→
-      Γ
+    let
+      xs = map select₃ ds
+      Δ  = || map (λ{ (i , Aᵢ , vᵢ , xᵢ) →
+                ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ]
+              }) (enumerate ds)
+    in
+    ────────────────────────────────────────────────────────────────────────
+    Δ ∣ Γ
+      —[ destroy⦅ xs ⦆ ]→
+    Γ
 
   ------------------------------------------------------------
   -- ii) Rules for contract advertisements and stipulation
 
   [C-Advertise] : let ⟨ G ⟩ _ = ad; partG = nub-participants G in
 
-      ValidAdvertisement ad    -- the advertisement is valid
-    → Any (_∈ Hon) partG       -- at least one honest participant
-    → deposits ad ⊆ deposits Γ -- all persistent deposits in place
-      --——————————————————————————————————————————————————————————————————————
-    → Γ —[ advertise⦅ ad ⦆ ]→ ` ad ∣ Γ
+    ∙ ValidAdvertisement ad    -- the advertisement is valid
+    ∙ Any (_∈ Hon) partG       -- at least one honest participant
+    ∙ deposits ad ⊆ deposits Γ -- all persistent deposits in place
+      ────────────────────────────────────────────────────────────
+      Γ —[ advertise⦅ ad ⦆ ]→ ` ad ∣ Γ
 
 
   [C-AuthCommit] : let ⟨ G ⟩ _ = ad in
-    ∀ {secrets : List (Secret × Maybe ℕ)}
+    ∀ {secrets : List (Secret × Maybe ℕ)} →
 
-    → let (as , ms) = unzip secrets
-          Δ         = || map (uncurry ⟨ A ∶_♯_⟩) secrets
-      in
+    let (as , ms) = unzip secrets
+        Δ         = || map (uncurry ⟨ A ∶_♯_⟩) secrets
+    in
 
-      as ≡ secretsOfᵖ A G         -- a₁..aₖ secrets of A in G
-    → All (_∉ secretsOfᶜᶠ A Γ) as -- ∀i ∈ 1..k : ∄N : {A : aᵢ ♯ N} ∈ Γ
-    → (A ∈ Hon → All Is-just ms)  -- honest participants commit to valid lengths
-      --——————————————————————————————————————————————————————————————————————
-    → ` ad ∣ Γ
+    ∙ as ≡ secretsOfᵖ A G         -- a₁..aₖ secrets of A in G
+    ∙ All (_∉ secretsOfᶜᶠ A Γ) as -- ∀i ∈ 1..k : ∄N : {A : aᵢ ♯ N} ∈ Γ
+    ∙ (A ∈ Hon → All Is-just ms)  -- honest participants commit to valid lengths
+      ──────────────────────────────────────────────────────────────────────────
+      ` ad ∣ Γ
         —[ auth-commit⦅ A , ad , secrets ⦆ ]→
       ` ad ∣ Γ ∣ Δ ∣ A auth[ ♯▷ ad ]
 
 
   [C-AuthInit] : let ⟨ G ⟩ _ = ad; partG = nub-participants G in
 
-      partG ⊆ committedParticipants ad Γ -- all participants have committed their secrets
-    → (A , v , x) ∈ persistentDeposits G -- G = A :! v @ x | ...
-      --——————————————————————————————————————————————————————————————————————
-    → ` ad ∣ Γ
+    ∙ partG ⊆ committedParticipants ad Γ -- all participants have committed their secrets
+    ∙ (A , v , x) ∈ persistentDeposits G -- G = A :! v @ x | ...
+      ───────────────────────────────────────────────────────────────────────────────────
+      ` ad ∣ Γ
         —[ auth-init⦅ A , ad , x ⦆ ]→
       ` ad ∣ Γ ∣ A auth[ x ▷ˢ ad ]
 
 
   [C-Init] : let ⟨ G ⟩ C = ad; partG = nub-participants G in
 
-      -- all participants have committed their secrets (guaranteed from [C-AuthInit])
+    -- all participants have committed their secrets (guaranteed from [C-AuthInit])
 
-      let toSpend = persistentDeposits G
-          vs      = map select₂ toSpend
-          xs      = map select₃ toSpend
-      in
+    let toSpend = persistentDeposits G
+        vs      = map select₂ toSpend
+        xs      = map select₃ toSpend
+    in
 
-      x ∉ xs ++ ids Γ -- x fresh
-
-      --——————————————————————————————————————————————————————————————————————
-    → ` ad ∣ Γ ∣ || map (λ{ (Aᵢ , vᵢ , xᵢ) → ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xᵢ ▷ˢ ad ] }) toSpend
-               ∣ || map _auth[ ♯▷ ad ] partG
-        —[ init⦅ G , C ⦆ ]→
-      ⟨ C , sum vs ⟩at x ∣ Γ
+    x ∉ xs ++ ids Γ -- x fresh
+    ──────────────────────────────────────────────────────────────────────────────────
+    ` ad
+    ∣ Γ
+    ∣ || map (λ{ (Aᵢ , vᵢ , xᵢ) → ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xᵢ ▷ˢ ad ] }) toSpend
+    ∣ || map _auth[ ♯▷ ad ] partG
+      —[ init⦅ G , C ⦆ ]→
+    ⟨ C , sum vs ⟩at x ∣ Γ
 
 
   ---------------------------------------------------
   -- iii) Rules for executing active contracts
 
   [C-Split] :
-    ∀ {vcis : List (Value × Contracts × Id)}
+    ∀ {vcis : List (Value × Contracts × Id)} →
 
-    → let (vs , cs , ys) = unzip₃ vcis in
+    let (vs , cs , ys) = unzip₃ vcis in
 
-      All (_∉ y L.∷ ids Γ) ys -- ys fresh
-
-      --——————————————————————————————————————————————————————————————————————
-    → ⟨ [ split (zip vs cs) ] , sum vs ⟩at y ∣ Γ
-        —[ split⦅ y ⦆ ]→
-      || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis ∣ Γ
+    All (_∉ y L.∷ ids Γ) ys -- ys fresh
+    ──────────────────────────────────────────
+    ⟨ [ split (zip vs cs) ] , sum vs ⟩at y ∣ Γ
+      —[ split⦅ y ⦆ ]→
+    || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis ∣ Γ
 
 
   [C-AuthRev] :
 
-      --——————————————————————————————————————————————————————————————————————
-      ⟨ A ∶ a ♯ just n ⟩ ∣ Γ
-        —[ auth-rev⦅ A , a ⦆ ]→
-      A ∶ a ♯ n ∣ Γ
+    ─────────────────────────
+    ⟨ A ∶ a ♯ just n ⟩ ∣ Γ
+      —[ auth-rev⦅ A , a ⦆ ]→
+    A ∶ a ♯ n ∣ Γ
 
 
   [C-PutRev] :
     ∀ {ds : List (Participant × Value × Id)}
-      {ss : List (Participant × Secret × ℕ)}
+      {ss : List (Participant × Secret × ℕ)} →
 
-    → let (_ , vs , xs) = unzip₃ ds
-          (_ , as , _)  = unzip₃ ss
-          Γ = || map (uncurry₃ ⟨_has_⟩at_) ds
-          Δ = || map (uncurry₃ _∶_♯_) ss
-          ΔΓ′ = Δ ∣ Γ′
-      in
+    let (_ , vs , xs) = unzip₃ ds
+        (_ , as , _)  = unzip₃ ss
+        Γ = || map (uncurry₃ ⟨_has_⟩at_) ds
+        Δ = || map (uncurry₃ _∶_♯_) ss
+        ΔΓ′ = Δ ∣ Γ′
+    in
 
-      z ∉ y L.∷ ids (Γ ∣ ΔΓ′) -- z fresh
-    → ⟦ p ⟧ Δ ≡ just true -- predicate is true
-
-      --——————————————————————————————————————————————————————————————————————
-    → ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ (Γ ∣ ΔΓ′)
+    ∙ z ∉ y L.∷ ids (Γ ∣ ΔΓ′) -- z fresh
+    ∙ ⟦ p ⟧ Δ ≡ just true -- predicate is true
+      ──────────────────────────────────────────────────────
+      ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ (Γ ∣ ΔΓ′)
         —[ put⦅ xs , as , y ⦆ ]→
       ⟨ c , v + sum vs ⟩at z ∣ ΔΓ′
 
 
   [C-Withdraw] :
 
-      x ∉ y L.∷ ids Γ -- x fresh
-
-      --——————————————————————————————————————————————————————————————————————
-    → ⟨ [ withdraw A ] , v ⟩at y ∣ Γ
-        —[ withdraw⦅ A , v , y ⦆ ]→
-      ⟨ A has v ⟩at x ∣ Γ
+    x ∉ y L.∷ ids Γ -- x fresh
+    ──────────────────────────────
+    ⟨ [ withdraw A ] , v ⟩at y ∣ Γ
+      —[ withdraw⦅ A , v , y ⦆ ]→
+    ⟨ A has v ⟩at x ∣ Γ
 
 
   [C-AuthControl] :
     ∀ {i : Index c} → let d = c ‼ i in
 
-      A ∈ authDecorations d -- D ≡ A : D′
-      --——————————————————————————————————————————————————————————————————————
-    → ⟨ c , v ⟩at x ∣ Γ
-        —[ auth-control⦅ A , x ▷ d ⦆ ]→
-      ⟨ c , v ⟩at x ∣ A auth[ x ▷ d ] ∣ Γ
+    A ∈ authDecorations d -- D ≡ A : D′
+    ───────────────────────────────────
+    ⟨ c , v ⟩at x ∣ Γ
+      —[ auth-control⦅ A , x ▷ d ⦆ ]→
+    ⟨ c , v ⟩at x ∣ A auth[ x ▷ d ] ∣ Γ
 
 
   -- T0D0 linearize, i.e. introduce new label and produce intermediate configuration:
@@ -248,34 +246,15 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
   [C-Control] :
     ∀ {i : Index c} → let open ∣SELECT c i in
 
-      ¬Null (authDecorations d) ⊎ (length c > 1)
-    → Γ ≈ L
-    → ⟨ [ d∗ ] , v ⟩at x ∣ L —[ α ]→ Γ′ -- T0D0 replace with _—↠_?
-    → cv α ≡ just x
-      --——————————————————————————————————————————————————————————————————————
-    → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub $ authDecorations d) ∣ Γ
+    ∙ ¬Null (authDecorations d) ⊎ (length c > 1)
+    ∙ Γ ≈ L
+    ∙ ⟨ [ d∗ ] , v ⟩at x ∣ L —[ α ]→ Γ′ -- T0D0 replace with _—↠_?
+    ∙ cv α ≡ just x
+      ───────────────────────────────────────────────────────────────────
+      ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub $ authDecorations d) ∣ Γ
         —[ α ]→
       Γ′
 
-_—[_]↛_ : Configuration → Label → Configuration → Set
-Γ —[ α ]↛ Γ′ = ¬ (Γ —[ α ]→ Γ′)
-
-isControl : Pred₀ (Γ —[ α ]→ Γ′)
-isControl ([C-Control] _ _ _ _) = ⊤
-isControl _ = ⊥
-
-isWithdraw : Pred₀ (Γ —[ α ]→ Γ′)
-isWithdraw ([C-Withdraw] _) = ⊤
-isWithdraw _ = ⊥
-
-innerL : (step : Γ —[ α ]→ Γ′) → {isControl step} → Configuration
--- innerL ([C-Control] {L = L} _ _ _ _) = L
-innerL ([C-Control] {c}{L = L}{v}{x} {i = i} _ _ _ _) = ⟨ [ removeTopDecorations (c ‼ i) ] , v ⟩at x ∣ L
-
--- innerStep : (step : Γ —[ α ]→ Γ′) → {isControl step} → innerL step —[ α ]→ Γ′
--- innerStep ([C-Control] {L = L} _ L→Γ′ _) = L→Γ′
-
--- cv⇒fresh : (step : Γ —[ α ]→ Γ′) → Is-just {isControl step} → Configuration
 
 -------------------------------------------
 -- Semantic rules for timed configurations.
@@ -290,28 +269,35 @@ data _—[_]→ₜ_ : TimedConfiguration → Label → TimedConfiguration → Se
   -- iv) Rules for handling time
   [Action] :
 
-      Γ —[ α ]→ Γ′
-    → cv α ≡ nothing
-      --——————————————————————————————————————————————————————————————————————
-    → Γ at t —[ α ]→ₜ Γ′ at t
+    ∙ Γ —[ α ]→ Γ′
+    ∙ cv α ≡ nothing
+      ───────────────────────
+      Γ at t —[ α ]→ₜ Γ′ at t
 
 
   [Delay] :
 
-      δ > 0
-      --——————————————————————————————————————————————————————————————————————
-    → Γ at t —[ delay⦅ δ ⦆ ]→ₜ Γ at (t + δ)
+    δ > 0
+    ─────────────────────────────────────
+    Γ at t —[ delay⦅ δ ⦆ ]→ₜ Γ at (t + δ)
 
 
   [Timeout] :
     ∀ {i : Index c} → let open ∣SELECT c i; As , ts = decorations d in
 
-      Null As                           -- no authorizations required to pick branch
-    → All (_≤ t) ts                     -- all time constraints are satisfied
-    → ⟨ [ d∗ ] , v ⟩at x ∣ Γ —[ α ]→ Γ′ -- resulting state if we pick branch
-    → cv α ≡ just x
-      --——————————————————————————————————————————————————————————————————————
-    → (⟨ c , v ⟩at x ∣ Γ) at t —[ α ]→ₜ Γ′ at t
+    ∙ Null As                           -- no authorizations required to pick branch
+    ∙ All (_≤ t) ts                     -- all time constraints are satisfied
+    ∙ ⟨ [ d∗ ] , v ⟩at x ∣ Γ —[ α ]→ Γ′ -- resulting state if we pick branch
+    ∙ cv α ≡ just x
+      ──────────────────────────────────────────────────────────────────────────────
+      (⟨ c , v ⟩at x ∣ Γ) at t —[ α ]→ₜ Γ′ at t
+
+
+_—[_]↛_ : Configuration → Label → Configuration → Set
+Γ —[ α ]↛ Γ′ = ¬ (Γ —[ α ]→ Γ′)
+
+_—[_]↛ₜ_ : TimedConfiguration → Label → TimedConfiguration → Set
+Γₜ —[ α ]↛ₜ Γₜ′ = ¬ (Γₜ —[ α ]→ₜ Γₜ′)
 
 -----------------------------------------------------------------------------------
 -- Derive the reflexive transitive closure for of _—→_ and _—→ₜ_.
