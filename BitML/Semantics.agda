@@ -11,4 +11,5 @@ open import BitML.Semantics.Action Participant Honest public
 open import BitML.Semantics.Label Participant Honest public
 open import BitML.Semantics.Predicate Participant Honest public
 open import BitML.Semantics.InferenceRules Participant Honest public
+open import BitML.Semantics.RuleMatching Participant Honest public
 open import BitML.Semantics.DecidableInference Participant Honest public
