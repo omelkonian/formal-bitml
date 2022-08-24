@@ -20,7 +20,7 @@ open import Prelude.Traces
 open import Prelude.Bifunctor
 open import Prelude.Irrelevance
 open import Prelude.Coercions
-
+open import Prelude.Split renaming (split to mkSplit)
 
 open import BitML.BasicTypes
 
@@ -402,7 +402,7 @@ committedPartG≡ {ad} (p ∷ ps@(_ ∷ _)) =
 ≈⇒names↭ : Γ ≈ Γ′ → Γ ↭⦅ names ⦆ Γ′
 ≈⇒names↭ = collectFromList↭ (collect ⦃ it ⦄)
 
-≈⇒ads↭   : Γ ≈ Γ′ → Γ ↭⦅ advertisements ⦆ Γ′
+≈⇒ads↭ : Γ ≈ Γ′ → Γ ↭⦅ advertisements ⦆ Γ′
 ≈⇒ads↭ = collectFromList↭ (collect ⦃ it ⦄)
 
 ≈⇒namesʳ↭ : Γ ≈ Γ′ → Γ ↭⦅ namesʳ ⦆ Γ′
@@ -411,16 +411,20 @@ committedPartG≡ {ad} (p ∷ ps@(_ ∷ _)) =
 ≈⇒namesˡ↭ : Γ ≈ Γ′ → Γ ↭⦅ namesˡ ⦆ Γ′
 ≈⇒namesˡ↭ {Γ}{Γ′} eq = mapMaybe-↭ isInj₁ $ ≈⇒names↭ {Γ}{Γ′} eq
 
+≈⇒deposits↭ : Γ ≈ Γ′ → Γ ↭⦅ deposits ⦆ Γ′
+≈⇒deposits↭ = collectFromList↭ (collect ⦃ it ⦄)
+
 ∈-resp-≈ : ∀ {Z Z′ A : Set} → ⦃ _ : A has Z ⦄ → ⦃ _ : ISetoid A ⦄
   → (f : ∀ {X} → ⦃ X has Z ⦄ → X → List Z′)
   → (∀ {a a′ : A} → a ≈ a′ → a ↭⦅ f ⦆ a′)
   → ∀ (z : Z′) → (λ ◆ → z ∈ f ◆) Respects _≈_
 ∈-resp-≈ _ ≈⇒↭ x = ∈-resp-↭ ∘ ≈⇒↭
 
-∈ads-resp-≈    = ∈-resp-≈ advertisements (λ {Γ}{Γ′} → ≈⇒ads↭    {Γ}{Γ′})
-∈names-resp-≈  = ∈-resp-≈ names          (λ {Γ}{Γ′} → ≈⇒names↭  {Γ}{Γ′})
-∈namesˡ-resp-≈ = ∈-resp-≈ namesˡ         (λ {Γ}{Γ′} → ≈⇒namesˡ↭ {Γ}{Γ′})
-∈namesʳ-resp-≈ = ∈-resp-≈ namesʳ         (λ {Γ}{Γ′} → ≈⇒namesʳ↭ {Γ}{Γ′})
+∈ads-resp-≈      = ∈-resp-≈ advertisements (λ {Γ}{Γ′} → ≈⇒ads↭      {Γ}{Γ′})
+∈names-resp-≈    = ∈-resp-≈ names          (λ {Γ}{Γ′} → ≈⇒names↭    {Γ}{Γ′})
+∈namesˡ-resp-≈   = ∈-resp-≈ namesˡ         (λ {Γ}{Γ′} → ≈⇒namesˡ↭   {Γ}{Γ′})
+∈namesʳ-resp-≈   = ∈-resp-≈ namesʳ         (λ {Γ}{Γ′} → ≈⇒namesʳ↭   {Γ}{Γ′})
+∈deposits-resp-≈ = ∈-resp-≈ deposits       (λ {Γ}{Γ′} → ≈⇒deposits↭ {Γ}{Γ′})
 
 --- ** name helpers
 
@@ -603,6 +607,21 @@ IsBase = λ where
   ∅ᶜ      → ⊥
   (_ ∣ _) → ⊥
   _       → ⊤
+
+¬base×composite : ∀ Γ → ¬ (IsBase Γ × IsComposite Γ)
+¬base×composite = λ where
+  ∅ᶜ      (() , _)
+  (_ ∣ _) (() , _)
+  (` _)             (_ , ())
+  (⟨ _ has _ ⟩at _) (_ , ())
+  (⟨ _ , _ ⟩at _)   (_ , ())
+  (_ auth[ _ ])     (_ , ())
+  (⟨ _ ∶ _ ♯ _ ⟩)   (_ , ())
+  (_ ∶ _ ♯ _)       (_ , ())
+
+instance
+  Split-∣ : (∃ IsComposite) -splitsInto- Cfg
+  Split-∣ .mkSplit ((l ∣ r) , tt) = l , r
 
 IsBase-BaseCfg  : ∀ (`γ : BaseCfg)
   → IsBase (to[ Cfg ] `γ)
