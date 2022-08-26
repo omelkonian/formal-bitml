@@ -179,7 +179,6 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
       —[ init⦅ G , C ⦆ ]→
     ⟨ C , sum vs ⟩at x ∣ Γ
 
-
   ---------------------------------------------------
   -- iii) Rules for executing active contracts
 

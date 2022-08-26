@@ -78,6 +78,9 @@ infix  5 _at_
 Cfg = Configuration
 Cfgᵗ = TimedConfiguration
 
+∅ᵗ : Cfgᵗ
+∅ᵗ = ∅ᶜ at 0
+
 -- Alternative representation as list of atomic/base configurations.
 data BaseCfg : Set where
   ``_ : (ad : Advertisement) → BaseCfg
