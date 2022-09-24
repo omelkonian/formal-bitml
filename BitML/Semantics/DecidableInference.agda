@@ -164,3 +164,29 @@ C-Control :
   → {p₂ : auto∶ cv α ≡ just x}
   → ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub (authDecorations d)) ∣ Γ —[ α ]→ Γ′
 C-Control {p₀ = p₀}{p₁} L—→Γ′ {p₂} = [C-Control] (toWitness p₀) (toWitness p₁) L—→Γ′ (toWitness p₂)
+
+Act :
+  ∀ {p : auto∶ cv α ≡ nothing} →
+  ∙ Γ —[ α ]→ Γ′
+    ───────────────────────
+    Γ at t —[ α ]→ₜ Γ′ at t
+Act {p = p} = flip [Action] (toWitness p)
+
+Delay :
+  ∀ {p : True $ δ >? 0} →
+  ─────────────────────────────────────
+  Γ at t —[ delay⦅ δ ⦆ ]→ₜ Γ at (t + δ)
+Delay {p = p} = [Delay] (toWitness p)
+
+Timeout :
+  ∀ {i : Index c} → let open ∣SELECT c i; As , ts = decorations d in
+
+  ∀ {p₁ : auto∶ Null As}
+    {p₂ : auto∶ All (_≤ t) ts}
+    {p₃ : auto∶ cv α ≡ just x} →
+
+  ⟨ [ d∗ ] , v ⟩at x ∣ Γ —[ α ]→ Γ′
+  ──────────────────────────────────────────────────────────────────────────────
+  (⟨ c , v ⟩at x ∣ Γ) at t —[ α ]→ₜ Γ′ at t
+Timeout {p₁ = p₁}{p₂}{p₃} Γ→ =
+  [Timeout] (toWitness p₁) (toWitness p₂) Γ→ (toWitness p₃)
