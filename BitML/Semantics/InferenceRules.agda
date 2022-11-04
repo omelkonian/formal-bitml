@@ -13,6 +13,7 @@ open import Prelude.Ord
 open import Prelude.General
 open import Prelude.InferenceRules
 open import Prelude.Split renaming (split to mkSplit)
+open import Prelude.Null
 
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)

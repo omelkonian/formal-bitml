@@ -21,6 +21,7 @@ open import Prelude.Bifunctor
 open import Prelude.Irrelevance
 open import Prelude.Coercions
 open import Prelude.Split renaming (split to mkSplit)
+open import Prelude.Null
 
 open import BitML.BasicTypes
 

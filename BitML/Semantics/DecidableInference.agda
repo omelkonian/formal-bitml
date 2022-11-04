@@ -14,6 +14,7 @@ open import Prelude.Validity
 open import Prelude.Ord
 open import Prelude.Nary hiding (⟦_⟧)
 open import Prelude.InferenceRules
+open import Prelude.Null
 
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
