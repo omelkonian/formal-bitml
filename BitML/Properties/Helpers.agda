@@ -267,7 +267,7 @@ c∈⇒x∈ : ∀ Γ →
   ──────────────────
   x ∈ ids Γ
 c∈⇒x∈ Γ = flip (∈-mapMaybe⁺ isInj₂) refl
-        ∘ ∈-concatMap⁺
+        ∘ ∈-concatMap⁺ names
         ∘ L.Any.map c⇒x
         ∘ ∈-Cfg′ _ Γ
 {-
@@ -332,37 +332,37 @@ module _ {c}{v}{x} where
     ≡⟨⟩
       ( ∈-resp-↭ (≈⇒namesʳ↭ {Γ}{Γ′} Γ≈) -- x ∈ ids Γ′
       ∘ flip (∈-mapMaybe⁺ isInj₂) refl  -- x ∈ ids Γ
-      ∘ ∈-concatMap⁺                    -- inj₂ x ∈ names Γ
+      ∘ ∈-concatMap⁺ _                  -- inj₂ x ∈ names Γ
       ∘ L.Any.map c⇒x                   -- Any (λ ◆ → inj₂ x ∈ names ◆) Γ
       ∘ ∈-Cfg′ _ Γ                      -- `⟨ c , v ⟩ₓ ∈ toList Γ
       ) c∈                              -- ⟨ c , v ⟩ₓ ∈ᶜ Γ
     ≡⟨ ∈-resp-↭∘∈-mapMaybe⁺ isInj₂ (≈⇒names↭ {Γ}{Γ′} Γ≈) refl _ ⟩
       ( flip (∈-mapMaybe⁺ isInj₂) refl -- x ∈ ids Γ′
       ∘ ∈-resp-↭ (≈⇒names↭ {Γ}{Γ′} Γ≈) -- inj₂ x ∈ names Γ′
-      ∘ ∈-concatMap⁺                   -- inj₂ x ∈ names Γ
+      ∘ ∈-concatMap⁺ _                 -- inj₂ x ∈ names Γ
       ∘ L.Any.map c⇒x                  -- Any (λ ◆ → inj₂ x ∈ names ◆) Γ
       ∘ ∈-Cfg′ _ Γ                     -- `⟨ c , v ⟩ₓ ∈ toList Γ
       ) c∈                             -- ⟨ c , v ⟩ₓ ∈ᶜ Γ
     ≡⟨ cong (flip (∈-mapMaybe⁺ isInj₂) refl)
             (∈-resp-↭∘∈-concatMap⁺ Γ≈ _)  ⟩
       ( flip (∈-mapMaybe⁺ isInj₂) refl -- x ∈ ids Γ′
-      ∘ ∈-concatMap⁺                   -- inj₂ x ∈ names Γ′
+      ∘ ∈-concatMap⁺ _                 -- inj₂ x ∈ names Γ′
       ∘ Any-resp-↭ Γ≈                  -- Any (λ ◆ → inj₂ x ∈ names ◆) Γ′
       ∘ L.Any.map c⇒x                  -- Any (λ ◆ → inj₂ x ∈ names ◆) Γ
       ∘ ∈-Cfg′ _ Γ                     -- `⟨ c , v ⟩ₓ ∈ toList Γ
       ) c∈                             -- ⟨ c , v ⟩ₓ ∈ᶜ Γ
-    ≡⟨ cong (flip (∈-mapMaybe⁺ isInj₂) refl ∘ ∈-concatMap⁺)
+    ≡⟨ cong (flip (∈-mapMaybe⁺ isInj₂) refl ∘ ∈-concatMap⁺ _)
             (Any-resp-↭∘Any-map c⇒x Γ≈ _) ⟩
       ( flip (∈-mapMaybe⁺ isInj₂) refl -- x ∈ ids Γ′
-      ∘ ∈-concatMap⁺                   -- inj₂ x ∈ names Γ′
+      ∘ ∈-concatMap⁺ _                 -- inj₂ x ∈ names Γ′
       ∘ L.Any.map c⇒x                  -- Any (λ ◆ → inj₂ x ∈ names ◆) Γ′
       ∘ ∈-resp-↭ Γ≈                    -- `⟨ c , v ⟩ₓ ∈ toList Γ′
       ∘ ∈-Cfg′ _ Γ                     -- `⟨ c , v ⟩ₓ ∈ toList Γ
       ) c∈                             -- ⟨ c , v ⟩ₓ ∈ᶜ Γ
-    ≡⟨ sym $ cong (flip (∈-mapMaybe⁺ isInj₂) refl ∘ ∈-concatMap⁺ ∘ L.Any.map c⇒x)
+    ≡⟨ sym $ cong (flip (∈-mapMaybe⁺ isInj₂) refl ∘ ∈-concatMap⁺ _ ∘ L.Any.map c⇒x)
            $ ∈-resp-↭∘∈-Cfg′ (⟨ c , v ⟩at x) Γ Γ′ Γ≈ c∈ ⟩
       ( flip (∈-mapMaybe⁺ isInj₂) refl -- x ∈ ids Γ′
-      ∘ ∈-concatMap⁺                   -- inj₂ x ∈ names Γ′
+      ∘ ∈-concatMap⁺ _                 -- inj₂ x ∈ names Γ′
       ∘ L.Any.map c⇒x                  -- Any (λ ◆ → inj₂ x ∈ names ◆) Γ′
       ∘ ∈-Cfg′ _ Γ′                    -- `⟨ c , v ⟩ₓ ∈ toList Γ′
       ∘ ∈ᶜ-resp-≈ {Γ}{Γ′} Γ≈           -- ⟨ c , v ⟩ₓ ∈ toList Γ′
@@ -479,7 +479,7 @@ tr ⊆ˢ tr′ = allStates tr ⊆ allStates tr′
     --——————————————
   → tr ⊆⦅ names ⦆ tr′
 ⊆ˢ⇒names⊆ tr tr′ states⊆
-  = ∈-concatMap⁺
+  = ∈-concatMap⁺ _
   ∘ ⊆-resp-Any states⊆
   ∘ ∈-concatMap⁻ names
 
@@ -488,7 +488,7 @@ tr ⊆ˢ tr′ = allStates tr ⊆ allStates tr′
     --——————————————————————
   → tr ⊆⦅ advertisements ⦆ tr′
 ⊆ˢ⇒ads⊆ tr tr′ states⊆
-  = ∈-concatMap⁺
+  = ∈-concatMap⁺ _
   ∘ ⊆-resp-Any states⊆
   ∘ ∈-concatMap⁻ advertisements
 
