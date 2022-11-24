@@ -9,6 +9,9 @@ open import Prelude.Lists
 open import Prelude.Applicative
 open import Prelude.Semigroup
 open import Prelude.Nary
+open import Prelude.FromList
+open import Prelude.Sets
+open import Prelude.DecEq
 
 open import BitML.Example.Setup
 open import BitML.Example.Contracts
@@ -32,4 +35,4 @@ _ = "x" ▷⟨ A , 33 , 67 ⟩
 -- donate
 _ = "x" ▷ᵈ B
 -- destroy
-_ = ⟦ "x₀", "x₁" , "x₂" ⟧ , # 1 ▷ᵈˢ "y"
+_ = fromList ⟦ "x₀", "x₁" , "x₂" ⟧ , # 1 ▷ᵈˢ "y"

@@ -1,5 +1,5 @@
 open import Prelude.Init
-open import Prelude.Lists
+open import Prelude.Lists.Core using (unzip₃)
 open import Prelude.Membership
 open import Prelude.DecEq
 open import Prelude.Nary hiding (⟦_⟧)
@@ -7,6 +7,8 @@ open import Prelude.Ord
 open import Prelude.General
 open import Prelude.InferenceRules
 open import Prelude.Split renaming (split to mkSplit)
+open import Prelude.Sets
+open import Prelude.Indexable
 
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
@@ -90,7 +92,7 @@ innerL ([C-Control] {c}{L = L}{v}{x} {i = i} _ _ _ _) =
 innerStep : (st : Γ —[ α ]→ Γ′) → {p : isControl st} → innerL st {p} —[ α ]→ Γ′
 innerStep ([C-Control] _ _ L→ _) = L→
 
-innerCI : (st : Γ —[ α ]→ Γ′) → {isControl st} → ∃ λ (c : Contracts) → Index c
+innerCI : (st : Γ —[ α ]→ Γ′) → {isControl st} → ∃ λ (c : Contracts) → Ix c
 innerCI ([C-Control] {c = c} {i = i} _ _ _ _) = c , i
 
 innerLₜ : (stₜ : Γₜ —[ α ]→ₜ Γₜ′) → {isTimeout stₜ} → Configuration
@@ -101,7 +103,7 @@ innerStepₜ : (stₜ : Γₜ —[ α ]→ₜ (Γ′ at t′)) → {p : isTimeou
   innerLₜ stₜ {p} —[ α ]→ Γ′
 innerStepₜ ([Timeout] _ _ Γ→ _) = Γ→
 
-innerCIₜ : (stₜ : Γₜ —[ α ]→ₜ Γₜ′) → {isTimeout stₜ} → ∃ λ (c : Contracts) → Index c
+innerCIₜ : (stₜ : Γₜ —[ α ]→ₜ Γₜ′) → {isTimeout stₜ} → ∃ λ (c : Contracts) → Ix c
 innerCIₜ ([Timeout] {c = c} {i = i} _ _ _ _) = c , i
 
 innerDₜ : (stₜ : Γₜ —[ α ]→ₜ Γₜ′) → {isTimeout stₜ} → Contract
@@ -167,7 +169,7 @@ match-withdraw :
   ∃ λ Γ₀ → ∃ λ x →
     (Γ  ≡ ⟨ [ withdraw A ] , v ⟩at y ∣ Γ₀)
   × (Γ′ ≡ ⟨ A has v ⟩at x ∣ Γ₀)
-  × (x ∉ y L.∷ ids Γ₀)
+  × (x ∉ˢ y ∷ˢ ids Γ₀)
 match-withdraw ([C-Withdraw] x∉) _ = -, -, refl , refl , x∉
 match-withdraw ([C-Control] _ _ _ _) ¬ctrl = ⊥-elim $ ¬ctrl tt
 
@@ -175,20 +177,21 @@ match-put :
   ∀ (step : Γ —[ put⦅ xs , as , y ⦆ ]→ Γ′) →
   ∙ ¬ isControl step
     ───────────────────────────────────────────
-  ∃ λ ds → ∃ λ ss → ∃ λ p → ∃ λ c → ∃ λ v → ∃ λ Γ₀ → ∃ λ z →
-  let (_ , vs , _xs) = unzip₃ ds
-      (_ , _as , _)  = unzip₃ ss
+  ∃ λ (get-ds : Ix xs → Participant × Value) →
+  ∃ λ (get-ss : Ix as → Participant × ℕ) →
+  ∃ λ p → ∃ λ c → ∃ λ v → ∃ λ Γ₀ → ∃ λ z →
+  let ds = mapWithIxˢ xs λ x i → let A , v = get-ds i in A , v , x
+      ss = mapWithIxˢ as λ a i → let A , n = get-ss i in A , a , n
+      (_ , vs , _) = unzip₃ ds
       _Γ = || map (uncurry₃ ⟨_has_⟩at_) ds
       Δ = || map (uncurry₃ _∶_♯_) ss
       ΔΓ′ = Δ ∣ Γ₀
   in (Γ  ≡ ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ (_Γ ∣ ΔΓ′))
    × (Γ′ ≡ ⟨ c , v + sum vs ⟩at z ∣ ΔΓ′)
-   × (xs ≡ _xs)
-   × (as ≡ _as)
-   × (z ∉ y L.∷ ids (_Γ ∣ ΔΓ′))
+   × (z ∉ˢ y ∷ˢ ids (_Γ ∣ ΔΓ′))
    × (⟦ p ⟧ Δ ≡ just true)
-match-put ([C-PutRev] {ds = ds}{ss} fresh-z p≡) _ =
-  ds , ss , -, -, -, -, -, refl , refl , refl , refl , fresh-z , p≡
+match-put ([C-PutRev] {get-ds = get-ds}{get-ss} fresh-z p≡) _ =
+  get-ds , get-ss , -, -, -, -, -, refl , refl , fresh-z , p≡
 match-put ([C-Control] _ _ _ _) ¬ctrl = ⊥-elim $ ¬ctrl tt
 
 match-split :
@@ -199,27 +202,24 @@ match-split :
   let vs , cs , ys = unzip₃ vcis
   in (Γ  ≡ ⟨ [ split (zip vs cs) ] , sum vs ⟩at y ∣ Γ₀)
    × (Γ′ ≡ || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis ∣ Γ₀)
-   × All (_∉ y L.∷ ids Γ₀) ys
+   × All (_∉ˢ y ∷ˢ ids Γ₀) ys
 match-split ([C-Split] {vcis = vcis} fresh-ys) _ =
   vcis , -, -, refl , refl , fresh-ys
 match-split ([C-Control] _ _ _ _) ¬ctrl = ⊥-elim $ ¬ctrl tt
 
-match-authDestroy : ∀ {j′ : Index xs} →
-  Γ —[ auth-destroy⦅ A , xs , j′ ⦆ ]→ Γ′
+match-authDestroy : ∀ {j : Ix xs} →
+  Γ —[ auth-destroy⦅ A , xs , j ⦆ ]→ Γ′
   ───────────────────────────────────────────
-  ∃ λ ds → ∃ λ Γ₀ → ∃ λ y → ∃ λ (j : Index ds) →
-  let _xs = map select₃ ds
-      _Aⱼ = proj₁ (ds ‼ j)
-      _j′ = ‼-map {xs = ds} j
+  ∃ λ (get-ds : Ix xs → Participant × Value) → ∃ λ Γ₀ → ∃ λ y →
+  let _Aⱼ = get-ds j .proj₁
+      ds = mapWithIxˢ xs λ x i → let A , v = get-ds i in  A , v , x
       Δ  = || map (uncurry₃ ⟨_has_⟩at_) ds
   in (Γ  ≡ Δ ∣ Γ₀)
-   × (Γ′ ≡ Δ ∣ _Aⱼ auth[ _xs , _j′ ▷ᵈˢ y ] ∣ Γ₀)
+   × (Γ′ ≡ Δ ∣ _Aⱼ auth[ xs , j ▷ᵈˢ y ] ∣ Γ₀)
    × (A ≡ _Aⱼ)
-   × ∃ λ (xs≡ : xs ≡ _xs)
-   → (j′ ≡ subst Index (sym xs≡) _j′)
-   × (y ∉ ids Γ₀)
-match-authDestroy ([DEP-AuthDestroy] {Γ = Γ₀} {ds = ds}{j} fresh-y) =
-  ds , -, -, j , refl , refl , refl , refl , refl , fresh-y
+   × (y ∉ˢ ids Γ₀)
+match-authDestroy ([DEP-AuthDestroy] fresh-y) =
+  -, -, -, refl , refl , refl , fresh-y
 
 ⟨⟩∘∣-injective : ∀ {d d′} →
   ⟨ [ d ] , v ⟩at x ∣ Γ ≡ ⟨ [ d′ ] , v′ ⟩at x′ ∣ Γ′
@@ -238,7 +238,7 @@ match-withdrawₜ :
   × (innerXₜ stepₜ {isT} ≡ y)
   × (innerΓₜ stepₜ {isT} ≡ Γ₀)
   × (Γ′ ≡ ⟨ A has v ⟩at x ∣ Γ₀)
-  × (x ∉ y L.∷ ids Γ₀)
+  × (x ∉ˢ y ∷ˢ ids Γ₀)
 match-withdrawₜ stepₜ@([Timeout] {c = c} {i = i} As≡∅ ∀t≤ Γ→ refl) tt
   with Γ₀ , x , Γ≡ , ⋯ ← match-withdraw Γ→ (timeout⇒¬control stepₜ tt)
   with d≡ , v≡ , x≡ , Γ≡′ ← ⟨⟩∘∣-injective Γ≡
@@ -249,9 +249,12 @@ match-putₜ :
   ∀ (isT : isTimeout stepₜ) →
     ────────────────────────────────────────────────────────
   let d = innerDₜ stepₜ {isT} in
-  ∃ λ ds → ∃ λ ss → ∃ λ p → ∃ λ c → ∃ λ v → ∃ λ Γ₀ → ∃ λ z →
-  let (_ , vs , _xs) = unzip₃ ds
-      (_ , _as , _)  = unzip₃ ss
+  ∃ λ (get-ds : Ix xs → Participant × Value) →
+  ∃ λ (get-ss : Ix as → Participant × ℕ) →
+  ∃ λ p → ∃ λ c → ∃ λ v → ∃ λ Γ₀ → ∃ λ z →
+  let ds = mapWithIxˢ xs λ x i → let A , v = get-ds i in A , v , x
+      ss = mapWithIxˢ as λ a i → let A , n = get-ss i in A , a , n
+      (_ , vs , _) = unzip₃ ds
       _Γ = || map (uncurry₃ ⟨_has_⟩at_) ds
       Δ = || map (uncurry₃ _∶_♯_) ss
       ΔΓ′ = Δ ∣ Γ₀
@@ -261,9 +264,7 @@ match-putₜ :
   × (innerXₜ stepₜ {isT} ≡ y)
   × (innerΓₜ stepₜ {isT} ≡ (_Γ ∣ ΔΓ′))
   × (Γ′ ≡ ⟨ c , v + sum vs ⟩at z ∣ ΔΓ′)
-  × (xs ≡ _xs)
-  × (as ≡ _as)
-  × (z ∉ y L.∷ ids (_Γ ∣ ΔΓ′))
+  × (z ∉ˢ y ∷ˢ ids (_Γ ∣ ΔΓ′))
   × (⟦ p ⟧ Δ ≡ just true)
 match-putₜ stepₜ@([Timeout] {c = c} {i = i} As≡∅ ∀t≤ Γ→ refl) tt
   with ds , ss , p , c , v , Γ₀ , z , Γ≡ , ⋯ ← match-put Γ→ (timeout⇒¬control stepₜ tt)
@@ -282,7 +283,7 @@ match-splitₜ :
   × (innerXₜ stepₜ {isT} ≡ y)
   × (innerΓₜ stepₜ {isT} ≡ Γ₀)
   × (Γ′ ≡ || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis ∣ Γ₀)
-  × All (_∉ y L.∷ ids Γ₀) ys
+  × All (_∉ˢ y ∷ˢ ids Γ₀) ys
 match-splitₜ stepₜ@([Timeout] {c = c} {i = i} _ _ Γ→ refl) tt
   with vcis , Γ₀ , y , Γ≡ , ⋯ ← match-split Γ→ (timeout⇒¬control stepₜ tt)
   with d≡ , v≡ , x≡ , Γ≡′ ← ⟨⟩∘∣-injective Γ≡

@@ -4,16 +4,10 @@
 
 module BitML.Example.Contracts where
 
-open import Data.Unit using (tt)
-open import Data.List using (List; []; _∷_; [_])
-open import Data.List.Relation.Unary.Any using (here; there)
-
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-import Data.List.Relation.Binary.Sublist.Heterogeneous as SB
-
---------------------------------------------------------------------------------
-
+open import Prelude.Init
 open import Prelude.Lists
+open import Prelude.DecEq
+open import Prelude.Sets
 
 open import BitML.Example.Setup
 
@@ -28,18 +22,18 @@ ex-contracts₁ = withdraw A ∙
 
 ex-contracts₂ : Contracts
 ex-contracts₂ = A ⇒ withdraw A
-              ⊕ put [] ⇒ (withdraw A ∙)
+              ⊕ put ∅ ⇒ (withdraw A ∙)
               ∙
 
 ex-contracts₃ : Contracts
-ex-contracts₃ = put [ "x" ] ⇒ (withdraw A ∙)
+ex-contracts₃ = put (singleton "x") ⇒ (withdraw A ∙)
               ∙
 
 ex-contracts₄ : Contracts
 ex-contracts₄ = A ⇒ withdraw B
               ⊕ B ⇒ split ( 2 ⊸ (withdraw A ∙)
                           ⊕ 3 ⊸ (after 100 ⇒ withdraw B ∙)
-                          ⊕ 0 ⊸ (put [ "y" ] ⇒ (A ⇒ withdraw B ∙) ∙)
+                          ⊕ 0 ⊸ (put (singleton "y") ⇒ (A ⇒ withdraw B ∙) ∙)
                           ∙)
               ∙
 

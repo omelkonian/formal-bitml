@@ -7,6 +7,7 @@ open import Prelude.DecLists
 open import Prelude.Decidable
 open import Prelude.Setoid
 open import Prelude.Ord
+open import Prelude.Sets
 
 open import BitML.BasicTypes hiding (a; x; y; t)
 open import BitML.Predicate hiding (`; ∣_∣)
@@ -32,7 +33,7 @@ a = "CHANGE_ME" ; N = 9 ; t = 42 ; x = "x" ; y = "y" ; x₁ = "x₁" ; x₂ = "x
 
 tc : Advertisement
 tc = ⟨ A :! 1 at x ∣∣ A :secret a ∣∣ B :! 0 at y ⟩
-       reveal [ a ] ⇒ [ withdraw A ]
+       reveal (singleton a) ⇒ [ withdraw A ]
      ⊕ after t ⇒ withdraw B
      ∙
 
@@ -45,7 +46,7 @@ tc-steps :
      ∷ auth-init⦅ B , tc , y ⦆
      ∷ init⦅ G tc , tc .C ⦆
      ∷ auth-rev⦅ A , a ⦆
-     ∷ put⦅ [] , [ a ] , x₁ ⦆
+     ∷ put⦅ ∅ , singleton a , x₁ ⦆
      ∷ withdraw⦅ A , 1 , x₂ ⦆
      ∷ []
      ]↠
@@ -55,10 +56,12 @@ tc-steps =
     ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
   —→⟨ C-Advertise {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} ⟩
     ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
-  —→⟨ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} {secrets = [ a , just N ]} ⟩
+  —→⟨ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y}
+                   {get-n = λ where 0F → just N} ⟩
     ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]
   —→⟨ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                      ∣ A auth[ ♯▷ tc ]} {secrets = []} ⟩
+                      ∣ A auth[ ♯▷ tc ]}
+                   {get-n = λ ()} ⟩
     ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
          ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]
   —→⟨ C-AuthInit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
@@ -79,7 +82,7 @@ tc-steps =
                 {Γ = A ∶ a ♯ 9}
                 {Γ′ = ⟨ [ withdraw A ] , 1 ⟩at x₂ ∣ (A ∶ a ♯ 9 ∣ ∅ᶜ)}
                 {i = 0F}
-    $ C-PutRev {ds = []} {ss = [ A , a , 9 ]} ⟩
+    $ C-PutRev {get-ds = λ ()} {get-ss = λ where 0F → A , 9} ⟩
     ⟨ [ withdraw A ] , 1 ⟩at x₂ ∣ A ∶ a ♯ 9
   —→⟨ C-Withdraw {x = x₃} {Γ = A ∶ a ♯ 9} ⟩
     ⟨ A has 1 ⟩at x₃ ∣ A ∶ a ♯ N
@@ -94,7 +97,7 @@ tc-stepsₜ :
      ∷ auth-init⦅ B , tc , y ⦆
      ∷ init⦅ G tc , tc .C ⦆
      ∷ auth-rev⦅ A , a ⦆
-     ∷ put⦅ [] , [ a ] , x₁ ⦆
+     ∷ put⦅ ∅ , singleton a , x₁ ⦆
      ∷ withdraw⦅ A , 1 , x₂ ⦆
      ∷ []
      ]↠ₜ
@@ -106,11 +109,13 @@ tc-stepsₜ =
      $ C-Advertise {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} ⟩
     (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y) at 0
   —→ₜ⟨ Act {t = 0}
-     $ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} {secrets = [ a , just N ]} ⟩
-    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]) at 0
+     $ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y}
+                    {get-n = λ where 0F → just N} ⟩
+    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
+          ∣ A auth[ ♯▷ tc ]) at 0
   —→ₜ⟨ Act {t = 0}
      $ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                       ∣ A auth[ ♯▷ tc ]} {secrets = []} ⟩
+                      ∣ A auth[ ♯▷ tc ]} {get-n = λ ()} ⟩
     (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
           ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]) at 0
   —→ₜ⟨ Act {t = 0}
@@ -131,7 +136,7 @@ tc-stepsₜ =
      $ [C-AuthRev] {n = 9} {Γ = ⟨ tc .C , 1 ⟩at x₁} ⟩
     (⟨ tc .C , 1 ⟩at x₁ ∣ A ∶ a ♯ 9) at 0
   —→ₜ⟨ Timeout {c = tc .C} {t = 0} {v = 1} {i = 0F}
-     $ C-PutRev {Γ′ = ∅ᶜ} {z = x₂} {ds = []} {ss = [ A , a , 9 ]} ⟩
+     $ C-PutRev {Γ′ = ∅ᶜ} {z = x₂} {get-ds = λ ()} {get-ss = λ where 0F → A , 9} ⟩
     (⟨ [ withdraw A ] , 1 ⟩at x₂ ∣ A ∶ a ♯ 9) at 0
   —→ₜ⟨ Timeout {c = [ withdraw A ]} {t = 0} {v = 1} {i = 0F}
      $ C-Withdraw {x = x₃} {Γ = A ∶ a ♯ 9} ⟩
@@ -151,7 +156,7 @@ tc-steps′ :
      {-
      ∷ init⦅ tc .G , tc .C ⦆
      ∷ auth-rev⦅ A , a ⦆
-     ∷ put⦅ [] , [ a ] , x₁ ⦆
+     ∷ put⦅ ∅ , singleton a , x₁ ⦆
      ∷ withdraw⦅ A , 1 , x₂ ⦆
      -}
      ∷ []
@@ -163,10 +168,11 @@ tc-steps′ =
     ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
   —→⟨ C-Advertise {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} ⟩
     ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
-  —→⟨ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} {secrets = [ a , just N ]} ⟩
+  —→⟨ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y}
+                   {get-n = λ where 0F → just N} ⟩
     ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]
   —→⟨ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                      ∣ A auth[ ♯▷ tc ]} {secrets = []} ⟩
+                      ∣ A auth[ ♯▷ tc ]} {get-n = λ ()} ⟩
     ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
          ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]
   —→⟨ [DEP-AuthDonate] {A}{1}{x}{` tc ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩

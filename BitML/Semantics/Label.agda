@@ -5,6 +5,8 @@ open import Prelude.Init
 open import Prelude.Lists
 open import Prelude.DecEq
 open import Prelude.Membership
+open import Prelude.Sets
+open import Prelude.ToList
 
 open import BitML.BasicTypes
 
@@ -27,7 +29,7 @@ data Label : Set where
   auth-donate⦅_,_▷ᵈ_⦆ : Participant → Id → Participant → Label -- A:x,B
   donate⦅_▷ᵈ_⦆ : Id → Participant → Label -- donate(x,B)
 
-  auth-destroy⦅_,_,_⦆ : Participant → (xs : Ids) → Index xs → Label -- A:x,j
+  auth-destroy⦅_,_,_⦆ : Participant → (xs : Ids) → Index (toList xs) → Label -- A:x,j
   destroy⦅_⦆ : Ids → Label -- destroy(x)
 
   advertise⦅_⦆ : Advertisement → Label -- advertise({G}C)

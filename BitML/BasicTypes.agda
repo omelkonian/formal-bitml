@@ -4,19 +4,20 @@
 module BitML.BasicTypes where
 
 open import Prelude.Init
+open import Prelude.DecEq
+open import Prelude.Sets
 
 Value  = ℕ
-Values = List Value
+Values = Set⟨ Value ⟩
 
 Secret  = String
-Secrets = List Secret
+Secrets = Set⟨ Secret ⟩
 
 Id  = String
-Ids = List String
+Ids = Set⟨ String ⟩
 
-Name : Set
 Name = Secret ⊎ Id
-Names = List Name
+Names = Set⟨ Name ⟩
 
 Time = ℕ
 

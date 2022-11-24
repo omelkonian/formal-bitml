@@ -4,6 +4,8 @@
 open import Prelude.Init
 open import Prelude.Lists
 open import Prelude.DecEq
+open import Prelude.Sets
+open import Prelude.ToList
 
 open import BitML.BasicTypes
 
@@ -39,7 +41,7 @@ data Action : Set where
   _▷ᵈ_ : Id → Participant → Action
 
   -- destroy i-th deposit in xs through y
-  _,_▷ᵈˢ_ : (xs : Ids) → Index xs → Id → Action
+  _,_▷ᵈˢ_ : (xs : Ids) → Index (toList xs) → Id → Action
 
 unquoteDecl DecEq-Action = DERIVE DecEq [ quote Action , DecEq-Action ]
 

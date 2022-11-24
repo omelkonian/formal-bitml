@@ -1,11 +1,10 @@
 ------------------------------------------------------------------------
 -- BitML datatypes: Contracts & Advertisements
 ------------------------------------------------------------------------
-import Data.List.NonEmpty as NE
-
 open import Prelude.Init
 open import Prelude.DecEq
 open import Prelude.Lists
+open import Prelude.Sets
 
 open import BitML.BasicTypes
 open import BitML.Predicate
@@ -16,7 +15,7 @@ module BitML.Contracts.Types
   (Honest : List⁺ Participant)
   where
 
-Hon = NE.toList Honest
+Hon = L.NE.toList Honest
 
 variable A B A′ B′ : Participant
 
@@ -63,8 +62,8 @@ _⊸_ : Value → Contracts → Value × Contracts
 _⊸_ = _,_
 
 pattern put_&reveal_⇒_ xs as c = put xs &reveal as if `true ⇒ c
-pattern put_⇒_ xs c            = put xs &reveal [] ⇒ c
-pattern reveal_⇒_ as c         = put [] &reveal as ⇒ c
+pattern put_⇒_ xs c            = put xs &reveal ∅           ⇒ c
+pattern reveal_⇒_ as c         = put ∅  &reveal as          ⇒ c
 
 -------------------------------------------------------------------
 -- Contract preconditions.
@@ -119,6 +118,7 @@ infixr 5 _⊕_
 
 data DepositType : Set where
   volatile persistent : DepositType
+unquoteDecl DecEq-DepositType = DERIVE DecEq [ quote DepositType , DecEq-DepositType ]
 
 DepositRef  = Participant × Value × Id
 TDepositRef = DepositType × DepositRef

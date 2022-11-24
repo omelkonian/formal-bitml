@@ -3,16 +3,18 @@ open import Prelude.DecEq
 open import Prelude.Membership
 open import Prelude.Setoid
 open import Prelude.ToList
+open import Prelude.FromList
 open import Prelude.Lists
 open import Prelude.General hiding (_⊢_)
 open import Prelude.Nary
 open import Prelude.Bifunctor
-open import Prelude.Collections
+open import Prelude.SetCollections
 open import Prelude.Measurable
 open import Prelude.ToN
 open import Prelude.InferenceRules
 open import Prelude.Decidable
 open import Prelude.Coercions
+open import Prelude.Sets
 
 module BitML.Properties.Helpers
   (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
@@ -183,38 +185,38 @@ zoom {α = α} Γ↠ α∈
   with _ , _ , _ , _ , xy∈ , x≈ , .α , refl , Γ→ ← zoomP Γ↠ α∈
      = -, -, -, -, xy∈ , x≈ , Γ→
 
+-- ∈-deposits-
+
 namesʳ⊆deposits :
-    x ∈ namesʳ g
+    x ∈ˢ namesʳ g
   → Σ Participant λ A → Σ Value λ v →
-      (A , v , x) ∈ deposits g
+      (A , v , x) ∈ˢ deposits g
 namesʳ⊆deposits {x} {A :? v at x} (here refl) = A , v , here refl
 namesʳ⊆deposits {x} {A :! v at x} (here refl) = A , v , here refl
 namesʳ⊆deposits {x} {l ∣∣ r} x∈
-  rewrite mapMaybe-++ isInj₂ (names l) (names r)
-  with L.Mem.∈-++⁻ (namesʳ l) x∈
-namesʳ⊆deposits {x} {l ∣∣ r} x∈ | inj₁ x∈ˡ
-  with A , v , d∈ ← namesʳ⊆deposits {g = l} x∈ˡ
-  with _ , td∈ , refl ← L.Mem.∈-map⁻ proj₂ d∈
-     = A , v , L.Mem.∈-map⁺ proj₂ (L.Mem.∈-++⁺ˡ td∈)
-namesʳ⊆deposits {x} {l ∣∣ r} x∈ | inj₂ x∈ʳ
-  with A , v , d∈ ← namesʳ⊆deposits {g = r} x∈ʳ
-  with _ , td∈ , refl ← L.Mem.∈-map⁻ proj₂ d∈
-     = A , v , L.Mem.∈-map⁺ proj₂ (L.Mem.∈-++⁺ʳ _ td∈)
+  with ∈-∪⁻ _ (namesʳ l) (namesʳ r)
+     $ mapMaybeˢ-∪ isInj₂ {names l}{names r} .proj₁ x∈
+... | inj₁ x∈ˡ =
+  let A , v , d∈ = namesʳ⊆deposits {g = l} x∈ˡ
+  in A , v , ∈-∪⁺ˡ _ (deposits l) (deposits r) d∈
+... | inj₂ x∈ʳ =
+  let A , v , d∈ = namesʳ⊆deposits {g = r} x∈ʳ
+  in A , v , ∈-∪⁺ʳ _ (deposits l) (deposits r) d∈
 
 deposits⊆namesʳ :
-    (A , v , x) ∈ deposits Γ
-  → x ∈ namesʳ Γ
+    (A , v , x) ∈ˢ deposits Γ
+  → x ∈ˢ namesʳ Γ
 deposits⊆namesʳ {A} {v} {x} {⟨ A has v ⟩at x} (here refl) = here refl
 deposits⊆namesʳ {A} {v} {x} {l ∣ r} d∈
-  rewrite mapMaybe∘collectFromBase-++ {X = Name} isInj₂ l r
-  rewrite collectFromBase-++ {X = DepositRef} l r
-  with L.Mem.∈-++⁻ (deposits l) d∈
-... | inj₁ x∈ˡ = L.Mem.∈-++⁺ˡ $ deposits⊆namesʳ {Γ = l} x∈ˡ
-... | inj₂ x∈ʳ = L.Mem.∈-++⁺ʳ _ $ deposits⊆namesʳ {Γ = r} x∈ʳ
+  with ∈-deposits-∪⁻ l r d∈
+... | inj₁ d∈ˡ =
+  ∈-ids-∪⁺ˡ l r $ deposits⊆namesʳ {Γ = l} d∈ˡ
+... | inj₂ d∈ʳ =
+  ∈-ids-∪⁺ʳ l r $ deposits⊆namesʳ {Γ = r} d∈ʳ
 
 deposits⊆⇒namesʳ⊆ :
-    deposits ad ⊆ deposits Γ
-  → namesʳ ad ⊆ namesʳ Γ
+    deposits ad ⊆ˢ deposits Γ
+  → namesʳ ad ⊆ˢ namesʳ Γ
 deposits⊆⇒namesʳ⊆ {ad}{Γ} d⊆
   = deposits⊆namesʳ {Γ = Γ}
   ∘ d⊆
@@ -227,11 +229,11 @@ deposits⊆⇒namesʳ⊆ {ad}{Γ} d⊆
 -- NB: typechecking pattern-match coverage for this is slooooow
 postulate
   cvDestroys :
-      x ∉ ids Γ
+      x ∉ˢ ids Γ
     → ⟨ [ d ] , v ⟩at x ∣ Γ —[ α ]→ Γ′
     → cv α ≡ just x
       --—————————————————————————————————
-    → x ∉ ids Γ′
+    → x ∉ˢ ids Γ′
 {-
 cvDestroys y∉ step cv≡ y∈
   with step | cv≡
@@ -259,34 +261,22 @@ cvDestroys y∉ step cv≡ y∈
     (inj₁ y∈Δ) → L.All.lookup fresh-ys (x∈vcis⇒ {vcis = vcis} y∈Δ) (here refl)
 -}
 
-c⇒x : ∀ {Γ : BaseCfg} → ⌞ ⟨ c , v ⟩at x ⌟ ≡ Γ → inj₂ x ∈ names Γ
+c⇒x : ∀ {Γ : BaseCfg} → ⌞ ⟨ c , v ⟩at x ⌟ ≡ Γ → inj₂ x ∈ˢ names Γ
 c⇒x refl = here refl
 
 c∈⇒x∈ : ∀ Γ →
   ⟨ c , v ⟩at x ∈ᶜ Γ
   ──────────────────
-  x ∈ ids Γ
-c∈⇒x∈ Γ = flip (∈-mapMaybe⁺ isInj₂) refl
-        ∘ ∈-concatMap⁺
+  x ∈ˢ ids Γ
+c∈⇒x∈ Γ = flip (∈ˢ-mapMaybe⁺ isInj₂ {xs = names Γ}) refl
+        ∘ collectFromBase⁺ {Γ = Γ}
         ∘ L.Any.map c⇒x
         ∘ ∈-Cfg′ _ Γ
-{-
-c∈⇒x∈ = λ where
-  (` _)             → contradict
-  (⟨ _ , _ ⟩at _)   → λ where (here refl) → here refl
-  (⟨ _ has _ ⟩at _) → contradict
-  (_ auth[ _ ])     → contradict
-  (⟨ _ ∶ _ ♯ _ ⟩)   → contradict
-  (_ ∶ _ ♯ _)       → contradict
-  (l ∣ r) → ∈ᶜ-++⁻ l r >≡>
-    Sum.[ ∈-ids-++⁺ˡ l r ∘ c∈⇒x∈ l
-        , ∈-ids-++⁺ʳ l r ∘ c∈⇒x∈ r
-        ]
--}
 
-x∉⇒c∉ : x ∉ ids Γ → ⟨ c , v ⟩at x ∉ᶜ Γ
+x∉⇒c∉ : x ∉ˢ ids Γ → ⟨ c , v ⟩at x ∉ᶜ Γ
 x∉⇒c∉ {Γ = Γ} = _∘ c∈⇒x∈ Γ
 
+{-
 module _ {c}{v}{x} where
 
   postulate
@@ -429,31 +419,31 @@ module _ {c}{v}{x} where
     with go ← ∈-resp-↭∘c∈⇒x∈∘∈ᶜ-resp-≈ Γ Γ′ (↭-sym Γ≈)
     rewrite L.Perm.↭-sym-involutive Γ≈
     = go
-
+-}
 
 -- Collections on traces.
 private variable X : Set ℓ
 
 instance
-  HX↠ₜ : ⦃ ∀ {αs} → (Γₜ —[ αs ]↠ₜ Γₜ′) has X ⦄ → (Γₜ —↠ₜ Γₜ′) has X
+  HX↠ₜ : ⦃ _ : DecEq X ⦄ → ⦃ ∀ {αs} → (Γₜ —[ αs ]↠ₜ Γₜ′) has X ⦄ → (Γₜ —↠ₜ Γₜ′) has X
   HX↠ₜ .collect = collect ∘ proj₂
 
   HL↠ₜ : (Γₜ —[ αs ]↠ₜ Γₜ′) has Label
-  HL↠ₜ {αs = αs} .collect _ = αs
+  HL↠ₜ {αs = αs} .collect _ = fromList αs
 
   HA↠ₜ : (Γₜ —[ αs ]↠ₜ Γₜ′) has Ad
-  HA↠ₜ .collect = concatMap authorizedHonAds ∘ allStates
+  HA↠ₜ .collect = concatMapˢ authorizedHonAds ∘ fromList ∘ allStates
 
   HN↠ₜ : (Γₜ —[ αs ]↠ₜ Γₜ′) has Name
-  HN↠ₜ .collect = concatMap collect ∘ allStates
+  HN↠ₜ .collect = concatMapˢ collect ∘ fromList ∘ allStates
 
-ads⊆ : (tr : Γₜ —[ αs ]↠ₜ Γₜ′) → Γ ∈ allStates tr → advertisements Γ ⊆ advertisements tr
-ads⊆ (_ ∎) (here refl) = L.Mem.∈-++⁺ˡ
-ads⊆ (Γ —→⟨ _ ⟩ _ ⊢ tr) = λ where
-  (here refl) → L.Mem.∈-++⁺ˡ
-  (there Γ∈)  → L.Mem.∈-++⁺ʳ (advertisements Γ) ∘ ads⊆ tr Γ∈
+ads⊆ : (tr : Γₜ —[ αs ]↠ₜ Γₜ′) → Γ ∈ allStates tr → Γ ⊆⦅ advertisements ⦆ tr
+ads⊆ tr Γ∈ ad∈
+  = ∈ˢ-concat⁺ {xss = mapˢ authorizedHonAds (fromList (allStates tr))}
+  $ L.Any.map (λ where refl → ad∈)
+  $ ∈ˢ-map⁺ authorizedHonAds {xs = fromList (allStates tr)} $ ∈ˢ-fromList⁺ Γ∈
 
-labels : ∀ {X : Set} → ⦃ X has Label ⦄ → X → Labels
+labels : ∀ {X : Set} → ⦃ X has Label ⦄ → X → Set⟨ Label ⟩
 labels = collect
 
 -- Well-founded recursion on smaller (i.e. prefix) traces.
@@ -471,33 +461,37 @@ splitTraceˡ (_ —→⟨ Γ→ ⟩ p ⊢ Γ↠) (there Γ∈)  = _ —→ₜ⟨
 ≺-splitTraceˡ (_ —→⟨ _ ⟩ _ ⊢ _)   (here refl) = s≤s z≤n
 ≺-splitTraceˡ (_ —→⟨ _ ⟩ _ ⊢ tr′) (there Γ∈′) = s≤s (≺-splitTraceˡ tr′ Γ∈′)
 
-_⊆ˢ_ : Γₜ —[ αs ]↠ₜ Γₜ′ → Δₜ —[ αs′ ]↠ₜ Δₜ′ → Set
-tr ⊆ˢ tr′ = allStates tr ⊆ allStates tr′
+_⊆ˢᵗ_ : Γₜ —[ αs ]↠ₜ Γₜ′ → Δₜ —[ αs′ ]↠ₜ Δₜ′ → Set
+tr ⊆ˢᵗ tr′ = allStates tr ⊆ allStates tr′
 
-⊆ˢ⇒names⊆ : (tr : Γₜ —[ αs ]↠ₜ Γₜ′) (tr′ : Δₜ —[ αs′ ]↠ₜ Δₜ′)
-  → tr ⊆ˢ tr′
-    --——————————————
-  → tr ⊆⦅ names ⦆ tr′
-⊆ˢ⇒names⊆ tr tr′ states⊆
-  = ∈-concatMap⁺
+⊆ˢᵗ⇒names⊆ : (tr : Γₜ —[ αs ]↠ₜ Γₜ′) (tr′ : Δₜ —[ αs′ ]↠ₜ Δₜ′) →
+  tr ⊆ˢᵗ tr′
+  ────────────────────────
+  tr ⊆⦅ names ⦆ tr′
+⊆ˢᵗ⇒names⊆ tr tr′ states⊆
+  = ∈ˢ-concatMap⁺ names {fromList (allStates tr′)}
+  ∘ Anyˢ-fromList⁺
   ∘ ⊆-resp-Any states⊆
-  ∘ ∈-concatMap⁻ names
+  ∘ Anyˢ-fromList⁻
+  ∘ ∈ˢ-concatMap⁻ names {fromList (allStates tr)}
 
-⊆ˢ⇒ads⊆ : (tr : Γₜ —[ αs ]↠ₜ Γₜ′) (tr′ : Δₜ —[ αs′ ]↠ₜ Δₜ′)
-  → tr ⊆ˢ tr′
+⊆ˢᵗ⇒ads⊆ : (tr : Γₜ —[ αs ]↠ₜ Γₜ′) (tr′ : Δₜ —[ αs′ ]↠ₜ Δₜ′)
+  → tr ⊆ˢᵗ tr′
     --——————————————————————
   → tr ⊆⦅ advertisements ⦆ tr′
-⊆ˢ⇒ads⊆ tr tr′ states⊆
-  = ∈-concatMap⁺
+⊆ˢᵗ⇒ads⊆ tr tr′ states⊆
+  = ∈ˢ-concatMap⁺ advertisements {fromList (allStates tr′)}
+  ∘ Anyˢ-fromList⁺
   ∘ ⊆-resp-Any states⊆
-  ∘ ∈-concatMap⁻ advertisements
+  ∘ Anyˢ-fromList⁻
+  ∘ ∈ˢ-concatMap⁻ advertisements  {fromList (allStates tr)}
 
-⊆ˢ-splitTraceˡ : (tr : Γₜ₀ —[ αs ]↠ₜ Γₜ″) (xy∈ : (Γₜ , Γₜ′) ∈ allTransitionsᵗ tr)
-  → splitTraceˡ tr xy∈ ⊆ˢ tr
-⊆ˢ-splitTraceˡ tr xy∈ᵗ Γ∈ with tr | xy∈ᵗ | Γ∈
+⊆ˢᵗ-splitTraceˡ : (tr : Γₜ₀ —[ αs ]↠ₜ Γₜ″) (xy∈ : (Γₜ , Γₜ′) ∈ allTransitionsᵗ tr)
+  → splitTraceˡ tr xy∈ ⊆ˢᵗ tr
+⊆ˢᵗ-splitTraceˡ tr xy∈ᵗ Γ∈ with tr | xy∈ᵗ | Γ∈
 ... | _ —→⟨ _ ⟩ _ ⊢ _  | here refl | here refl = here refl
 ... | _ —→⟨ _ ⟩ _ ⊢ _  | there _   | here refl = here refl
-... | _ —→⟨ _ ⟩ _ ⊢ Γ↠ | there Γ∈′ | there x∈′ = there $ ⊆ˢ-splitTraceˡ Γ↠ Γ∈′ x∈′
+... | _ —→⟨ _ ⟩ _ ⊢ Γ↠ | there Γ∈′ | there x∈′ = there $ ⊆ˢᵗ-splitTraceˡ Γ↠ Γ∈′ x∈′
 
 _⊆ᵗʳ_ : Γₜ —[ αs ]↠ₜ Γₜ′ → Δₜ —[ αs′ ]↠ₜ Δₜ′ → Set
 tr ⊆ᵗʳ tr′ = allTransitions tr ⊆ allTransitions tr′

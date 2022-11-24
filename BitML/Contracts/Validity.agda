@@ -1,11 +1,6 @@
 ------------------------------------------------------------------------
 -- Validity of advertisements.
 ------------------------------------------------------------------------
-open import Function using (id)
-
-open import Data.List.Membership.Propositional.Properties
-open import Data.List.Relation.Binary.Subset.Propositional.Properties
-
 open import Prelude.Init
 open import Prelude.General
 open import Prelude.Lists
@@ -36,43 +31,42 @@ open import BitML.Contracts.Helpers Participant Honest
 
 splitsOK : Precondition → Contracts → Bool
 splitsOK G C₀ = goᶜˢ C₀ (persistentValue G)
-  where
-    goᶜ : (C : Contract) → Value → Bool
-    goᶜˢ : (C : Contracts) → Value → Bool
-    goᵛᶜˢ : (C : VContracts) → Bool
-
-    goᵛᶜˢ [] = true
-    goᵛᶜˢ ((v , cs) ∷ vcs) = goᶜˢ cs v
-
-    goᶜˢ [] _ = true
-    goᶜˢ (c ∷ cs) v = goᶜ c v ∧ goᶜˢ cs v
-
+  where mutual
+    goᶜ : Contract → Value → Bool
     goᶜ c₀@(put xs &reveal as if p ⇒ c) v
-      with sequenceM $ map (λ x → checkDeposit volatile x G) xs
+      with sequenceMˢ (mapˢ (λ x → checkDeposit volatile x G) xs)
     ... | nothing = false
-    ... | just vs = goᶜˢ c (∑ℕ vs)
+    ... | just vs = goᶜˢ c (sumˢ vs)
     goᶜ (split vcs)   v = (∑₁ vcs == v) ∧ goᵛᶜˢ vcs
     goᶜ (after _ ⇒ c) v = goᶜ c v
     goᶜ (_ ⇒ c)       v = goᶜ c v
     goᶜ (withdraw _)  _ = true
 
+
+    goᶜˢ : Contracts → Value → Bool
+    goᶜˢ [] _ = true
+    goᶜˢ (c ∷ cs) v = goᶜ c v ∧ goᶜˢ cs v
+
+    goᵛᶜˢ : VContracts → Bool
+    goᵛᶜˢ [] = true
+    goᵛᶜˢ ((v , cs) ∷ vcs) = goᶜˢ cs v
+
 record ValidAdvertisement (ad : Advertisement) : Set where
   -- open Advertisement ad renaming (C to c; G to g) -- ⟨ G ⟩ C = ad
   field
-    -- (i) names in G are distinct
-    names-uniq : Unique (names $ G ad)
+    -- (i) names in G are distinct (BY CONSTRUCTION)
 
     -- (ii) each name in C appears in G
-    names-⊆ : names (C ad) ⊆ names (G ad)
+    names-⊆ : names (C ad) ⊆ˢ names (G ad)
 
     -- (iii) the names in put_&reveal_ are distinct and secrets in `if ...` appear in `reveal ...`
-    names-put : All (λ{ (xs , as , p) → Unique xs × (secrets p ⊆ as)}) (putComponents $ C ad)
+    names-put : Allˢ (λ{ (xs , as , p) → secrets p ⊆ˢ as}) (putComponents $ ad .C)
 
     -- (iv) each participant has a persistent deposit in G
-    participants-⊆ : participants (G ad) ++ participants (C ad) ⊆ persistentParticipants (G ad)
+    participants-⊆ : participants (ad .G) ∪ participants (ad .C) ⊆ˢ persistentParticipants (ad .G)
 
     -- (extra) split commands are valid
-    splits-OK : T $ splitsOK (G ad) (C ad)
+    splits-OK : T $ splitsOK (ad .G) (ad .C)
 
 open ValidAdvertisement public
 
@@ -82,28 +76,25 @@ instance
 
   Dec-𝕍Ad : Valid ⁇¹
   Dec-𝕍Ad {x = ⟨ G ⟩ C} .dec
-    with unique? (names G)
-       | names C ⊆? names G
-       | all? (λ{ (xs , as , p) → unique? xs ×-dec (secrets p ⊆? as)}) (putComponents C)
-       | participants G ++ participants C ⊆? persistentParticipants G
+    with names C ⊆?ˢ names G
+       | allˢ? (λ{ (xs , as , p) → (secrets p ⊆?ˢ as)}) (putComponents C)
+       | (participants G ∪ participants C) ⊆?ˢ persistentParticipants G
        | T? (splitsOK G C)
-  ... | no ¬names-uniq | _ | _ | _ | _     = no $ ¬names-uniq ∘ names-uniq
-  ... | _ | no ¬names-⊆ | _ | _ | _        = no $ ¬names-⊆ ∘ names-⊆
-  ... | _ | _ | no ¬names-put | _ | _      = no $ ¬names-put ∘ names-put
-  ... | _ | _ | _ | no ¬participants-⊆ | _ = no $ ¬participants-⊆ ∘ participants-⊆
-  ... | _ | _ | _ | _ | no ¬splits-OK      = no $ ¬splits-OK ∘ splits-OK
-  ... | yes p₁ | yes p₂ | yes p₃ | yes p₄ | yes p₅ = yes λ where
-    .names-uniq → p₁; .names-⊆ → p₂; .names-put → p₃; .participants-⊆ → p₄; .splits-OK → p₅
-
+  ... | no ¬names-⊆ | _ | _ | _        = no $ ¬names-⊆ ∘ names-⊆
+  ... | _ | no ¬names-put | _ | _      = no $ ¬names-put ∘ names-put
+  ... | _ | _ | no ¬participants-⊆ | _ = no $ ¬participants-⊆ ∘ participants-⊆
+  ... | _ | _ | _ | no ¬splits-OK      = no $ ¬splits-OK ∘ splits-OK
+  ... | yes p₁ | yes p₂ | yes p₃ | yes p₄ = yes λ where
+    .names-⊆ → p₁; .names-put → p₂; .participants-⊆ → p₃; .splits-OK → p₄
 
 -- Properties.
 
 Valid⇒part⊆ : let ⟨ G ⟩ C = ad in
-  Valid ad → participants C ⊆ participants G
+  Valid ad → participants C ⊆ˢ participants G
 Valid⇒part⊆ {⟨ G ⟩ C} vad
   = persistentParticipants⊆ {g = G}
   ∘ vad .participants-⊆
-  ∘ ∈-++⁺ʳ (participants G)
+  ∘ ∈-∪⁺ʳ _ (participants G) (participants C)
 
-subterms′-part⊆ᵃ : Valid ad → d ∈ subtermsᵃ′ ad → participants d ⊆ participants (ad .G)
-subterms′-part⊆ᵃ {ad@(⟨ G ⟩ C)}{d} vad d∈ = Valid⇒part⊆ vad ∘ subterms′-part⊆ᶜ {ds = C} d∈
+subterms′-part⊆ᵃ : Valid ad → d ∈ subtermsᵃ′ ad → participants d ⊆ˢ participants (ad .G)
+subterms′-part⊆ᵃ {ad@(⟨ G ⟩ C)}{d} vad d∈ = Valid⇒part⊆ vad ∘ subterms′-part⊆ᶜˢ {ds = C} d∈

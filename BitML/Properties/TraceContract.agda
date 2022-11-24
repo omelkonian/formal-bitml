@@ -5,14 +5,15 @@ open import Prelude.Membership
 open L.Mem using (∈-++⁺ˡ; ∈-++⁺ʳ; ∈-++⁻; ∈-map⁺)
 open import Prelude.Bifunctor
 open import Prelude.Nary hiding (⟦_⟧)
-open import Prelude.Lists
-open import Prelude.DecLists
 open import Prelude.Validity
 open import Prelude.Setoid
 open import Prelude.General hiding (_⊢_)
 open import Prelude.ToN
 open import Prelude.Traces
 open import Prelude.InferenceRules
+open import Prelude.Sets
+open import Prelude.Indexable
+open import Prelude.Lists hiding (_‼_)
 
 module BitML.Properties.TraceContract
   (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
@@ -52,7 +53,7 @@ data ℍ[Contract]⦅_—[_]↝_⦆⦅_⦆ : Cfg → Label → Cfg → Contracts
     → cv α ≡ just x
     → ℍ[Contract]⦅ ⟨ [ d∗ ] , v ⟩at x ∣ L —[ α ]↝ Γ′ ⦆⦅ c ⦆
       ───────────────────────────────────────────────────────────────────────────────────────
-      ℍ[Contract]⦅ ⟨ c′ , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub $ authDecorations d) ∣ Γ
+      ℍ[Contract]⦅ ⟨ c′ , v ⟩at x ∣ ||ˢ mapˢ _auth[ x ▷ d ] (authDecorations d) ∣ Γ
                    —[ α ]↝ Γ′ ⦆⦅ c ⦆
 
   step-timeout : ∀ {i : Index c′} → let open ∣SELECT c′ i in
@@ -163,23 +164,22 @@ private
         , c∉ ∘ ∈-++⁺ʳ (cfgToList $ ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ])
         ]
 
-  ¬AuthDestroy : ∀ {xs} {j′ : Index xs}
+  ¬AuthDestroy : ∀ {xs} {j′ : Ix xs}
     → ⟨ c , v ⟩at x ∉ᶜ Γ
     → Γ —[ auth-destroy⦅ A , xs , j′ ⦆ ]→ Γ′
       --————————————————————————————————————
     → ⟨ c , v ⟩at x ∉ᶜ Γ′
-  ¬AuthDestroy c∉ ([DEP-AuthDestroy] {y}{Γ}{ds}{j} _) =
-    let xs = map select₃ ds
-        Aj = proj₁ (ds ‼ j)
-        j′ = ‼-map {xs = ds} j
+  ¬AuthDestroy c∉ ([DEP-AuthDestroy] {y}{Γ}{xs}{get-ds}{j} _) =
+    let Aⱼ = get-ds j .proj₁
+        ds = mapWithIxˢ xs λ x i → let A , v = get-ds i in  A , v , x
         Δ  = || map (uncurry₃ ⟨_has_⟩at_) ds
     in
-    ∈ᶜ-++⁻ (Δ ∣ Aj auth[ xs , j′ ▷ᵈˢ y ]) Γ >≡>
-    Sum.[ (∈ᶜ-++⁻ Δ (Aj auth[ xs , j′ ▷ᵈˢ y ]) >≡>
-          Sum.[ c∉ ∘ ∈ᶜ-++⁺ˡ Δ Γ
+    ∈ᶜ-∪⁻ (Δ ∣ Aⱼ auth[ xs , j ▷ᵈˢ y ]) Γ >≡>
+    Sum.[ (∈ᶜ-∪⁻ Δ (Aⱼ auth[ xs , j ▷ᵈˢ y ]) >≡>
+          Sum.[ c∉ ∘ ∈ᶜ-∪⁺ˡ Δ Γ
               , (λ{ (here ()) })
               ])
-        , c∉ ∘ ∈ᶜ-++⁺ʳ Δ Γ
+        , c∉ ∘ ∈ᶜ-∪⁺ʳ Δ Γ
         ]
 
   ¬Destroy :
@@ -187,11 +187,10 @@ private
     → Γ —[ destroy⦅ xs ⦆ ]→ Γ′
       --————————————————————————————————————
     → ⟨ c , v ⟩at x ∉ᶜ Γ′
-  ¬Destroy c∉ ([DEP-Destroy] {y}{Γ}{ds}) =
-    let xs = map select₃ ds
-        Δ  = || map (λ{ (i , Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ] })
-                    (enumerate ds)
-    in c∉ ∘ ∈ᶜ-++⁺ʳ Δ Γ
+  ¬Destroy c∉ ([DEP-Destroy] {y}{Γ}{xs}{get-ds}{j}) =
+    let Δ = || mapWithIxˢ xs λ xᵢ i → let Aᵢ , vᵢ = get-ds i in
+                 ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xs , i ▷ᵈˢ y ]
+    in c∉ ∘ ∈ᶜ-∪⁺ʳ Δ Γ
 
   ¬Advertise :
       ⟨ c , v ⟩at x ∉ᶜ Γ
@@ -199,7 +198,7 @@ private
       --————————————————————————————————————
     → ⟨ c , v ⟩at x ∉ᶜ Γ′
   ¬Advertise {ad = ad} c∉ ([C-Advertise] {ad = .ad}{Γ} vad hon⁺ d⊆) =
-    ∈ᶜ-++⁻ (` ad) Γ >≡>
+    ∈ᶜ-∪⁻ (` ad) Γ >≡>
     Sum.[ contradict
         , c∉
         ]
@@ -209,12 +208,13 @@ private
     → Γ —[ auth-commit⦅ A , ad , secrets ⦆ ]→ Γ′
       --————————————————————————————————————
     → ⟨ c , v ⟩at x ∉ᶜ Γ′
-  ¬AuthCommit c∉ ([C-AuthCommit] {ad}{A}{Γ}{secrets} _ _ _) =
-    let (as , ms) = unzip secrets
-        Δ         = || map (uncurry ⟨ A ∶_♯_⟩) secrets
+  ¬AuthCommit c∉ ([C-AuthCommit] {ad}{A}{Γ}{get-n} _ _) =
+    let as      = secretsOfᵖ A (ad .G)
+        secrets = mapWithIxˢ as λ a i → a , get-n i
+        Δ       = || map (uncurry ⟨ A ∶_♯_⟩) secrets
     in
-    ∈ᶜ-++⁻ (` ad ∣ Γ ∣ Δ) (A auth[ ♯▷ ad ]) >≡>
-    Sum.[ ∈ᶜ-++⁻ (` ad ∣ Γ) Δ >≡>
+    ∈ᶜ-∪⁻ (` ad ∣ Γ ∣ Δ) (A auth[ ♯▷ ad ]) >≡>
+    Sum.[ ∈ᶜ-∪⁻ (` ad ∣ Γ) Δ >≡>
           Sum.[ c∉
               , ∉ᶜ-|| {f = uncurry ⟨ A ∶_♯_⟩} (λ{ (here ()); (there ())}) secrets
               ]
@@ -227,10 +227,13 @@ private
       --————————————————————————————————————
     → ⟨ c , v ⟩at x ∉ᶜ Γ′
   ¬AuthInit c∉ ([C-AuthInit] {ad}{Γ}{A}{x = x} _ _) =
-    ∈ᶜ-++⁻ (` ad ∣ Γ) (A auth[ x ▷ˢ ad ]) >≡>
+    ∈ᶜ-∪⁻ (` ad ∣ Γ) (A auth[ x ▷ˢ ad ]) >≡>
     Sum.[ c∉
         , (λ{ (here ()) })
         ]
+
+  ¬Init-helper : ⟨ c , v ⟩at x ≡ ⟨ c′ , v′ ⟩at x′ → c ≡ c′
+  ¬Init-helper refl = refl
 
   ¬Init :
       ⟨ c , v ⟩at x ∉ᶜ Γ
@@ -238,17 +241,18 @@ private
     → Γ —[ init⦅ g , c′ ⦆ ]→ Γ′
       --————————————————————————————————————
     → ⟨ c , v ⟩at x ∉ᶜ Γ′
-  ¬Init c∉ ¬eq ([C-Init] {ad}{x}{Γ} _) = let ⟨ G ⟩ C = ad; partG = nub-participants G in
-    let toSpend = persistentDeposits G
-        vs      = map (proj₁ ∘ proj₂) toSpend
-        Δ₁ = || map (λ{ (Ai , vi , xi) → ⟨ Ai has vi ⟩at xi ∣ Ai auth[ xi ▷ˢ ad ] }) toSpend
-        Δ₂ = || map _auth[ ♯▷ ad ] partG
+  ¬Init c∉ ¬eq ([C-Init] {ad}{x}{Γ} _) = let ⟨ G ⟩ C = ad; partG = participants G in
+    let
+      toSpend = persistentDeposits G
+      vs = mapˢ select₂ toSpend
+      Δ₁ = ||ˢ mapˢ (λ (Aᵢ , vᵢ , xᵢ) → ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xᵢ ▷ˢ ad ]) toSpend
+      Δ₂ = ||ˢ mapˢ _auth[ ♯▷ ad ] (participants G)
     in
-    ∈-++⁻ [ ⟨ C , sum vs ⟩at x ] >≡>
-    Sum.[ (λ{ (here refl) → ¬eq refl })
-        , c∉ ∘ ∈ᶜ-++⁺ˡ (` ad ∣ Γ ∣ Δ₁) Δ₂
-             ∘ ∈ᶜ-++⁺ˡ (` ad ∣ Γ) Δ₁
-             ∘ ∈ᶜ-++⁺ʳ (` ad) Γ
+    ∈-++⁻ [ ⟨ C , sumˢ vs ⟩at x ] >≡>
+    Sum.[ (λ{ (here cvx≡) → ¬eq (¬Init-helper cvx≡) })
+        , c∉ ∘ ∈ᶜ-∪⁺ˡ (` ad ∣ Γ ∣ Δ₁) Δ₂
+             ∘ ∈ᶜ-∪⁺ˡ (` ad ∣ Γ) Δ₁
+             ∘ ∈ᶜ-∪⁺ʳ (` ad) Γ
         ]
 
   ¬Withdraw-helper : ∀ {i : Index c}
@@ -269,7 +273,7 @@ private
         , c∉ ∘ ∈-++⁺ʳ [ ⟨ [ withdraw A ] , v ⟩at y ]
         ]
   ¬Withdraw {c₀}{v₀}{x₀}
-    {Γ = .(⟨ c , v ⟩at x ∣ || map _auth[ x ▷ (c ‼ i) ] (nub $ authDecorations (c ‼ i)) ∣ Γ)}
+    {Γ = .(⟨ c , v ⟩at x ∣ ||ˢ mapˢ _auth[ x ▷ (c ‼ i) ] (authDecorations (c ‼ i)) ∣ Γ)}
     {A}{v′}{y}
     {Γ′}
     c∉ ([C-Control] {c}{Γ}{L}{v}{x}{.(withdraw⦅ A , v′ , y ⦆)}{.Γ′}{i} p ≈L L→Γ′ refl)
@@ -278,12 +282,12 @@ private
       d_ = c ‼ i
       d∗ = removeTopDecorations d_
 
-      S₀ = ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d_ ] (nub $ authDecorations d_)
+      S₀ = ⟨ c , v ⟩at x ∣ ||ˢ mapˢ _auth[ x ▷ d_ ] (authDecorations d_)
       S  = S₀ ∣ Γ
       S′ = Γ′
 
       c∉Γ : ⟨ c₀ , v₀ ⟩at x₀ ∉ᶜ Γ
-      c∉Γ ad∈Γ = c∉ $ ∈ᶜ-++⁺ʳ S₀ Γ ad∈Γ
+      c∉Γ ad∈Γ = c∉ $ ∈ᶜ-∪⁺ʳ S₀ Γ ad∈Γ
 
       c∉L : ⟨ c₀ , v₀ ⟩at x₀ ∉ᶜ L
       c∉L = ∉ᶜ-resp-≈ {Γ}{L} ≈L c∉Γ
@@ -302,14 +306,16 @@ private
     → ⟨C,v⟩ₓ ∉ᶜ Γ′
   HELP c∉ cv≡ ([C-Split] {y}{Γ}{vcis} fresh-ys) c∈ =
     let (vs , cs , ys) = unzip₃ vcis in
-    case ∈ᶜ-++⁻ (|| map (uncurry₃ $ flip ⟨_,_⟩at_) vcis) Γ c∈ of λ where
+    case ∈ᶜ-∪⁻ (|| map (uncurry₃ $ flip ⟨_,_⟩at_) vcis) Γ c∈ of λ where
       (inj₁ c∈Δ) → L.All.lookup fresh-ys (x∈vcis⇒¬fresh {vcis = vcis} c∈Δ) (here refl)
       (inj₂ c∈Γ) → c∉ c∈Γ
-  HELP c∉ cv≡ ([C-PutRev] {Γ′ = Γ′} {ds = ds}{ss} _ _) (there c∈) =
-    let Γ = || map (uncurry₃ ⟨_has_⟩at_) ds
+  HELP c∉ cv≡ ([C-PutRev] {Γ′ = Γ′} {xs = xs}{as}{get-ds}{get-ss} _ _) (there c∈) =
+    let ds = mapWithIxˢ xs λ x i → let A , v = get-ds i in A , v , x
+        ss = mapWithIxˢ as λ a i → let A , n = get-ss i in A , a , n
+        Γ = || map (uncurry₃ ⟨_has_⟩at_) ds
         Δ = || map (uncurry₃ _∶_♯_) ss
         ΔΓ′ = Δ ∣ Γ′
-    in c∉ $ ∈ᶜ-++⁺ʳ Γ ΔΓ′ c∈
+    in c∉ $ ∈ᶜ-∪⁺ʳ Γ ΔΓ′ c∈
   HELP c∉ cv≡ ([C-Withdraw] _) (there c∈) = c∉ c∈
 
   h :
@@ -335,26 +341,27 @@ private
   ... | withdraw⦅ _ , _ , _ ⦆        | st = ⊥-elim $ ¬Withdraw c∉ st c∈
   ... | auth-control⦅ _ , _ ▷ _ ⦆    | st = ⊥-elim $ ¬AuthControl c∉ st c∈
   ... | delay⦅ _ ⦆                   | st = ⊥-elim $ ¬Delay st
-  ... | put⦅ xs , as , y ⦆ | [C-PutRev] {Γ′}{z}{.y}{p}{c′}{v′} {ds = ds}{ss} fresh-z _
+  ... | put⦅ xs , as , y ⦆
+      | [C-PutRev] {Γ′}{z}{.y}{p}{c′}{v′} {xs = xs}{as}{get-ds}{get-ss} fresh-z _
       = case c∈ of λ where
       (here refl) →
         step-put
       (there c∈′) →
-        let
-          (_ , vs , xs) = unzip₃ ds
-          (_ , as , _)  = unzip₃ ss
-          Γ = || map (uncurry₃ ⟨_has_⟩at_) ds
-          Δ = || map (uncurry₃ _∶_♯_) ss
-          ΔΓ′ = Δ ∣ Γ′
+        let ds = mapWithIxˢ xs λ x i → let A , v = get-ds i in A , v , x
+            ss = mapWithIxˢ as λ a i → let A , n = get-ss i in A , a , n
+            (_ , vs , _) = unzip₃ ds
+            Γ = || map (uncurry₃ ⟨_has_⟩at_) ds
+            Δ = || map (uncurry₃ _∶_♯_) ss
+            ΔΓ′ = Δ ∣ Γ′
         in
-          ⊥-elim $ c∉ $ there $′ ∈ᶜ-++⁺ʳ Γ ΔΓ′ c∈′
+          ⊥-elim $ c∉ $ there $′ ∈ᶜ-∪⁺ʳ Γ ΔΓ′ c∈′
 
   ... | split⦅ y ⦆ | [C-Split] {.y}{Γ}{vcis} _
       = let
           (vs , cs , _) = unzip₃ vcis
           vcs = zip vs cs
         in
-        case ∈ᶜ-++⁻ (|| map (uncurry₃ $ flip ⟨_,_⟩at_) vcis) Γ c∈ of λ where
+        case ∈ᶜ-∪⁻ (|| map (uncurry₃ $ flip ⟨_,_⟩at_) vcis) Γ c∈ of λ where
           (inj₁ c∈Δ) → step-split {vcs = vcs} (c∈vcis⇒′ {vcis = vcis} c∈Δ)
           (inj₂ c∈Γ) → ⊥-elim $ c∉ $ there $ c∈Γ
 
@@ -363,10 +370,10 @@ private
       = let d = c ‼ i; d∗ = removeTopDecorations d
 
             c∉L : ⟨ c₀ , v₀ ⟩at y₀ ∉ᶜ L
-            c∉L = c∉ ∘ ∈ᶜ-++⁺ʳ (⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub $ authDecorations d)) Γ
+            c∉L = c∉ ∘ ∈ᶜ-∪⁺ʳ (⟨ c , v ⟩at x ∣ ||ˢ mapˢ _auth[ x ▷ d ] (authDecorations d)) Γ
                      ∘ ∈ᶜ-resp-≈ {L}{Γ} (↭-sym Γ≈)
         in
-        step-control Γ≈ cv≡ $ h (∈ᶜ-++⁻ (⟨ [ d∗ ] , v ⟩at x) L >≡>
+        step-control Γ≈ cv≡ $ h (∈ᶜ-∪⁻ (⟨ [ d∗ ] , v ⟩at x) L >≡>
           Sum.[ (λ{ (here refl) → HELP c∉L cv≡ Γ→ c∈ })
               , c∉L
               ]) c∈ Γ→
@@ -391,7 +398,7 @@ private
       d∗ = removeTopDecorations d_
 
       c∉Γ : ⟨ c₀ , v₀ ⟩at x₀ ∉ᶜ Γ
-      c∉Γ = c∉ ∘ ∈ᶜ-++⁺ʳ (⟨ c , v ⟩at x) Γ
+      c∉Γ = c∉ ∘ ∈ᶜ-∪⁺ʳ (⟨ c , v ⟩at x) Γ
 
       c∉′ : ⟨ c₀ , v₀ ⟩at x₀ ∉ᶜ ⟨ [ d∗ ] , v ⟩at x ∣ Γ
       c∉′ = λ where
