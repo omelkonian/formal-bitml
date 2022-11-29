@@ -9,7 +9,7 @@ open import Prelude.DecEq
 open import Prelude.Lists
 open import Prelude.DecLists
 open import Prelude.Membership
-open import Prelude.Collections
+open import Prelude.Lists.Collections
 open import Prelude.Applicative
 open import Prelude.Semigroup
 open import Prelude.Nary
@@ -642,7 +642,7 @@ IsBase-BaseCfg = λ where
   = subst IsBase (sym eq) $ IsBase-BaseCfg `γ
 
 instance
-  Squashed-IsBase : ∀ {Γ} → Squashed (IsBase Γ)
+  Squashed-IsBase : ∀ {Γ} → · (IsBase Γ)
   Squashed-IsBase {Γ} .∀≡ with Γ
   ... | ∅ᶜ              = λ ()
   ... | _ ∣ _           = λ ()

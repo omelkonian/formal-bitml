@@ -3,7 +3,7 @@ open import Induction using (Recursor)
 open import Prelude.Init
 open import Prelude.DecEq
 open import Prelude.Membership
-open import Prelude.Collections
+open import Prelude.Lists.Collections
 
 module BitML.Contracts.Induction
   (Participant : Set)

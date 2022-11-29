@@ -8,7 +8,7 @@ open import Prelude.Lists
 open import Prelude.DecLists
 open import Prelude.DecEq
 open import Prelude.Membership
-open import Prelude.Collections
+open import Prelude.Lists.Collections
 open import Prelude.Bifunctor
 open import Prelude.General
 open import Prelude.Null

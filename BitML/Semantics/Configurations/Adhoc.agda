@@ -3,7 +3,7 @@ open import Prelude.DecEq
 open import Prelude.Decidable
 open import Prelude.DecLists
 open import Prelude.Setoid
-open import Prelude.Collections
+open import Prelude.Lists.Collections
 open import Prelude.Nary
 
 open import BitML.BasicTypes

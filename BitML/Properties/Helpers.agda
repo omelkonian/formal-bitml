@@ -7,7 +7,7 @@ open import Prelude.Lists
 open import Prelude.General hiding (_⊢_)
 open import Prelude.Nary
 open import Prelude.Bifunctor
-open import Prelude.Collections
+open import Prelude.Lists.Collections
 open import Prelude.Measurable
 open import Prelude.ToN
 open import Prelude.InferenceRules

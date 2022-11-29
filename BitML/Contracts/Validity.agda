@@ -13,7 +13,7 @@ open import Prelude.DecLists
 open import Prelude.DecEq
 open import Prelude.Sets
 open import Prelude.Measurable
-open import Prelude.Collections
+open import Prelude.Lists.Collections
 open import Prelude.Membership
 open import Prelude.Functor
 open import Prelude.Foldable
