@@ -9,7 +9,7 @@ open import Data.List.Relation.Binary.Subset.Propositional.Properties
 open import Prelude.Init
 open import Prelude.General
 open import Prelude.Lists
-open import Prelude.DecLists
+open import Prelude.Lists.Dec
 open import Prelude.DecEq
 open import Prelude.Sets
 open import Prelude.Measurable

@@ -1,7 +1,7 @@
 open import Prelude.Init
 open import Prelude.DecEq
 open import Prelude.Decidable
-open import Prelude.DecLists
+open import Prelude.Lists.Dec
 open import Prelude.Setoid
 open import Prelude.Lists.Collections
 open import Prelude.Nary

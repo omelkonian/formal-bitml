@@ -5,7 +5,7 @@ open import Data.List.Membership.Propositional.Properties
 
 open import Prelude.Init
 open import Prelude.Lists
-open import Prelude.DecLists
+open import Prelude.Lists.Dec
 open import Prelude.DecEq
 open import Prelude.Membership
 open import Prelude.Lists.Collections

@@ -4,7 +4,7 @@
 open import Prelude.Init
 open import Prelude.General
 open import Prelude.Lists
-open import Prelude.DecLists
+open import Prelude.Lists.Dec
 open import Prelude.DecEq
 open import Prelude.Decidable
 open import Prelude.Membership
@@ -182,7 +182,7 @@ Delay {p = p} = [Delay] (toWitness p)
 Timeout :
   ∀ {i : Index c} → let open ∣SELECT c i; As , ts = decorations d in
 
-  ∀ {p₁ : auto∶ Null As}
+  ∀ {p₁ : True $ Null? As}
     {p₂ : auto∶ All (_≤ t) ts}
     {p₃ : auto∶ cv α ≡ just x} →
 

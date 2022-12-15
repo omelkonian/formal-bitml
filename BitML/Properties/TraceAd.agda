@@ -6,7 +6,7 @@ open import Prelude.Membership
 open import Prelude.Bifunctor
 open import Prelude.Nary
 open import Prelude.Lists
-open import Prelude.DecLists
+open import Prelude.Lists.Dec
 open import Prelude.Validity
 open import Prelude.Setoid
 open import Prelude.Traces

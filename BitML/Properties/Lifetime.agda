@@ -6,7 +6,7 @@ open L.Mem using (∈-++⁺ˡ; ∈-++⁺ʳ; ∈-++⁻; ∈-map⁺)
 open import Prelude.Bifunctor
 open import Prelude.Nary hiding (⟦_⟧)
 open import Prelude.Lists
-open import Prelude.DecLists
+open import Prelude.Lists.Dec
 open import Prelude.Validity
 open import Prelude.Setoid
 open import Prelude.General hiding (_⊢_)

@@ -3,7 +3,7 @@ module BitML.Example.TimedCommitment where -- (see BitML paper, Section 2)
 open import Prelude.Init
 open import Prelude.DecEq
 open import Prelude.Lists
-open import Prelude.DecLists
+open import Prelude.Lists.Dec
 open import Prelude.Decidable
 open import Prelude.Setoid
 open import Prelude.Ord

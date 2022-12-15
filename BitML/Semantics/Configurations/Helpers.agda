@@ -7,7 +7,7 @@ open L.Perm using (∈-resp-↭; map⁺)
 open import Prelude.Lists.PermutationsMeta
 open import Prelude.DecEq
 open import Prelude.Lists
-open import Prelude.DecLists
+open import Prelude.Lists.Dec
 open import Prelude.Membership
 open import Prelude.Lists.Collections
 open import Prelude.Applicative
@@ -42,7 +42,7 @@ instance
     .relℓ → 0ℓ
     ._≈_ → _↭_
 
-  SetoidLaws-Cfg′ : Setoid-Laws Cfg′
+  SetoidLaws-Cfg′ : SetoidLaws Cfg′
   SetoidLaws-Cfg′ .isEquivalence = record {IsEquivalence L.Perm.↭-isEquivalence}
 
   Setoid-Cfg : ISetoid Cfg
@@ -50,7 +50,7 @@ instance
     .relℓ → 0ℓ
     ._≈_ → _≈_ on to[ Cfg′ ]
 
-  SetoidLaws-Cfg : Setoid-Laws Cfg
+  SetoidLaws-Cfg : SetoidLaws Cfg
   SetoidLaws-Cfg .isEquivalence = record {IsEquivalence L.Perm.↭-isEquivalence}
 
   Setoid-Cfgᵗ : ISetoid Cfgᵗ
@@ -58,7 +58,7 @@ instance
     .relℓ → 0ℓ
     ._≈_ (Γ at t) (Γ′ at t′) → (t ≡ t′) × (Γ ≈ Γ′)
 
-  SetoidLaws-Cfgᵗ : Setoid-Laws Cfgᵗ
+  SetoidLaws-Cfgᵗ : SetoidLaws Cfgᵗ
   SetoidLaws-Cfgᵗ .isEquivalence = record
     { refl  = refl , ↭-refl
     ; sym   = λ where (t≡ , Γ≈) → sym t≡ , ↭-sym Γ≈
