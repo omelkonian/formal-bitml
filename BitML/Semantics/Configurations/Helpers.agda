@@ -18,7 +18,7 @@ open import Prelude.General
 open import Prelude.Setoid
 open import Prelude.Traces
 open import Prelude.Bifunctor
-open import Prelude.Irrelevance
+open import Prelude.Irrelevance.Core
 open import Prelude.Coercions
 open import Prelude.Split renaming (split to mkSplit)
 open import Prelude.Null
