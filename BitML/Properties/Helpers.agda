@@ -1,4 +1,4 @@
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 open import Prelude.Membership
 open import Prelude.Setoid
@@ -15,7 +15,7 @@ open import Prelude.Decidable
 open import Prelude.Coercions
 
 module BitML.Properties.Helpers
-  (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
+  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
   where
 
 open import BitML.BasicTypes
@@ -136,30 +136,30 @@ allStatesᵗ⁺-∷ʳ {Γₜ = Γₜ} (x —→⟨ Γ←′ ⟩ eq′ ⊢ Γ↞)
   ∎≡
   where open ≡-Reasoning renaming (begin_ to begin≡_; _∎ to _∎≡)
 
-_~[_]→ₜ_ : Cfgᵗ → Label → Cfgᵗ → Set
+_~[_]→ₜ_ : Cfgᵗ → Label → Cfgᵗ → Type
 x ~[ α ]→ₜ y =
   ∃ λ x′ → ∃ λ y′ →
       (x ≈ x′ × y ≈ y′)
     × (x′ —[ α ]→ₜ y′)
 
-∃[_∋_]′ : Γₜ —[ αs ]↠ₜ Γₜ′ → (Γₜ —[ αs ]↠ₜ Γₜ′ → Rel₀ Cfg) → Set
+∃[_∋_]′ : Γₜ —[ αs ]↠ₜ Γₜ′ → (Γₜ —[ αs ]↠ₜ Γₜ′ → Rel₀ Cfg) → Type
 ∃[ Γ↠ ∋ P ]′
   = ∃ λ x → ∃ λ x′ → ∃ λ y → ∃ λ y′
   → ((x , y) ∈ allTransitions Γ↠)
   × (x ≈ x′ × y ≈ y′)
   × P Γ↠ x′ y′
 
-∃[_∋_] : Γₜ —[ αs ]↠ₜ Γₜ′ → Rel₀ Cfg → Set
+∃[_∋_] : Γₜ —[ αs ]↠ₜ Γₜ′ → Rel₀ Cfg → Type
 ∃[ Γ↠ ∋ P ] = ∃[ Γ↠ ∋ const P ]′
 
-∃[_∋ᵗ_]′ : Γₜ —[ αs ]↠ₜ Γₜ′ → (Γₜ —[ αs ]↠ₜ Γₜ′ → Rel₀ Cfgᵗ) → Set
+∃[_∋ᵗ_]′ : Γₜ —[ αs ]↠ₜ Γₜ′ → (Γₜ —[ αs ]↠ₜ Γₜ′ → Rel₀ Cfgᵗ) → Type
 ∃[ Γ↠ ∋ᵗ P ]′
   = ∃ λ x → ∃ λ x′ → ∃ λ y → ∃ λ y′
   → ((x , y) ∈ allTransitionsᵗ Γ↠)
   × (x ≈ x′ × y ≈ y′)
   × P Γ↠ x′ y′
 
-∃[_∋ᵗ_] : Γₜ —[ αs ]↠ₜ Γₜ′ → Rel₀ Cfgᵗ → Set
+∃[_∋ᵗ_] : Γₜ —[ αs ]↠ₜ Γₜ′ → Rel₀ Cfgᵗ → Type
 ∃[ Γ↠ ∋ᵗ P ] = ∃[ Γ↠ ∋ᵗ const P ]′
 
 zoomP : ∀ {P : Pred₀ Label}
@@ -432,7 +432,7 @@ module _ {c}{v}{x} where
 
 
 -- Collections on traces.
-private variable X : Set ℓ
+private variable X : Type ℓ
 
 instance
   HX↠ₜ : ⦃ ∀ {αs} → (Γₜ —[ αs ]↠ₜ Γₜ′) has X ⦄ → (Γₜ —↠ₜ Γₜ′) has X
@@ -453,7 +453,7 @@ ads⊆ (Γ —→⟨ _ ⟩ _ ⊢ tr) = λ where
   (here refl) → L.Mem.∈-++⁺ˡ
   (there Γ∈)  → L.Mem.∈-++⁺ʳ (advertisements Γ) ∘ ads⊆ tr Γ∈
 
-labels : ∀ {X : Set} → ⦃ X has Label ⦄ → X → Labels
+labels : ∀ {X : Type} → ⦃ X has Label ⦄ → X → Labels
 labels = collect
 
 -- Well-founded recursion on smaller (i.e. prefix) traces.
@@ -471,7 +471,7 @@ splitTraceˡ (_ —→⟨ Γ→ ⟩ p ⊢ Γ↠) (there Γ∈)  = _ —→ₜ⟨
 ≺-splitTraceˡ (_ —→⟨ _ ⟩ _ ⊢ _)   (here refl) = s≤s z≤n
 ≺-splitTraceˡ (_ —→⟨ _ ⟩ _ ⊢ tr′) (there Γ∈′) = s≤s (≺-splitTraceˡ tr′ Γ∈′)
 
-_⊆ˢ_ : Γₜ —[ αs ]↠ₜ Γₜ′ → Δₜ —[ αs′ ]↠ₜ Δₜ′ → Set
+_⊆ˢ_ : Γₜ —[ αs ]↠ₜ Γₜ′ → Δₜ —[ αs′ ]↠ₜ Δₜ′ → Type
 tr ⊆ˢ tr′ = allStates tr ⊆ allStates tr′
 
 ⊆ˢ⇒names⊆ : (tr : Γₜ —[ αs ]↠ₜ Γₜ′) (tr′ : Δₜ —[ αs′ ]↠ₜ Δₜ′)
@@ -499,7 +499,7 @@ tr ⊆ˢ tr′ = allStates tr ⊆ allStates tr′
 ... | _ —→⟨ _ ⟩ _ ⊢ _  | there _   | here refl = here refl
 ... | _ —→⟨ _ ⟩ _ ⊢ Γ↠ | there Γ∈′ | there x∈′ = there $ ⊆ˢ-splitTraceˡ Γ↠ Γ∈′ x∈′
 
-_⊆ᵗʳ_ : Γₜ —[ αs ]↠ₜ Γₜ′ → Δₜ —[ αs′ ]↠ₜ Δₜ′ → Set
+_⊆ᵗʳ_ : Γₜ —[ αs ]↠ₜ Γₜ′ → Δₜ —[ αs′ ]↠ₜ Δₜ′ → Type
 tr ⊆ᵗʳ tr′ = allTransitions tr ⊆ allTransitions tr′
 
 ⊆ᵗʳ-splitTraceˡ : (tr : Γₜ₀ —[ αs ]↠ₜ Γₜ″) (xy∈ : (Γₜ , Γₜ′) ∈ allTransitionsᵗ tr)
@@ -525,7 +525,7 @@ tr ⊆ᵗʳ tr′ = allTransitions tr ⊆ allTransitions tr′
 ∃-weakenP _ P⇒ (x , x′ , y , y′ , xy∈ , xy≈ , H)
               = x , x′ , y , y′ , xy∈ , xy≈ , P⇒ H
 
-∃-splitTraceˡ : ∀ {X : Set} {P : X → Rel₀ Cfg} (tr : Γₜ₀ —[ αs ]↠ₜ Γₜ″) (xy∈ : (Γₜ , Γₜ′) ∈ allTransitionsᵗ tr) {x x′ : X}
+∃-splitTraceˡ : ∀ {X : Type} {P : X → Rel₀ Cfg} (tr : Γₜ₀ —[ αs ]↠ₜ Γₜ″) (xy∈ : (Γₜ , Γₜ′) ∈ allTransitionsᵗ tr) {x x′ : X}
   → P x ⇒² P x′
   → ∃[ splitTraceˡ tr xy∈ ∋ P x ]
     --——————————————————————————————

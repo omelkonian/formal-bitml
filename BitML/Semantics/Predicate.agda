@@ -2,6 +2,7 @@
 -- Denotational semantics of predicates.
 ------------------------------------------------------------------------
 open import Prelude.Init hiding (_+_)
+open SetAsType
 open Integer using (_+_; _-_; _<?_)
 open import Prelude.Lists
 open import Prelude.DecEq
@@ -12,7 +13,7 @@ open import BitML.BasicTypes
 open import BitML.Predicate
 
 module BitML.Semantics.Predicate
-  (Participant : Set)
+  (Participant : Type)
   ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where

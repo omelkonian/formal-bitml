@@ -1,4 +1,4 @@
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open L.Mem using (∈-++⁺ˡ; ∈-++⁺ʳ; ∈-++⁻; ∈-map⁺)
 open import Prelude.DecEq
 open import Prelude.Decidable
@@ -12,7 +12,7 @@ open import Prelude.Setoid
 open import Prelude.Traces
 
 module BitML.Properties.TraceAd
-  (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
+  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
   where
 
 open import BitML.BasicTypes
@@ -317,7 +317,7 @@ traceAd {ad}{Γ₀}{Γ}{t}{α ∷ αs}{t′} ad∉ ad∈
       (yes ad∈M′) → here $ sym $ hᵗ (∉ᶜ-resp-≈ {Γ₀}{Γ₀′} Γ₀≈ ad∉) ad∈M′ Γ₀→M
       (no  ad∉M′) → there $ traceAd (ad∉M′ ∘ ∈ᶜ-resp-≈ {M}{M′} M≈) ad∈ M↠
 
-ℍ[C-Advertise]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Ad → Set
+ℍ[C-Advertise]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Ad → Type
 ℍ[C-Advertise]⦅ Γ ↝ Γ′ ⦆⦅ ad ⦆ = let ⟨ G ⟩ _ = ad; partG = nub-participants G in
     (Γ′ ≡ ` ad ∣ Γ)
     --

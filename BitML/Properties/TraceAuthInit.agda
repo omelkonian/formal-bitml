@@ -1,4 +1,4 @@
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 open import Prelude.Decidable
 open import Prelude.Membership
@@ -11,7 +11,7 @@ open import Prelude.Setoid
 open import Prelude.Traces
 
 module BitML.Properties.TraceAuthInit
-  (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
+  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
   where
 
 open import BitML.BasicTypes
@@ -316,7 +316,7 @@ traceAuthInit {A}{x}{ad}{Γ₀}{Γ}{t}{α ∷ αs}{t′} auth∉ auth∈
       (yes auth∈M′) → (λ{ refl → here refl }) $ hᵗ (∉ᶜ-resp-≈ {Γ₀}{Γ₀′} Γ₀≈ auth∉) auth∈M′ Γ₀→M
       (no  auth∉M′) → there $ traceAuthInit (auth∉M′ ∘ ∈ᶜ-resp-≈ {M}{M′} M≈) auth∈ M↠
 
-ℍ[C-AuthInit]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Participant × Ad × Id → Set
+ℍ[C-AuthInit]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Participant × Ad × Id → Type
 ℍ[C-AuthInit]⦅ Γ ↝ Γ′ ⦆⦅ A , ad , x ⦆ = ∃ λ Γ₁ → Σ Value λ v → let ⟨ G ⟩ _ = ad; partG = nub-participants G in
     (Γ ≡ ` ad ∣ Γ₁)
   × (Γ′ ≡ ` ad ∣ Γ₁ ∣ A auth[ x ▷ˢ ad ])

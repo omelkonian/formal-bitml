@@ -1,4 +1,4 @@
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 open import Prelude.Decidable
 open import Prelude.Membership
@@ -11,7 +11,7 @@ open import Prelude.Setoid
 open import Prelude.Traces
 
 module BitML.Properties.TraceAuthCommit
-  (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
+  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
   where
 
 open import BitML.BasicTypes
@@ -318,7 +318,7 @@ traceAuthCommit {A}{ad}{Γ₀}{Γ}{t}{α ∷ αs}{t′} auth∉ auth∈
       (yes auth∈M′) → map₂′ (λ{ refl → here refl }) $ hᵗ (∉ᶜ-resp-≈ {Γ₀}{Γ₀′} Γ₀≈ auth∉) auth∈M′ Γ₀→M
       (no  auth∉M′) → map₂′ there $ traceAuthCommit (auth∉M′ ∘ ∈ᶜ-resp-≈ {M}{M′} M≈) auth∈ M↠
 
-ℍ[C-AuthCommit]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Ad × Participant × List (Secret × Maybe ℕ) → Set
+ℍ[C-AuthCommit]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Ad × Participant × List (Secret × Maybe ℕ) → Type
 ℍ[C-AuthCommit]⦅ Γ ↝ Γ′ ⦆⦅ ad , A , secrets ⦆ = ∃ λ Γ₁ →
   let ⟨ G ⟩ _ = ad; (as , ms) = unzip secrets; Δ = || map (uncurry ⟨ A ∶_♯_⟩) secrets in
     (Γ ≡ ` ad ∣ Γ₁)

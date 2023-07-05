@@ -1,4 +1,4 @@
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 open import Prelude.Decidable
 open import Prelude.Membership
@@ -13,7 +13,7 @@ open import Prelude.Traces
 open import Prelude.ToN
 
 module BitML.Properties.TraceInit
-  (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
+  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
   where
 
 open import BitML.BasicTypes
@@ -310,7 +310,7 @@ traceInit {ad}{Γ₀}{Γ}{t}{α ∷ αs}{t′} ad∈ ad∉
       (no  ad∉M′) → here $ sym $ hᵗ (∈ᶜ-resp-≈ {Γ₀}{Γ₀′} Γ₀≈ ad∈) ad∉M′ Γ₀→M
       (yes ad∈M′) → there $ traceInit (∈ᶜ-resp-≈ {M′}{M} (↭-sym M≈) ad∈M′) ad∉ M↠
 
-ℍ[C-Init]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Ad → Set
+ℍ[C-Init]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Ad → Type
 ℍ[C-Init]⦅ Γ ↝ Γ′ ⦆⦅ ad ⦆ = ∃ λ Γ₁ → ∃ λ x → let ⟨ G ⟩ C = ad; partG = nub-participants G in
   let toSpend = persistentDeposits G
       vs      = map select₂ toSpend
@@ -337,7 +337,7 @@ init⇒∗ Γ↠ α∈
 open import BitML.Properties.TraceAd Participant Honest
 open import BitML.Properties.TraceAuthInit Participant Honest
 
-∃ℍ[C-AuthInit]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Ad → Set
+∃ℍ[C-AuthInit]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Ad → Type
 ∃ℍ[C-AuthInit]⦅ Γ ↝ Γ′ ⦆⦅ ad ⦆ = ∃ λ A → ∃ λ x → ℍ[C-AuthInit]⦅ Γ ↝ Γ′ ⦆⦅ A , ad , x ⦆
 
 private

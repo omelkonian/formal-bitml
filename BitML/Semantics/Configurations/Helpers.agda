@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- Utilities for constructing configurations.
 ------------------------------------------------------------------------
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open L.Mem hiding (_∈_)
 open L.Perm using (∈-resp-↭; map⁺)
 open import Prelude.Lists.PermutationsMeta
@@ -26,7 +26,7 @@ open import Prelude.Null
 open import BitML.BasicTypes
 
 module BitML.Semantics.Configurations.Helpers
-  (Participant : Set)
+  (Participant : Type)
   ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
@@ -164,7 +164,7 @@ c ⊈ᶜ c′ = ¬ c ⊆ᶜ c′
 ⊆ᶜ-++⁺ʳ : ∀ l r → Δ ⊆ᶜ r → Δ ⊆ᶜ l ∣ r
 ⊆ᶜ-++⁺ʳ l r = ∈ᶜ-++⁺ʳ l r ∘_
 
-_≢deposit : Cfg → Set
+_≢deposit : Pred₀ Cfg
 _≢deposit = λ where
   (⟨ _ has _ ⟩at _) → ⊥
   _                 → ⊤
@@ -182,7 +182,7 @@ Initial⇒∉ {Γ = l ∣ r} ⦃ ≢dep ⦄ (pˡ , pʳ) =
 ∉ᶜ-resp-≈ : Γ ≈ Γ′ → Γ₀ ∉ᶜ Γ → Γ₀ ∉ᶜ Γ′
 ∉ᶜ-resp-≈ {Γ}{Γ′}{Γ₀} Γ≈ c∉ = c∉ ∘ ∈ᶜ-resp-≈ {Γ′}{Γ} (↭-sym Γ≈)
 
--- ∈ᶜ-||⁺ : ∀ {A : Set} {f : A → Cfg} xs
+-- ∈ᶜ-||⁺ : ∀ {A : Type} {f : A → Cfg} xs
 --   → (∃ λ x → (x ∈ xs) × (Γ ∈ᶜ f x))
 --     --———————————————————————————
 --   → Γ ∈ᶜ || map f xs
@@ -191,7 +191,7 @@ Initial⇒∉ {Γ = l ∣ r} ⦃ ≢dep ⦄ (pˡ , pʳ) =
 -- ∈ᶜ-||⁺ {f = f} (.x ∷ xs@(_ ∷ _)) (x , here refl , Γ∈) = ∈ᶜ-++⁺ˡ (f x) (|| map f xs) Γ∈
 -- ∈ᶜ-||⁺ {f = f} (x  ∷ xs@(_ ∷ _)) (y , there y∈  , Γ∈) = ∈ᶜ-++⁺ʳ (f x) (|| map f xs) (∈ᶜ-||⁺ xs (y , y∈ , Γ∈))
 
-∈ᶜ-||⇒⊆ᶜ : ∀ {A : Set} {f : A → Cfg} {x} xs
+∈ᶜ-||⇒⊆ᶜ : ∀ {A : Type} {f : A → Cfg} {x} xs
   → x ∈ xs
   → || map f xs ⊆ᶜ Γ
     --———————————————————————————
@@ -203,7 +203,7 @@ Initial⇒∉ {Γ = l ∣ r} ⦃ ≢dep ⦄ (pˡ , pʳ) =
     (here refl) → Γ⊆ ∘ ∈ᶜ-++⁺ˡ (f x) (|| map f xs)
     (there x∈)  → ∈ᶜ-||⇒⊆ᶜ {Γ = Γ} xs x∈ (Γ⊆ ∘ ∈ᶜ-++⁺ʳ (f x) (|| map f xs))
 
-∉ᶜ-|| : ∀ {A : Set} {f : A → Cfg}
+∉ᶜ-|| : ∀ {A : Type} {f : A → Cfg}
   → (∀ {x} → Γ ∉ᶜ f x)
     --———————————————————————————
   → ∀ xs → Γ ∉ᶜ || map f xs
@@ -214,7 +214,7 @@ Initial⇒∉ {Γ = l ∣ r} ⦃ ≢dep ⦄ (pˡ , pʳ) =
   Sum.[ Γ≢
       , ∉ᶜ-|| Γ≢ xs ]
 
-private variable X Y : Set
+private variable X Y : Type
 
 collectFromBase : (BaseCfg → List X) → (Cfg → List X)
 collectFromBase f = collectFromList f ∘ to[ Cfg′ ]
@@ -415,7 +415,7 @@ committedPartG≡ {ad} (p ∷ ps@(_ ∷ _)) =
 ≈⇒deposits↭ : Γ ≈ Γ′ → Γ ↭⦅ deposits ⦆ Γ′
 ≈⇒deposits↭ = collectFromList↭ (collect ⦃ it ⦄)
 
-∈-resp-≈ : ∀ {Z Z′ A : Set} → ⦃ _ : A has Z ⦄ → ⦃ _ : ISetoid A ⦄
+∈-resp-≈ : ∀ {Z Z′ A : Type} → ⦃ _ : A has Z ⦄ → ⦃ _ : ISetoid A ⦄
   → (f : ∀ {X} → ⦃ X has Z ⦄ → X → List Z′)
   → (∀ {a a′ : A} → a ≈ a′ → a ↭⦅ f ⦆ a′)
   → ∀ (z : Z′) → (λ ◆ → z ∈ f ◆) Respects _≈_
@@ -473,7 +473,7 @@ namesʳ-∥map-authDestroy (_ ∷ _ ∷ _) (here refl) = here refl
 namesʳ-∥map-authDestroy ((Bᵢ , vᵢ , xᵢ) ∷ ds@(_ ∷ _)) (there d∈) = there $ (namesʳ-∥map-authDestroy ds) d∈
 
 private
-  n≡ : ∀ {A : Set} {P Q : A → Cfg}
+  n≡ : ∀ {A : Type} {P Q : A → Cfg}
     → (∀ x → Null $ namesʳ (Q x) )
     → (xs : List A)
     → namesʳ (|| map (λ x → P x ∣ Q x) xs)
@@ -520,7 +520,7 @@ namesʳ-∥map-destroy {y = y} ds {x} x∈ = qed
     P : DepositRef → Cfg
     P (Aᵢ , vᵢ , xᵢ) = ⟨ Aᵢ has vᵢ ⟩at xᵢ
 
-    P′ : ∀ {A : Set} → A × DepositRef → Cfg
+    P′ : ∀ {A : Type} → A × DepositRef → Cfg
     P′ = P ∘ proj₂
 
     Q P∣Q : Index ds × DepositRef → Cfg

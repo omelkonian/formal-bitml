@@ -1,7 +1,9 @@
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 
-module BitML (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant) where
+module BitML
+  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
+  where
 
 open import BitML.BasicTypes public
 open import BitML.Predicate public

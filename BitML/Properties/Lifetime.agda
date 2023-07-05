@@ -1,4 +1,4 @@
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 open import Prelude.Decidable
 open import Prelude.Membership
@@ -15,7 +15,7 @@ open import Prelude.Traces
 open import Prelude.InferenceRules
 
 module BitML.Properties.Lifetime
-  (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
+  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
   where
 
 open import BitML.BasicTypes
@@ -39,7 +39,7 @@ data _↝_ : Rel₀ Contract where
       ────────────────────────────────────
       c ↝ c′
 
-private variable X : Set ℓ
+private variable X : Type ℓ
 
 weaken‼ : ∀ {xs ys : List X} → xs ⊆ ys → Index xs → Index ys
 weaken‼ {xs = x ∷ xs} xs⊆ 0F = L.Any.index $ xs⊆ (here refl)
@@ -74,7 +74,7 @@ step˘ : c ↝∗ c′ → c′ ↝ c″ → c ↝∗ c″
 step˘ base = flip step base
 step˘ (step c↝ c↝∗) c↝′ = step c↝ (step˘ c↝∗ c↝′)
 
-_∙↝∗_ : Ad → Contract → Set
+_∙↝∗_ : Ad → Contract → Type
 (⟨ _ ⟩ c) ∙↝∗ c′ = c ↝∗ c′
 
 step∙˘ : ad ∙↝∗ c → c ↝ c′ → ad ∙↝∗ c′

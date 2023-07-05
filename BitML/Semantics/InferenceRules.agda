@@ -1,7 +1,7 @@
 -----------------------------------------------
 -- Small-step semantics for the BitML calculus
 -----------------------------------------------
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.Lists
 open import Prelude.Lists.Dec
 open import Prelude.Membership
@@ -19,7 +19,7 @@ open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
 
 module BitML.Semantics.InferenceRules
-  (Participant : Set)
+  (Participant : Type)
   ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
@@ -38,7 +38,7 @@ open import BitML.Semantics.Predicate Participant Honest
 -- i.e. using `ids Γ` does not examine names in authorization
 
 infix -1 _—[_]→_ _—[_]↛_
-data _—[_]→_ : Configuration → Label → Configuration → Set where
+data _—[_]→_ : Configuration → Label → Configuration → Type where
 
   ------------------------------
   -- i) Rules for deposits
@@ -260,11 +260,11 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 -- Semantic rules for timed configurations.
 
 infix 3 _≈ₜ_
-_≈ₜ_ : TimedConfiguration → TimedConfiguration → Set
+_≈ₜ_ : TimedConfiguration → TimedConfiguration → Type
 c ≈ₜ c′ = (time c ≡ time c′) × (cfg c ≈ cfg c′)
 
 infix -1 _—[_]→ₜ_
-data _—[_]→ₜ_ : TimedConfiguration → Label → TimedConfiguration → Set where
+data _—[_]→ₜ_ : TimedConfiguration → Label → TimedConfiguration → Type where
 
   -- iv) Rules for handling time
   [Action] :
@@ -293,10 +293,10 @@ data _—[_]→ₜ_ : TimedConfiguration → Label → TimedConfiguration → Se
       (⟨ c , v ⟩at x ∣ Γ) at t —[ α ]→ₜ Γ′ at t
 
 
-_—[_]↛_ : Configuration → Label → Configuration → Set
+_—[_]↛_ : Configuration → Label → Configuration → Type
 Γ —[ α ]↛ Γ′ = ¬ (Γ —[ α ]→ Γ′)
 
-_—[_]↛ₜ_ : TimedConfiguration → Label → TimedConfiguration → Set
+_—[_]↛ₜ_ : TimedConfiguration → Label → TimedConfiguration → Type
 Γₜ —[ α ]↛ₜ Γₜ′ = ¬ (Γₜ —[ α ]→ₜ Γₜ′)
 
 -----------------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- Types of configurations.
 ------------------------------------------------------------------------
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.Lists
 open import Prelude.DecEq
 open import Prelude.Coercions
@@ -9,7 +9,7 @@ open import Prelude.Coercions
 open import BitML.BasicTypes
 
 module BitML.Semantics.Configurations.Types
-  (Participant : Set)
+  (Participant : Type)
   ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
@@ -17,11 +17,7 @@ module BitML.Semantics.Configurations.Types
 open import BitML.Contracts.Types Participant Honest
 open import BitML.Semantics.Action Participant Honest
 
--------------------------------------------------------------------
-
-ActiveContract = Contract × Value × Id
-
-data Configuration : Set where
+data Configuration : Type where
   -- empty
   ∅ᶜ : Configuration
 
@@ -57,11 +53,10 @@ variable Γ Γ′ Γ″ Γ₀ Γ₀′ Γ₀″ Δ Δ′ Δ″ L L′ L″ M M�
 || (Γ ∷ []) = Γ
 || (Γ ∷ Γs) = Γ ∣ || Γs
 
-record TimedConfiguration : Set where
+record TimedConfiguration : Type where
   constructor _at_
-  field
-    cfg  : Configuration
-    time : Time
+  field cfg  : Configuration
+        time : Time
 open TimedConfiguration public
 
 unquoteDecl DecEqᵗᶜᶠ = DERIVE DecEq [ quote TimedConfiguration , DecEqᵗᶜᶠ ]
@@ -81,14 +76,16 @@ Cfgᵗ = TimedConfiguration
 ∅ᵗ : Cfgᵗ
 ∅ᵗ = ∅ᶜ at 0
 
+ActiveContract = Contract × Value × Id
+
 -- Alternative representation as list of atomic/base configurations.
-data BaseCfg : Set where
-  ``_ : (ad : Advertisement) → BaseCfg
-  `⟨_,_⟩at_ : (c : Contract) → (v : Value) → (x : Id) → BaseCfg
+data BaseCfg : Type where
+  ``_         : (ad : Advertisement) → BaseCfg
+  `⟨_,_⟩at_   : (c : Contract) → (v : Value) → (x : Id) → BaseCfg
   `⟨_has_⟩at_ : (A : Participant) → (v : Value) → (x : Id) → BaseCfg
-  _`auth[_] : (A : Participant) → (a : Action) → BaseCfg
-  `⟨_∶_♯_⟩ : (A : Participant) → (s : Secret) → (mn : Maybe ℕ) → BaseCfg
-  _`∶_♯_ : (A : Participant) → (s : Secret) → (n : ℕ) → BaseCfg
+  _`auth[_]   : (A : Participant) → (a : Action) → BaseCfg
+  `⟨_∶_♯_⟩    : (A : Participant) → (s : Secret) → (mn : Maybe ℕ) → BaseCfg
+  _`∶_♯_      : (A : Participant) → (s : Secret) → (n : ℕ) → BaseCfg
 unquoteDecl DecEqᵇᶜᶠ = DERIVE DecEq [ quote BaseCfg , DecEqᵇᶜᶠ ]
 
 variable Γ¹ Γ¹′ Γ¹″ Δ¹ Δ¹′ Δ¹″ : BaseCfg

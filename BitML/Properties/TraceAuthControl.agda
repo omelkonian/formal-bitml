@@ -1,4 +1,4 @@
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 open import Prelude.Decidable
 open import Prelude.Membership
@@ -11,7 +11,7 @@ open import Prelude.Setoid
 open import Prelude.Traces
 
 module BitML.Properties.TraceAuthControl
-  (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
+  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
   where
 
 open import BitML.BasicTypes
@@ -326,7 +326,7 @@ traceAuthControl {A}{x}{d}{Γ₀}{Γ}{t}{α ∷ αs}{t′} auth∉ auth∈
       (yes auth∈M′) → (λ{ refl → here refl }) $ hᵗ (∉ᶜ-resp-≈ {Γ₀}{Γ₀′} Γ₀≈ auth∉) auth∈M′ Γ₀→M
       (no  auth∉M′) → there $ traceAuthControl (auth∉M′ ∘ ∈ᶜ-resp-≈ {M}{M′} M≈) auth∈ M↠
 
-ℍ[C-AuthControl]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Participant × Id × Branch → Set
+ℍ[C-AuthControl]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Participant × Id × Branch → Type
 ℍ[C-AuthControl]⦅ Γ ↝ Γ′ ⦆⦅ A , x , d ⦆ =
   ∃ λ Γ₁ → Σ ActiveContract λ (c , v , x) → Σ (Index c) λ i →
     (d ≡ (c ‼ i))

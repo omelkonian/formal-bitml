@@ -6,7 +6,7 @@ open import Function using (id)
 open import Data.List.Membership.Propositional.Properties
 open import Data.List.Relation.Binary.Subset.Propositional.Properties
 
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.General
 open import Prelude.Lists
 open import Prelude.Lists.Dec
@@ -26,7 +26,7 @@ open import BitML.BasicTypes
 open import BitML.Predicate hiding (∣_∣)
 
 module BitML.Contracts.Validity
-  (Participant : Set)
+  (Participant : Type)
   ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
@@ -56,7 +56,7 @@ splitsOK G C₀ = goᶜ C₀ (persistentValue G)
     goᵈ (_ ⇒ c)       v = goᵈ c v
     goᵈ (withdraw _)  _ = true
 
-record ValidAdvertisement (ad : Advertisement) : Set where
+record ValidAdvertisement (ad : Advertisement) : Type where
   -- open Advertisement ad renaming (C to c; G to g) -- ⟨ G ⟩ C = ad
   field
     -- (i) names in G are distinct

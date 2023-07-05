@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- Decision procedure for BitML's small-step semantics.
 ------------------------------------------------------------------------
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.General
 open import Prelude.Lists
 open import Prelude.Lists.Dec
@@ -20,7 +20,7 @@ open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
 
 module BitML.Semantics.DecidableInference
-  (Participant : Set)
+  (Participant : Type)
   ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where

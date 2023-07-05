@@ -7,7 +7,7 @@ open import Prelude.InferenceRules
 open import Prelude.Setoid
 
 module BitML.Properties.Invariants
-  (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
+  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
   where
 
 open import BitML.BasicTypes
