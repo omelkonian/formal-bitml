@@ -19,7 +19,7 @@ open import BitML.Semantics.Action Participant Honest
 
 -------------------------------------------------------------------
 
-ActiveContract = Contracts × Value × Id
+ActiveContract = Contract × Value × Id
 
 data Configuration : Set where
   -- empty
@@ -29,7 +29,7 @@ data Configuration : Set where
   `_ : (ad : Advertisement) → Configuration
 
   -- active contract
-  ⟨_,_⟩at_ : (c : Contracts) → (v : Value) → (x : Id) → Configuration
+  ⟨_,_⟩at_ : (c : Contract) → (v : Value) → (x : Id) → Configuration
 
   -- deposit redeemable by a participant
   ⟨_has_⟩at_ : (A : Participant) → (v : Value) → (x : Id) → Configuration
@@ -84,7 +84,7 @@ Cfgᵗ = TimedConfiguration
 -- Alternative representation as list of atomic/base configurations.
 data BaseCfg : Set where
   ``_ : (ad : Advertisement) → BaseCfg
-  `⟨_,_⟩at_ : (c : Contracts) → (v : Value) → (x : Id) → BaseCfg
+  `⟨_,_⟩at_ : (c : Contract) → (v : Value) → (x : Id) → BaseCfg
   `⟨_has_⟩at_ : (A : Participant) → (v : Value) → (x : Id) → BaseCfg
   _`auth[_] : (A : Participant) → (a : Action) → BaseCfg
   `⟨_∶_♯_⟩ : (A : Participant) → (s : Secret) → (mn : Maybe ℕ) → BaseCfg

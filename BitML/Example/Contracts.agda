@@ -23,19 +23,19 @@ open import BitML.Contracts.Types Participant Honest hiding (A; B)
 
 --------------------------------------------------------------------------------
 
-ex-contracts₁ : Contracts
+ex-contracts₁ : Contract
 ex-contracts₁ = withdraw A ∙
 
-ex-contracts₂ : Contracts
+ex-contracts₂ : Contract
 ex-contracts₂ = A ⇒ withdraw A
               ⊕ put [] ⇒ (withdraw A ∙)
               ∙
 
-ex-contracts₃ : Contracts
+ex-contracts₃ : Contract
 ex-contracts₃ = put [ "x" ] ⇒ (withdraw A ∙)
               ∙
 
-ex-contracts₄ : Contracts
+ex-contracts₄ : Contract
 ex-contracts₄ = A ⇒ withdraw B
               ⊕ B ⇒ split ( 2 ⊸ (withdraw A ∙)
                           ⊕ 3 ⊸ (after 100 ⇒ withdraw B ∙)

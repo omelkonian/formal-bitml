@@ -1,27 +1,21 @@
 ------------------------------------------------------------------------
 -- Datatype for predicates used in contracts.
 ------------------------------------------------------------------------
+module BitML.Predicate where
 
-open import Data.Nat     using (ℕ)
-open import Data.Integer using (ℤ; +_)
-open import Data.Fin     using (Fin)
-open import Data.Product using (∃-syntax; _,_)
-open import Data.List    using ([]; [_]; _++_)
+open import Prelude.Init; open SetAsType
+open import Prelude.DecEq
 
 open import BitML.BasicTypes
 
-open import Prelude.DecEq
-
-module BitML.Predicate where
-
-data Arith : Set where
+data Arith : Type where
   `    : ℤ → Arith
   ∣_∣  : Secret → Arith
   _`+_ : Arith → Arith → Arith
   _`-_ : Arith → Arith → Arith
 unquoteDecl DecEqᵃʳ = DERIVE DecEq [ quote Arith , DecEqᵃʳ ]
 
-data Predicate : Set where
+data Predicate : Type where
   `true : Predicate
   _`∧_  : Predicate → Predicate → Predicate
   `¬_   : Predicate → Predicate

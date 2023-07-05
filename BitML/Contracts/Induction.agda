@@ -1,12 +1,12 @@
 open import Induction using (Recursor)
 
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 open import Prelude.Membership
 open import Prelude.Lists.Collections
 
 module BitML.Contracts.Induction
-  (Participant : Set)
+  (Participant : Type)
   ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
@@ -16,56 +16,56 @@ open import BitML.Predicate
 open import BitML.Contracts.Types Participant Honest
   hiding (C)
 
-data ℂ : Set where
-  C   : Contract → ℂ
-  CS  : Contracts → ℂ
+data ℂ : Type where
+  D   : Branch     → ℂ
+  C   : Contract   → ℂ
   VCS : VContracts → ℂ
 
-data _≺_ : Rel ℂ 0ℓ where
+data _≺_ : Rel₀ ℂ where
 
-  ≺-∈  : d ∈ ds → C d ≺ CS ds
-  ≺-∈ᵛ : ds ∈ map proj₂ vcs → CS ds ≺ VCS vcs
+  ≺-∈  : d ∈ ds → D d ≺ C ds
+  ≺-∈ᵛ : ds ∈ map proj₂ vcs → C ds ≺ VCS vcs
   instance
-    ≺-put   : CS ds ≺ C (put xs &reveal as if p ⇒ ds)
-    ≺-auth  : C d ≺ C (A ⇒ d)
-    ≺-after : C d ≺ C (after t ⇒ d)
-    ≺-split : VCS vcs ≺ C (split vcs)
+    ≺-put   : C ds    ≺ D (put xs &reveal as if p ⇒ ds)
+    ≺-auth  : D d     ≺ D (A ⇒ d)
+    ≺-after : D d     ≺ D (after t ⇒ d)
+    ≺-split : VCS vcs ≺ D (split vcs)
 
 ≺-wf : WellFounded _≺_
 ≺-wf = acc ∘ _≻_
   where
     _≻_ : ∀ c c′ → c′ ≺ c → Acc _≺_ c′
-    (.(CS (_ ∷ _))  ≻ .(C _))  (≺-∈                (here refl)) = acc (_ ≻_)
-    (.(CS (_ ∷ _))  ≻ .(C _))  (≺-∈                (there p))   = (_ ≻ _) (≺-∈ p)
-    (.(VCS (_ ∷ _)) ≻ .(CS _)) (≺-∈ᵛ {vcs = _ ∷ _} (here refl)) = acc (_ ≻_)
-    (.(VCS (_ ∷ _)) ≻ .(CS _)) (≺-∈ᵛ {vcs = _ ∷ _} (there p))   = (_ ≻ _) (≺-∈ᵛ p)
+    (.(C (_ ∷ _))   ≻ .(D _)) (≺-∈                (here refl)) = acc (_ ≻_)
+    (.(C (_ ∷ _))   ≻ .(D _)) (≺-∈                (there p))   = (_ ≻ _) (≺-∈ p)
+    (.(VCS (_ ∷ _)) ≻ .(C _)) (≺-∈ᵛ {vcs = _ ∷ _} (here refl)) = acc (_ ≻_)
+    (.(VCS (_ ∷ _)) ≻ .(C _)) (≺-∈ᵛ {vcs = _ ∷ _} (there p))   = (_ ≻ _) (≺-∈ᵛ p)
 
-    (.(C (put _ &reveal _ if _ ⇒ _)) ≻ .(CS _))  ≺-put   = acc (_ ≻_)
-    (.(C (_ ⇒ _))                    ≻ .(C _))   ≺-auth  = acc (_ ≻_)
-    (.(C (after _ ⇒ _))              ≻ .(C _))   ≺-after = acc (_ ≻_)
-    (.(C (split _))                  ≻ .(VCS _)) ≺-split = acc (_ ≻_)
+    (.(D (put _ &reveal _ if _ ⇒ _)) ≻ .(C _))   ≺-put   = acc (_ ≻_)
+    (.(D (_ ⇒ _))                    ≻ .(D _))   ≺-auth  = acc (_ ≻_)
+    (.(D (after _ ⇒ _))              ≻ .(D _))   ≺-after = acc (_ ≻_)
+    (.(D (split _))                  ≻ .(VCS _)) ≺-split = acc (_ ≻_)
 
 ≺-rec : Recursor (WF.WfRec _≺_)
 ≺-rec = WF.All.wfRec ≺-wf 0ℓ
 
-record Toℂ (A : Set) : Set where
+record Toℂ (A : Type) : Type where
   field toℂ : A → ℂ
 open Toℂ ⦃ ... ⦄ public
 
-_≺ℂ_ : ∀ {A B : Set} ⦃ _ : Toℂ A ⦄ ⦃ _ : Toℂ B ⦄ → A → B → Set
+_≺ℂ_ : ∀ {A B : Type} ⦃ _ : Toℂ A ⦄ ⦃ _ : Toℂ B ⦄ → A → B → Type
 x ≺ℂ y = toℂ x ≺ toℂ y
 
 instance
+  Toℂᵈ : Toℂ Branch
+  Toℂᵈ .toℂ = D
+
   Toℂᶜ : Toℂ Contract
   Toℂᶜ .toℂ = C
-
-  Toℂᶜˢ : Toℂ Contracts
-  Toℂᶜˢ .toℂ = CS
 
   Toℂᵛᶜˢ : Toℂ VContracts
   Toℂᵛᶜˢ .toℂ = VCS
 
-  -- HP-ℂ : ∀ {X : Set} ⦃ _ : Contract has X ⦄ → ℂ has X
-  -- HP-ℂ .collect (C d)     = collect d
-  -- HP-ℂ .collect (CS ds)   = collect ds
+  -- HP-ℂ : ∀ {X : Type} ⦃ _ : Branch has X ⦄ → ℂ has X
+  -- HP-ℂ .collect (D d)     = collect d
+  -- HP-ℂ .collect (C ds)    = collect ds
   -- HP-ℂ .collect (VCS vcs) = collect vcs

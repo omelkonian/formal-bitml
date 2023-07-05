@@ -24,7 +24,7 @@ open import BitML.Contracts Participant Honest hiding (d)
 open import BitML.Semantics Participant Honest
 open import BitML.Properties.Helpers Participant Honest
 
-data _↝_ : Rel₀ Contracts where
+data _↝_ : Rel₀ Contract where
 
   put↝ : ∀ {i : Index c} → let open ∣SELECT c i in
 
@@ -66,7 +66,7 @@ weaken∈ {c} d∈ (split↝ {i = 0F} d≡ c∈)
   = split↝ d≡ c∈
 
 
-data _↝∗_ : Rel₀ Contracts where
+data _↝∗_ : Rel₀ Contract where
   base : c ↝∗ c
   step : c ↝ c′ → c′ ↝∗ c″ → c ↝∗ c″
 
@@ -74,28 +74,28 @@ step˘ : c ↝∗ c′ → c′ ↝ c″ → c ↝∗ c″
 step˘ base = flip step base
 step˘ (step c↝ c↝∗) c↝′ = step c↝ (step˘ c↝∗ c↝′)
 
-_∙↝∗_ : Ad → Contracts → Set
+_∙↝∗_ : Ad → Contract → Set
 (⟨ _ ⟩ c) ∙↝∗ c′ = c ↝∗ c′
 
 step∙˘ : ad ∙↝∗ c → c ↝ c′ → ad ∙↝∗ c′
 step∙˘ = step˘
 
-open ⊆-Reasoning Contract renaming (begin_ to begin⊆_; _∎ to _⊆∎)
-
 h-sub↝ : c ↝ c′ → subtermsᶜ′ c′ ⊆ subtermsᶜ′ c
-h-sub↝ (put↝ {c}{xs}{as}{p}{c′}{i} d≡) = let open ∣SELECT c i in
-  begin⊆ subtermsᶜ′ c′ ≡˘⟨ cong subtermsᵈ′ d≡ ⟩
-         subtermsᵈ′ d∗ ⊆⟨ h-sub‼ {c} ⟩
-         subtermsᶜ′ c  ⊆∎
-h-sub↝ (split↝ {c}{vcs}{c′}{i} d≡ c∈) = let open ∣SELECT c i in
-  begin⊆ subtermsᶜ′ c′ ⊆⟨ subterms⊆ᵛᶜˢ′ {c′}{vcs} c∈ ⟩
-         subtermsᵈ′ (split vcs) ≡˘⟨ cong subtermsᵈ′ d≡ ⟩
-         subtermsᵈ′ d∗ ⊆⟨  h-sub‼ {c} ⟩
-         subtermsᶜ′ c  ⊆∎
+h-sub↝ = λ where
+  (put↝ {c}{xs}{as}{p}{c′}{i} d≡) → let open ∣SELECT c i in
+    begin⊆ subtermsᶜ′ c′ ≡˘⟨ cong subtermsᵈ′ d≡ ⟩
+           subtermsᵈ′ d∗ ⊆⟨ h-sub‼ {c} ⟩
+           subtermsᶜ′ c  ⊆∎
+  (split↝ {c}{vcs}{c′}{i} d≡ c∈)  → let open ∣SELECT c i in
+    begin⊆ subtermsᶜ′ c′          ⊆⟨ subterms⊆ᵛ′ {c′}{vcs} c∈ ⟩
+           subtermsᵈ′ (split vcs) ≡˘⟨ cong subtermsᵈ′ d≡ ⟩
+           subtermsᵈ′ d∗          ⊆⟨  h-sub‼ {c} ⟩
+           subtermsᶜ′ c           ⊆∎
+ where open ⊆-Reasoning Branch renaming (begin_ to begin⊆_; _∎ to _⊆∎)
 
 h-sub↝∗ : c ↝∗ c′ → subtermsᶜ′ c′ ⊆ subtermsᶜ′ c
 h-sub↝∗ base = id
 h-sub↝∗ (step c↝ c↝∗) = h-sub↝ c↝ ∘ h-sub↝∗ c↝∗
 
 h-sub∙↝∗ : ad ∙↝∗ c → c ⊆ subtermsᵃ′ ad
-h-sub∙↝∗ ad↝ = h-sub↝∗ ad↝ ∘ subterms⊆ᶜˢ
+h-sub∙↝∗ ad↝ = h-sub↝∗ ad↝ ∘ subterms⊆ᶜ

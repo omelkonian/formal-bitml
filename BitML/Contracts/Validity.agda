@@ -34,27 +34,27 @@ module BitML.Contracts.Validity
 open import BitML.Contracts.Types Participant Honest hiding (B)
 open import BitML.Contracts.Helpers Participant Honest
 
-splitsOK : Precondition → Contracts → Bool
-splitsOK G C₀ = goᶜˢ C₀ (persistentValue G)
+splitsOK : Precondition → Contract → Bool
+splitsOK G C₀ = goᶜ C₀ (persistentValue G)
   where
-    goᶜ : (C : Contract) → Value → Bool
-    goᶜˢ : (C : Contracts) → Value → Bool
-    goᵛᶜˢ : (C : VContracts) → Bool
+    goᵈ  : Branch → Value → Bool
+    goᶜ  : Contract → Value → Bool
+    goᵛᶜ : VContracts → Bool
 
-    goᵛᶜˢ [] = true
-    goᵛᶜˢ ((v , cs) ∷ vcs) = goᶜˢ cs v
+    goᵛᶜ [] = true
+    goᵛᶜ ((v , cs) ∷ vcs) = goᶜ cs v
 
-    goᶜˢ [] _ = true
-    goᶜˢ (c ∷ cs) v = goᶜ c v ∧ goᶜˢ cs v
+    goᶜ [] _ = true
+    goᶜ (c ∷ cs) v = goᵈ c v ∧ goᶜ cs v
 
-    goᶜ c₀@(put xs &reveal as if p ⇒ c) v
+    goᵈ c₀@(put xs &reveal as if p ⇒ c) v
       with sequenceM $ map (λ x → checkDeposit volatile x G) xs
     ... | nothing = false
-    ... | just vs = goᶜˢ c (∑ℕ vs)
-    goᶜ (split vcs)   v = (∑₁ vcs == v) ∧ goᵛᶜˢ vcs
-    goᶜ (after _ ⇒ c) v = goᶜ c v
-    goᶜ (_ ⇒ c)       v = goᶜ c v
-    goᶜ (withdraw _)  _ = true
+    ... | just vs = goᶜ c (∑ℕ vs)
+    goᵈ (split vcs)   v = (∑₁ vcs == v) ∧ goᵛᶜ vcs
+    goᵈ (after _ ⇒ c) v = goᵈ c v
+    goᵈ (_ ⇒ c)       v = goᵈ c v
+    goᵈ (withdraw _)  _ = true
 
 record ValidAdvertisement (ad : Advertisement) : Set where
   -- open Advertisement ad renaming (C to c; G to g) -- ⟨ G ⟩ C = ad

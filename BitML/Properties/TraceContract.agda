@@ -1,4 +1,4 @@
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 open import Prelude.Decidable
 open import Prelude.Membership
@@ -15,7 +15,7 @@ open import Prelude.Traces
 open import Prelude.InferenceRules
 
 module BitML.Properties.TraceContract
-  (Participant : Set) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
+  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
   where
 
 open import BitML.BasicTypes
@@ -26,7 +26,7 @@ open import BitML.Properties.Helpers Participant Honest
 open import BitML.Properties.TraceInit Participant Honest
 
 -- ℍ[Contract]⦅ Γ —[ α ]↝ Γ′ ⦆⦅ c ⦆: Contract `c` is created by a transition `Γ —[ α ]→ Γ′`
-data ℍ[Contract]⦅_—[_]↝_⦆⦅_⦆ : Cfg → Label → Cfg → Contracts → Set where
+data ℍ[Contract]⦅_—[_]↝_⦆⦅_⦆ : Cfg → Label → Cfg → Contract → Type where
 
   base :
 
@@ -398,19 +398,19 @@ private
         (here refl) → HELP c∉Γ cv≡ Γ→ c∈
         (there c∈Γ) → c∉Γ c∈Γ
 
-map⦅proj₁⦆∘zip : ∀ {A B : Set} {xs : List A} {ys : List B} →
+map⦅proj₁⦆∘zip : ∀ {A B : Type} {xs : List A} {ys : List B} →
   map proj₁ (zip xs ys) ⊆ xs
 map⦅proj₁⦆∘zip {xs = _ ∷ _ }{_ ∷ _} = λ where
   (here refl) → here refl
   (there x∈)  → there (map⦅proj₁⦆∘zip x∈)
 
-map⦅proj₂⦆∘zip : ∀ {A B : Set} {xs : List A} {ys : List B} →
+map⦅proj₂⦆∘zip : ∀ {A B : Type} {xs : List A} {ys : List B} →
   map proj₂ (zip xs ys) ⊆ ys
 map⦅proj₂⦆∘zip {xs = _ ∷ _ }{_ ∷ _} = λ where
   (here refl) → here refl
   (there x∈)  → there (map⦅proj₂⦆∘zip x∈)
 
-∃ℍ[Contract]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Contracts → Set
+∃ℍ[Contract]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Contract → Type
 ∃ℍ[Contract]⦅ Γ ↝ Γ′ ⦆⦅ c ⦆ = ∃ ℍ[Contract]⦅ Γ —[_]↝ Γ′ ⦆⦅ c ⦆
 
 traceContractₜ :
@@ -432,7 +432,7 @@ traceContractₜ {c}{v}{y}{Γ₀}{Γ}{t}{α ∷ αs}{t′} c∉ c∈
 
 open import BitML.Properties.Lifetime Participant Honest
 
-Ancestor⦅_↝_⦆ : Ad → Contracts → Rel₀ Cfg
+Ancestor⦅_↝_⦆ : Ad → Contract → Rel₀ Cfg
 Ancestor⦅ ad ↝ c ⦆ Γ Γ′ =
     ℍ[C-Init]⦅ Γ ↝ Γ′ ⦆⦅ ad ⦆
   × (ad ∙↝∗ c)

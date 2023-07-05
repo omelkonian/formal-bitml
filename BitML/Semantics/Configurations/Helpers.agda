@@ -466,7 +466,7 @@ deposit∈Γ⇒namesʳ {A} {v} {x} {l ∣ r} d∈
 ... | inj₂ d∈ʳ = let _ , x∈ , d≡ = ∈-mapMaybe⁻ isInj₂ (deposit∈Γ⇒namesʳ {Γ = r} d∈ʳ)
                  in ∈-mapMaybe⁺ isInj₂ (∈-collect-++⁺ʳ l r x∈) d≡
 
-namesʳ-∥map-authDestroy : ∀ (ds : List (Participant × Value × Id))
+namesʳ-∥map-authDestroy : ∀ (ds : DepositRefs)
   → map (proj₂ ∘ proj₂) ds ⊆ namesʳ (|| map (uncurry₃ ⟨_has_⟩at_) ds)
 namesʳ-∥map-authDestroy (_ ∷ []) (here refl) = here refl
 namesʳ-∥map-authDestroy (_ ∷ _ ∷ _) (here refl) = here refl
@@ -510,30 +510,29 @@ private
                 | L.++-identityʳ (namesʳ $ P x₁)
                 = refl
 
-namesʳ-∥map-destroy : ∀ (ds : List (Participant × Value × Id)) → let xs = map (proj₂ ∘ proj₂) ds in
+namesʳ-∥map-destroy : ∀ (ds : DepositRefs) → let xs = map (proj₂ ∘ proj₂) ds in
   xs ⊆ namesʳ (|| map (λ{ (i , Aᵢ , vᵢ , xᵢ) → ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ] }) (enumerate ds))
 namesʳ-∥map-destroy {y = y} ds {x} x∈ = qed
   where
-    PVI = Participant × Value × Id
     x̂ = map (proj₂ ∘ proj₂) ds
     eds = enumerate ds
 
-    P : PVI → Cfg
+    P : DepositRef → Cfg
     P (Aᵢ , vᵢ , xᵢ) = ⟨ Aᵢ has vᵢ ⟩at xᵢ
 
-    P′ : ∀ {A : Set} → A × PVI → Cfg
+    P′ : ∀ {A : Set} → A × DepositRef → Cfg
     P′ = P ∘ proj₂
 
-    Q P∣Q : Index ds × PVI → Cfg
+    Q P∣Q : Index ds × DepositRef → Cfg
     Q (i , Aᵢ , vᵢ , xᵢ) = Aᵢ auth[ x̂ , ‼-map {xs = ds} i ▷ᵈˢ y ]
     P∣Q x = P′ x ∣ Q x
 
     h : namesʳ (|| map P∣Q eds)
       ≡ namesʳ (|| map P′ eds)
-    h = n≡ {A = Index ds × PVI} {P = P′} {Q = Q} (λ _ → refl) eds
+    h = n≡ {A = Index ds × DepositRef} {P = P′} {Q = Q} (λ _ → refl) eds
 
     -- [BUG] if I replace `enumerate ds` with `eds` I get an error!?
-    h′ : ∀ (ds : List PVI) → map P′ (enumerate ds) ≡ map P ds
+    h′ : ∀ (ds : DepositRefs) → map P′ (enumerate ds) ≡ map P ds
     h′ [] = refl
     h′ (pvi ∷ ds) = cong (_ ∷_) qed
       where
@@ -555,7 +554,7 @@ namesʳ-∥map-authCommit {secrets = (_ , _) ∷ []} (here refl) = here refl
 namesʳ-∥map-authCommit {secrets = (_ , _) ∷ ss@(_ ∷ _)} (here refl) = here refl
 namesʳ-∥map-authCommit {secrets = _ ∷ ss@(_ ∷ _)} (there a∈) = there (namesʳ-∥map-authCommit {secrets = ss} a∈)
 
-x∈vcis⇒¬fresh : ∀ {vcis : List (Value × Contracts × Id)}
+x∈vcis⇒¬fresh : ∀ {vcis : VIContracts}
   → ⟨ c , v ⟩at x ∈ᶜ || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis
     --—————————————————————————————————————————————————
   → x ∈ select₃ (unzip₃ vcis)
@@ -565,7 +564,7 @@ x∈vcis⇒¬fresh {vcis = _ ∷ vs@(_ ∷ _)} = λ where
   (here refl) → here refl
   (there c∈)  → there $ x∈vcis⇒¬fresh {vcis = vs} c∈
 
-c∈vcis⇒ : ∀ {vcis : List (Value × Contracts × Id)}
+c∈vcis⇒ : ∀ {vcis : VIContracts}
   → ⟨ c , v ⟩at x ∈ᶜ || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis
     --———————————————————————————————————————————————————————
   → c ∈ proj₁ (proj₂ $ unzip₃ vcis)
@@ -575,7 +574,7 @@ c∈vcis⇒ {vcis = _ ∷ vs@(_ ∷ _)} = λ where
   (here refl) → here refl
   (there c∈)  → there $ c∈vcis⇒ {vcis = vs} c∈
 
-c∈vcis⇒′ : ∀ {vcis : List (Value × Contracts × Id)} →
+c∈vcis⇒′ : ∀ {vcis : VIContracts} →
   let
     (vs , cs , _) = unzip₃ vcis
     vcs = zip vs cs
@@ -589,7 +588,7 @@ c∈vcis⇒′ {vcis = _ ∷ vs@(_ ∷ _)} = λ where
   (here refl) → here refl
   (there c∈)  → there $ c∈vcis⇒′ {vcis = vs} c∈
 
-x∈vcis⇒ : ∀ {vcis : List (Value × Contracts × Id)}
+x∈vcis⇒ : ∀ {vcis : VIContracts}
   → x ∈ ids (|| map (uncurry₃ $ flip ⟨_,_⟩at_) vcis)
   → x ∈ select₃ (unzip₃ vcis)
 x∈vcis⇒ {vcis = _ ∷ []}         = λ where

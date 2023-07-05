@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------
 -- Types of labels.
 ------------------------------------------------------------------------
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.Lists
 open import Prelude.DecEq
 open import Prelude.Membership
@@ -9,7 +9,7 @@ open import Prelude.Membership
 open import BitML.BasicTypes
 
 module BitML.Semantics.Label
-  (Participant : Set)
+  (Participant : Type)
   ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
@@ -17,7 +17,7 @@ module BitML.Semantics.Label
 open import BitML.Contracts.Types Participant Honest
 open import BitML.Semantics.Action Participant Honest
 
-data Label : Set where
+data Label : Type where
   auth-join⦅_,_↔_⦆ : Participant → Id → Id → Label -- A:x,y
   join⦅_↔_⦆ : Id → Id → Label -- join(x,y)
 
@@ -34,20 +34,19 @@ data Label : Set where
 
   auth-commit⦅_,_,_⦆ : Participant → Advertisement → List (Secret × Maybe ℕ) → Label -- A:{G}C,Δ
   auth-init⦅_,_,_⦆ : Participant → Advertisement → Id → Label -- A:{G}C,x
-  init⦅_,_⦆ : Precondition → Contracts → Label -- init(G,C)
+  init⦅_,_⦆ : Precondition → Contract → Label -- init(G,C)
 
   split⦅_⦆ : Id → Label -- split(y)
   auth-rev⦅_,_⦆ : Participant → Secret → Label -- A:a
   put⦅_,_,_⦆ : Ids → Secrets → Id → Label -- put(x,a,y)
   withdraw⦅_,_,_⦆ : Participant → Value → Id → Label -- withdraw(A,v,y)
 
-  auth-control⦅_,_▷_⦆ : Participant → Id → Contract → Label -- A:x,D
+  auth-control⦅_,_▷_⦆ : Participant → Id → Branch → Label -- A:x,D
 
   delay⦅_⦆ : Time → Label -- δ
 
 unquoteDecl DecEq-Label = DERIVE DecEq [ quote Label , DecEq-Label ]
 
-Labels : Set
 Labels = List Label
 
 variable
@@ -55,21 +54,23 @@ variable
   αs αs′ : Labels
 
 cv : Label → Maybe Id
-cv put⦅ _ , _ , y ⦆      = just y
-cv withdraw⦅ _ , _ , y ⦆ = just y
-cv split⦅ y ⦆            = just y
-cv _                     = nothing
+cv = λ where
+  put⦅ _ , _ , y ⦆      → just y
+  withdraw⦅ _ , _ , y ⦆ → just y
+  split⦅ y ⦆            → just y
+  _                     → nothing
 
 authDecoration : Label → Maybe Participant
-authDecoration auth-join⦅ p , _ ↔ _ ⦆       = just p
-authDecoration auth-divide⦅ p , _ ▷ _ , _ ⦆ = just p
-authDecoration auth-donate⦅ p , _ ▷ᵈ _ ⦆    = just p
-authDecoration auth-destroy⦅ p , _ , _ ⦆    = just p
-authDecoration auth-commit⦅ p , _ , _ ⦆     = just p
-authDecoration auth-init⦅ p , _ , _ ⦆       = just p
-authDecoration auth-rev⦅ p , _ ⦆            = just p
-authDecoration auth-control⦅ p , _ ▷ _ ⦆   = just p
-authDecoration _                            = nothing
+authDecoration = λ where
+  auth-join⦅ p , _ ↔ _ ⦆       → just p
+  auth-divide⦅ p , _ ▷ _ , _ ⦆ → just p
+  auth-donate⦅ p , _ ▷ᵈ _ ⦆    → just p
+  auth-destroy⦅ p , _ , _ ⦆    → just p
+  auth-commit⦅ p , _ , _ ⦆     → just p
+  auth-init⦅ p , _ , _ ⦆       → just p
+  auth-rev⦅ p , _ ⦆            → just p
+  auth-control⦅ p , _ ▷ _ ⦆    → just p
+  _                            → nothing
 
 mentionedAd : Label → Maybe Advertisement
 mentionedAd = λ where

@@ -60,7 +60,7 @@ DEP-Donate :
 DEP-Donate {p = p} = [DEP-Donate] (toWitness p)
 
 DEP-AuthDestroy :
-  ∀ {ds : List (Participant × Value × Id)} {j : Index ds} →
+  ∀ {ds : DepositRefs} {j : Index ds} →
   let xs = map select₃ ds
       Aⱼ = (ds ‼ j) .proj₁
       j′ = ‼-map {xs = ds} j
@@ -113,7 +113,7 @@ C-Init : let ⟨ G ⟩ C = ad; partG = nub-participants G in
 C-Init {p = p} = [C-Init] (toWitness p)
 
 C-Split :
-  ∀ {vcis : List (Value × Contracts × Id)} →
+  ∀ {vcis : VIContracts} →
   let (vs , cs , ys) = unzip₃ vcis in
   ∀ {p : auto∶ All (_∉ y L.∷ ids Γ) ys} →
   ──────────────────────────────────────────
@@ -123,7 +123,7 @@ C-Split :
 C-Split {vcis = vcis} {p = p} = [C-Split] {vcis = vcis} (toWitness p)
 
 C-PutRev :
-  ∀ {ds : List (Participant × Value × Id)}
+  ∀ {ds : DepositRefs}
     {ss : List (Participant × Secret × ℕ)}
   → let (_ , vs , xs) = unzip₃ ds
         (_ , as , _)  = unzip₃ ss

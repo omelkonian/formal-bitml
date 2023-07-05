@@ -14,7 +14,6 @@ Secrets = List Secret
 Id  = String
 Ids = List String
 
-Name : Set
 Name = Secret ⊎ Id
 Names = List Name
 

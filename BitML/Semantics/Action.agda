@@ -1,14 +1,14 @@
 ------------------------------------------------------------------------
 -- Types of actions.
 ------------------------------------------------------------------------
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.Lists
 open import Prelude.DecEq
 
 open import BitML.BasicTypes
 
 module BitML.Semantics.Action
-  (Participant : Set)
+  (Participant : Type)
   ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
@@ -18,7 +18,7 @@ open import BitML.Contracts.Helpers Participant Honest
 
 --------------------------------------------------------------------------------
 
-data Action : Set where
+data Action : Type where
 
   -- commit secrets to stipulate {G}C
   ♯▷_ : Advertisement → Action
@@ -27,7 +27,7 @@ data Action : Set where
   _▷ˢ_ : Id → Advertisement → Action
 
   -- take branch
-  _▷_ : Id → Contract → Action
+  _▷_ : Id → Branch → Action
 
   -- join deposits
   _↔_▷⟨_,_⟩ : Id → Id → Participant → Value → Action

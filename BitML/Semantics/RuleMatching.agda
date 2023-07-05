@@ -1,4 +1,4 @@
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.Maybes
 open import Prelude.Lists
 open import Prelude.Membership
@@ -13,7 +13,7 @@ open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
 
 module BitML.Semantics.RuleMatching
-  (Participant : Set)
+  (Participant : Type)
   ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
@@ -91,7 +91,7 @@ innerL ([C-Control] {c}{L = L}{v}{x} {i = i} _ _ _ _) =
 innerStep : (st : Γ —[ α ]→ Γ′) → {p : isControl st} → innerL st {p} —[ α ]→ Γ′
 innerStep ([C-Control] _ _ L→ _) = L→
 
-innerCI : (st : Γ —[ α ]→ Γ′) → {isControl st} → ∃ λ (c : Contracts) → Index c
+innerCI : (st : Γ —[ α ]→ Γ′) → {isControl st} → ∃ λ (c : Contract) → Index c
 innerCI ([C-Control] {c = c} {i = i} _ _ _ _) = c , i
 
 innerLₜ : (stₜ : Γₜ —[ α ]→ₜ Γₜ′) → {isTimeout stₜ} → Configuration
@@ -102,10 +102,10 @@ innerStepₜ : (stₜ : Γₜ —[ α ]→ₜ (Γ′ at t′)) → {p : isTimeou
   innerLₜ stₜ {p} —[ α ]→ Γ′
 innerStepₜ ([Timeout] _ _ Γ→ _) = Γ→
 
-innerCIₜ : (stₜ : Γₜ —[ α ]→ₜ Γₜ′) → {isTimeout stₜ} → ∃ λ (c : Contracts) → Index c
+innerCIₜ : (stₜ : Γₜ —[ α ]→ₜ Γₜ′) → {isTimeout stₜ} → ∃ λ (c : Contract) → Index c
 innerCIₜ ([Timeout] {c = c} {i = i} _ _ _ _) = c , i
 
-innerDₜ : (stₜ : Γₜ —[ α ]→ₜ Γₜ′) → {isTimeout stₜ} → Contract
+innerDₜ : (stₜ : Γₜ —[ α ]→ₜ Γₜ′) → {isTimeout stₜ} → Branch
 innerDₜ st {isT} = let c , i = innerCIₜ st {isT}; open ∣SELECT c i in d
 
 innerVₜ : (stₜ : Γₜ —[ α ]→ₜ Γₜ′) → {isTimeout stₜ} → Value

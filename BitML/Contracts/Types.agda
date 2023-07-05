@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 import Data.List.NonEmpty as NE
 
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 open import Prelude.Lists
 
@@ -11,7 +11,7 @@ open import BitML.BasicTypes
 open import BitML.Predicate
 
 module BitML.Contracts.Types
-  (Participant : Set)
+  (Participant : Type)
   ⦃ _ : DecEq Participant ⦄
   (Honest : List⁺ Participant)
   where
@@ -23,43 +23,46 @@ variable A B A′ B′ : Participant
 ------------------------------------------------------------------------
 -- Contracts
 
-data Contract : Set
-Contracts = List Contract
-VContracts = List (Value × Contracts)
+data Branch : Type
+Contract    = List Branch
+Contracts   = List Contract
+VContracts  = List (Value × Contract)
+VIContracts = List (Value × Contract × Id)
 
-data Contract where
+data Branch where
 
   -- collect deposits and secrets
-  put_&reveal_if_⇒_ : Ids → Secrets → Predicate → Contracts → Contract
+  put_&reveal_if_⇒_ : Ids → Secrets → Predicate → Contract → Branch
 
   -- transfer the balance to a participant
-  withdraw : Participant → Contract
+  withdraw : Participant → Branch
 
   -- split the balance
   -- T0D0: phrase as percentages to mitigate the need for `Validity.splitsOK`
-  split : VContracts → Contract
+  split : VContracts → Branch
 
   -- wait for participant's authorization
-  _⇒_ : Participant → Contract → Contract
+  _⇒_ : Participant → Branch → Branch
 
   -- wait of a period of time
-  after_⇒_ : Time → Contract → Contract
+  after_⇒_ : Time → Branch → Branch
 
 {-# TERMINATING #-}
-unquoteDecl DecEq-Contract = DERIVE DecEq [ quote Contract , DecEq-Contract ]
+unquoteDecl DecEq-Branch = DERIVE DecEq [ quote Branch , DecEq-Branch ]
 
 variable
-  d d′ d″ : Contract
-  ds ds′ ds″ c c′ c″ : Contracts
+  d d′ d″ : Branch
+  ds ds′ ds″ c c′ c″ : Contract
+  cs cs′ cs″ : Contracts
   vcs vcs′ vcs″ : VContracts
 
-_⊕_ : ∀ {A : Set} → A → List A → List A
+_⊕_ : ∀ {A : Type} → A → List A → List A
 _⊕_ = _∷_
 
-_∙ : ∀ {A : Set} → A → List A
+_∙ : ∀ {A : Type} → A → List A
 _∙ = [_]
 
-_⊸_ : Value → Contracts → Value × Contracts
+_⊸_ : Value → Contract → Value × Contract
 _⊸_ = _,_
 
 pattern put_&reveal_⇒_ xs as c = put xs &reveal as if `true ⇒ c
@@ -69,7 +72,7 @@ pattern reveal_⇒_ as c         = put [] &reveal as ⇒ c
 -------------------------------------------------------------------
 -- Contract preconditions.
 
-data Precondition : Set where
+data Precondition : Type where
 
   -- volatile deposit
   _:?_at_ : Participant → Value → Id → Precondition
@@ -83,20 +86,22 @@ data Precondition : Set where
   -- composition
   _∣∣_ : Precondition → Precondition → Precondition
 
-unquoteDecl DecEq-Precondition = DERIVE DecEq [ quote Precondition , DecEq-Precondition ]
+unquoteDecl DecEq-Precondition =
+  DERIVE DecEq [ quote Precondition , DecEq-Precondition ]
 
 variable g g′ g″ : Precondition
 
 ------------------------------------------------------------------------
 -- Advertisements.
 
-record Advertisement : Set where
+record Advertisement : Type where
   constructor ⟨_⟩_
   field
     G : Precondition
-    C : Contracts
+    C : Contract
 open Advertisement public
-unquoteDecl DecEq-Advertisement = DERIVE DecEq [ quote Advertisement , DecEq-Advertisement ]
+unquoteDecl DecEq-Advertisement =
+  DERIVE DecEq [ quote Advertisement , DecEq-Advertisement ]
 
 Ad = Advertisement
 variable ad ad′ ad″ : Advertisement
@@ -117,8 +122,10 @@ infix  7 _⊸_
 infix  6 _∙
 infixr 5 _⊕_
 
-data DepositType : Set where
+data DepositType : Type where
   volatile persistent : DepositType
 
-DepositRef  = Participant × Value × Id
-TDepositRef = DepositType × DepositRef
+DepositRef   = Participant × Value × Id
+DepositRefs  = List DepositRef
+TDepositRef  = DepositType × DepositRef
+TDepositRefs = List TDepositRef

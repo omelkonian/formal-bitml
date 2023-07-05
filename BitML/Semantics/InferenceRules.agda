@@ -95,7 +95,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 
 
   [DEP-AuthDestroy] :
-    ∀ {ds : List (Participant × Value × Id)} {j : Index ds} →
+    ∀ {ds : DepositRefs} {j : Index ds} →
 
     let xs = map select₃ ds
         Aⱼ = (ds ‼ j) .proj₁
@@ -111,7 +111,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 
 
   [DEP-Destroy] :
-    ∀ {ds : List (Participant × Value × Id)} →
+    ∀ {ds : DepositRefs} →
 
     let
       xs = map select₃ ds
@@ -184,7 +184,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
   -- iii) Rules for executing active contracts
 
   [C-Split] :
-    ∀ {vcis : List (Value × Contracts × Id)} →
+    ∀ {vcis : VIContracts} →
 
     let (vs , cs , ys) = unzip₃ vcis in
 
@@ -204,7 +204,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Set where
 
 
   [C-PutRev] :
-    ∀ {ds : List (Participant × Value × Id)}
+    ∀ {ds : DepositRefs}
       {ss : List (Participant × Secret × ℕ)} →
 
     let (_ , vs , xs) = unzip₃ ds
