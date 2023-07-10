@@ -6,13 +6,12 @@ open import Prelude.Nary
 open import Prelude.InferenceRules
 open import Prelude.Setoid
 
-module BitML.Properties.Invariants
-  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
-  where
-
 open import BitML.BasicTypes
-open import BitML.Contracts Participant Honest
-open import BitML.Semantics Participant Honest
+
+module BitML.Properties.Invariants (⋯ : ⋯) where
+
+open import BitML.Contracts ⋯
+open import BitML.Semantics ⋯
 
 open import Prelude.General
 

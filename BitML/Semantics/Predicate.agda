@@ -12,13 +12,9 @@ open import Prelude.Monad
 open import BitML.BasicTypes
 open import BitML.Predicate
 
-module BitML.Semantics.Predicate
-  (Participant : Type)
-  ⦃ _ : DecEq Participant ⦄
-  (Honest : List⁺ Participant)
-  where
+module BitML.Semantics.Predicate (⋯ : ⋯) (let open ⋯ ⋯) where
 
-open import BitML.Semantics.Configurations.Types Participant Honest hiding (`_)
+open import BitML.Semantics.Configurations.Types ⋯ hiding (`_)
 
 infix 4 _<?ᵇ_
 _<?ᵇ_ : ℤ → ℤ → Bool

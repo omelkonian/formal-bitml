@@ -18,18 +18,14 @@ open import Prelude.Null
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
 
-module BitML.Semantics.InferenceRules
-  (Participant : Type)
-  ⦃ _ : DecEq Participant ⦄
-  (Honest : List⁺ Participant)
-  where
+module BitML.Semantics.InferenceRules (⋯ : ⋯) (let open ⋯ ⋯) where
 
-open import BitML.Contracts Participant Honest hiding (d)
-open import BitML.Semantics.Action Participant Honest
-open import BitML.Semantics.Configurations.Types Participant Honest
-open import BitML.Semantics.Configurations.Helpers Participant Honest
-open import BitML.Semantics.Label Participant Honest
-open import BitML.Semantics.Predicate Participant Honest
+open import BitML.Contracts ⋯ hiding (d)
+open import BitML.Semantics.Action ⋯
+open import BitML.Semantics.Configurations.Types ⋯
+open import BitML.Semantics.Configurations.Helpers ⋯
+open import BitML.Semantics.Label ⋯
+open import BitML.Semantics.Predicate ⋯
 
 ---------------------------------------------
 -- Semantic rules for untimed configurations.

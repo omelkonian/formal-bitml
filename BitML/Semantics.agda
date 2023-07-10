@@ -1,15 +1,15 @@
 open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 
-module BitML.Semantics
-  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
-  where
+open import BitML.BasicTypes
 
-open import BitML.Semantics.Configurations.Types Participant Honest public
-open import BitML.Semantics.Configurations.Helpers Participant Honest public
-open import BitML.Semantics.Action Participant Honest public
-open import BitML.Semantics.Label Participant Honest public
-open import BitML.Semantics.Predicate Participant Honest public
-open import BitML.Semantics.InferenceRules Participant Honest public
-open import BitML.Semantics.RuleMatching Participant Honest public
-open import BitML.Semantics.DecidableInference Participant Honest public
+module BitML.Semantics (⋯ : ⋯) where
+
+open import BitML.Semantics.Configurations.Types ⋯ public
+open import BitML.Semantics.Configurations.Helpers ⋯ public
+open import BitML.Semantics.Action ⋯ public
+open import BitML.Semantics.Label ⋯ public
+open import BitML.Semantics.Predicate ⋯ public
+open import BitML.Semantics.InferenceRules ⋯ public
+open import BitML.Semantics.RuleMatching ⋯ public
+open import BitML.Semantics.DecidableInference ⋯ public

@@ -12,19 +12,15 @@ open import Prelude.Split renaming (split to mkSplit)
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
 
-module BitML.Semantics.RuleMatching
-  (Participant : Type)
-  ⦃ _ : DecEq Participant ⦄
-  (Honest : List⁺ Participant)
-  where
+module BitML.Semantics.RuleMatching (⋯ : ⋯) (let open ⋯ ⋯) where
 
-open import BitML.Contracts Participant Honest hiding (d)
-open import BitML.Semantics.Action Participant Honest
-open import BitML.Semantics.Configurations.Types Participant Honest
-open import BitML.Semantics.Configurations.Helpers Participant Honest
-open import BitML.Semantics.Label Participant Honest
-open import BitML.Semantics.Predicate Participant Honest
-open import BitML.Semantics.InferenceRules Participant Honest
+open import BitML.Contracts ⋯ hiding (d)
+open import BitML.Semantics.Action ⋯
+open import BitML.Semantics.Configurations.Types ⋯
+open import BitML.Semantics.Configurations.Helpers ⋯
+open import BitML.Semantics.Label ⋯
+open import BitML.Semantics.Predicate ⋯
+open import BitML.Semantics.InferenceRules ⋯
 
 
 -- ** types of steps
@@ -241,9 +237,9 @@ match-withdrawₜ :
   × (Γ′ ≡ ⟨ A has v ⟩at x ∣ Γ₀)
   × (x ∉ y L.∷ ids Γ₀)
 match-withdrawₜ stepₜ@([Timeout] {c = c} {i = i} As≡∅ ∀t≤ Γ→ refl) tt
-  with Γ₀ , x , Γ≡ , ⋯ ← match-withdraw Γ→ (timeout⇒¬control stepₜ tt)
+  with Γ₀ , x , Γ≡ , ⋯⋯ ← match-withdraw Γ→ (timeout⇒¬control stepₜ tt)
   with d≡ , v≡ , x≡ , Γ≡′ ← ⟨⟩∘∣-injective Γ≡
-  = Γ₀ , x , d≡ , v≡ , x≡ , Γ≡′ , ⋯
+  = Γ₀ , x , d≡ , v≡ , x≡ , Γ≡′ , ⋯⋯
 
 match-putₜ :
   ∀ (stepₜ : Γ at t —[ put⦅ xs , as , y ⦆ ]→ₜ Γ′ at t) →
@@ -267,9 +263,9 @@ match-putₜ :
   × (z ∉ y L.∷ ids (_Γ ∣ ΔΓ′))
   × (⟦ p ⟧ Δ ≡ just true)
 match-putₜ stepₜ@([Timeout] {c = c} {i = i} As≡∅ ∀t≤ Γ→ refl) tt
-  with ds , ss , p , c , v , Γ₀ , z , Γ≡ , ⋯ ← match-put Γ→ (timeout⇒¬control stepₜ tt)
+  with ds , ss , p , c , v , Γ₀ , z , Γ≡ , ⋯⋯ ← match-put Γ→ (timeout⇒¬control stepₜ tt)
   with d≡ , v≡ , x≡ , Γ≡′ ← ⟨⟩∘∣-injective Γ≡
-  = ds , ss , p , c , v , Γ₀ , z , d≡ , v≡ , x≡ , Γ≡′ , ⋯
+  = ds , ss , p , c , v , Γ₀ , z , d≡ , v≡ , x≡ , Γ≡′ , ⋯⋯
 
 match-splitₜ :
   ∀ (stepₜ : Γ at t —[ split⦅ y ⦆ ]→ₜ Γ′ at t) →
@@ -285,8 +281,8 @@ match-splitₜ :
   × (Γ′ ≡ || map (uncurry₃ $ flip ⟨_,_⟩at_) vcis ∣ Γ₀)
   × All (_∉ y L.∷ ids Γ₀) ys
 match-splitₜ stepₜ@([Timeout] {c = c} {i = i} _ _ Γ→ refl) tt
-  with vcis , Γ₀ , y , Γ≡ , ⋯ ← match-split Γ→ (timeout⇒¬control stepₜ tt)
+  with vcis , Γ₀ , y , Γ≡ , ⋯⋯ ← match-split Γ→ (timeout⇒¬control stepₜ tt)
   with d≡ , v≡ , x≡ , Γ≡′ ← ⟨⟩∘∣-injective Γ≡
-  = vcis , Γ₀ , y , d≡ , v≡ , x≡ , Γ≡′ , ⋯
+  = vcis , Γ₀ , y , d≡ , v≡ , x≡ , Γ≡′ , ⋯⋯
 
 -- T0D0: complete view that is convenient for analysis

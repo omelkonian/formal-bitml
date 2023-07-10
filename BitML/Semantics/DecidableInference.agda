@@ -19,21 +19,17 @@ open import Prelude.Null
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (`; ∣_∣)
 
-module BitML.Semantics.DecidableInference
-  (Participant : Type)
-  ⦃ _ : DecEq Participant ⦄
-  (Honest : List⁺ Participant)
-  where
+module BitML.Semantics.DecidableInference (⋯ : ⋯) (let open ⋯ ⋯) where
 
-open import BitML.Contracts.Types Participant Honest hiding (d)
-open import BitML.Contracts.Helpers Participant Honest
-open import BitML.Contracts.Validity Participant Honest
-open import BitML.Semantics.Action Participant Honest
-open import BitML.Semantics.Configurations.Types Participant Honest
-open import BitML.Semantics.Configurations.Helpers Participant Honest
-open import BitML.Semantics.Label Participant Honest
-open import BitML.Semantics.Predicate Participant Honest
-open import BitML.Semantics.InferenceRules Participant Honest
+open import BitML.Contracts.Types ⋯ hiding (d)
+open import BitML.Contracts.Helpers ⋯
+open import BitML.Contracts.Validity ⋯
+open import BitML.Semantics.Action ⋯
+open import BitML.Semantics.Configurations.Types ⋯
+open import BitML.Semantics.Configurations.Helpers ⋯
+open import BitML.Semantics.Label ⋯
+open import BitML.Semantics.Predicate ⋯
+open import BitML.Semantics.InferenceRules ⋯
 
 DEP-Join :
   ∀ {p : auto∶ z ∉ x L.∷ y ∷ ids Γ} →

@@ -8,14 +8,10 @@ open import Prelude.Membership
 
 open import BitML.BasicTypes
 
-module BitML.Semantics.Label
-  (Participant : Type)
-  ⦃ _ : DecEq Participant ⦄
-  (Honest : List⁺ Participant)
-  where
+module BitML.Semantics.Label (⋯ : ⋯) (let open ⋯ ⋯) where
 
-open import BitML.Contracts.Types Participant Honest
-open import BitML.Semantics.Action Participant Honest
+open import BitML.Contracts.Types ⋯
+open import BitML.Semantics.Action ⋯
 
 data Label : Type where
   auth-join⦅_,_↔_⦆ : Participant → Id → Id → Label -- A:x,y

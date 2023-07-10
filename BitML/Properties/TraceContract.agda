@@ -14,16 +14,15 @@ open import Prelude.ToN
 open import Prelude.Traces
 open import Prelude.InferenceRules
 
-module BitML.Properties.TraceContract
-  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
-  where
-
 open import BitML.BasicTypes
+
+module BitML.Properties.TraceContract (⋯ : ⋯) (let open ⋯ ⋯) where
+
 open import BitML.Predicate using (p)
-open import BitML.Contracts Participant Honest hiding (d)
-open import BitML.Semantics Participant Honest
-open import BitML.Properties.Helpers Participant Honest
-open import BitML.Properties.TraceInit Participant Honest
+open import BitML.Contracts ⋯ hiding (d)
+open import BitML.Semantics ⋯
+open import BitML.Properties.Helpers ⋯
+open import BitML.Properties.TraceInit ⋯
 
 -- ℍ[Contract]⦅ Γ —[ α ]↝ Γ′ ⦆⦅ c ⦆: Contract `c` is created by a transition `Γ —[ α ]→ Γ′`
 data ℍ[Contract]⦅_—[_]↝_⦆⦅_⦆ : Cfg → Label → Cfg → Contract → Type where
@@ -61,7 +60,7 @@ data ℍ[Contract]⦅_—[_]↝_⦆⦅_⦆ : Cfg → Label → Cfg → Contract 
       ────────────────────────────────────────────────────────
       ℍ[Contract]⦅ ⟨ c′ , v ⟩at x ∣ Γ —[ α ]↝ Γ′ ⦆⦅ c ⦆
 
-open import BitML.Contracts Participant Honest using (d)
+open import BitML.Contracts ⋯ using (d)
 
 d∗≢auth : removeTopDecorations d ≢ A ⇒ d′
 d∗≢auth {_ ⇒ d}       eq = d∗≢auth {d} eq
@@ -430,7 +429,7 @@ traceContractₜ {c}{v}{y}{Γ₀}{Γ}{t}{α ∷ αs}{t′} c∉ c∈
   let _ , _ , _ , _ , xy∈ , H = traceContractₜ (∉ᶜ-resp-≈ {M′}{M} (↭-sym M≈) c∉M′) c∈ M↠
   in -, -, -, -, there xy∈ , H
 
-open import BitML.Properties.Lifetime Participant Honest
+open import BitML.Properties.Lifetime ⋯
 
 Ancestor⦅_↝_⦆ : Ad → Contract → Rel₀ Cfg
 Ancestor⦅ ad ↝ c ⦆ Γ Γ′ =

@@ -10,14 +10,13 @@ open import Prelude.Validity
 open import Prelude.Setoid
 open import Prelude.Traces
 
-module BitML.Properties.TraceAuthControl
-  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
-  where
-
 open import BitML.BasicTypes
-open import BitML.Contracts Participant Honest
-open import BitML.Semantics Participant Honest
-open import BitML.Properties.Helpers Participant Honest
+
+module BitML.Properties.TraceAuthControl (⋯ : ⋯) (let open ⋯ ⋯) where
+
+open import BitML.Contracts ⋯
+open import BitML.Semantics ⋯
+open import BitML.Properties.Helpers ⋯
 
 private
   ¬Control :

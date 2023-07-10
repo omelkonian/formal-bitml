@@ -7,14 +7,10 @@ open import Prelude.DecEq
 
 open import BitML.BasicTypes
 
-module BitML.Semantics.Action
-  (Participant : Type)
-  ⦃ _ : DecEq Participant ⦄
-  (Honest : List⁺ Participant)
-  where
+module BitML.Semantics.Action (⋯ : ⋯) (let open ⋯ ⋯) where
 
-open import BitML.Contracts.Types Participant Honest hiding (A; B)
-open import BitML.Contracts.Helpers Participant Honest
+open import BitML.Contracts.Types ⋯ hiding (A; B)
+open import BitML.Contracts.Helpers ⋯
 
 --------------------------------------------------------------------------------
 

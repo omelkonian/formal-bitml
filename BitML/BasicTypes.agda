@@ -3,7 +3,8 @@
 ------------------------------------------------------------------------
 module BitML.BasicTypes where
 
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
+open import Prelude.DecEq
 
 Value  = ℕ
 Values = List Value
@@ -32,3 +33,12 @@ variable
   xs xs′ xs″ : Ids
 
   t δ t′ δ′ t″ δ″ : Time
+
+-- module parameters
+
+record ⋯ : Type₁ where
+  constructor ⋯_,_⋯
+  field Participant    : Type
+        ⦃ decEq-part ⦄ : DecEq Participant
+        Honest         : List⁺ Participant
+  Hon = L.NE.toList Honest

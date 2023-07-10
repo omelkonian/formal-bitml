@@ -8,14 +8,10 @@ open import Prelude.Coercions
 
 open import BitML.BasicTypes
 
-module BitML.Semantics.Configurations.Types
-  (Participant : Type)
-  ⦃ _ : DecEq Participant ⦄
-  (Honest : List⁺ Participant)
-  where
+module BitML.Semantics.Configurations.Types (⋯ : ⋯) (let open ⋯ ⋯) where
 
-open import BitML.Contracts.Types Participant Honest
-open import BitML.Semantics.Action Participant Honest
+open import BitML.Contracts.Types ⋯
+open import BitML.Semantics.Action ⋯
 
 data Configuration : Type where
   -- empty

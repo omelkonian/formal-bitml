@@ -15,8 +15,8 @@ open import BitML.Example.Contracts
 
 open import BitML.BasicTypes
 open import BitML.Predicate
-open import BitML.Contracts.Types Participant Honest hiding (A; B)
-open import BitML.Semantics.Action Participant Honest
+open import BitML.Contracts.Types ⋯ Participant , Honest ⋯ hiding (A; B)
+open import BitML.Semantics.Action ⋯ Participant , Honest ⋯
 
 
 -- secret

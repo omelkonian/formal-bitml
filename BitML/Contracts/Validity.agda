@@ -25,14 +25,10 @@ open import Prelude.Decidable
 open import BitML.BasicTypes
 open import BitML.Predicate hiding (∣_∣)
 
-module BitML.Contracts.Validity
-  (Participant : Type)
-  ⦃ _ : DecEq Participant ⦄
-  (Honest : List⁺ Participant)
-  where
+module BitML.Contracts.Validity (⋯ : ⋯) where
 
-open import BitML.Contracts.Types Participant Honest hiding (B)
-open import BitML.Contracts.Helpers Participant Honest
+open import BitML.Contracts.Types ⋯ hiding (B)
+open import BitML.Contracts.Helpers ⋯
 
 splitsOK : Precondition → Contract → Bool
 splitsOK G C₀ = goᶜ C₀ (persistentValue G)

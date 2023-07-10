@@ -5,16 +5,12 @@ open import Prelude.DecEq
 open import Prelude.Membership
 open import Prelude.Lists.Collections
 
-module BitML.Contracts.Induction
-  (Participant : Type)
-  ⦃ _ : DecEq Participant ⦄
-  (Honest : List⁺ Participant)
-  where
-
 open import BitML.BasicTypes
 open import BitML.Predicate
-open import BitML.Contracts.Types Participant Honest
-  hiding (C)
+
+module BitML.Contracts.Induction ⋯ where
+
+open import BitML.Contracts.Types ⋯ hiding (C)
 
 data ℂ : Type where
   D   : Branch     → ℂ

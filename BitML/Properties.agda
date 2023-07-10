@@ -1,15 +1,15 @@
 open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 
-module BitML.Properties
-  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
-  where
+open import BitML.BasicTypes
 
-open import BitML.Properties.Helpers Participant Honest public
-open import BitML.Properties.TraceAd Participant Honest public
-open import BitML.Properties.TraceAuthCommit Participant Honest public
-open import BitML.Properties.TraceAuthInit Participant Honest public
-open import BitML.Properties.TraceInit Participant Honest public
-open import BitML.Properties.TraceAuthControl Participant Honest public
-open import BitML.Properties.Lifetime Participant Honest public
-open import BitML.Properties.TraceContract Participant Honest public
+module BitML.Properties (⋯ : ⋯) where
+
+open import BitML.Properties.Helpers ⋯ public
+open import BitML.Properties.TraceAd ⋯ public
+open import BitML.Properties.TraceAuthCommit ⋯ public
+open import BitML.Properties.TraceAuthInit ⋯ public
+open import BitML.Properties.TraceInit ⋯ public
+open import BitML.Properties.TraceAuthControl ⋯ public
+open import BitML.Properties.Lifetime ⋯ public
+open import BitML.Properties.TraceContract ⋯ public

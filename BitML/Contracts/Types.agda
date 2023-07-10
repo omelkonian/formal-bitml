@@ -10,13 +10,7 @@ open import Prelude.Lists
 open import BitML.BasicTypes
 open import BitML.Predicate
 
-module BitML.Contracts.Types
-  (Participant : Type)
-  ⦃ _ : DecEq Participant ⦄
-  (Honest : List⁺ Participant)
-  where
-
-Hon = NE.toList Honest
+module BitML.Contracts.Types ⋯ (let open ⋯ ⋯) where
 
 variable A B A′ B′ : Participant
 

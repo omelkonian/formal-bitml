@@ -16,14 +16,10 @@ open import Prelude.Null
 open import BitML.BasicTypes
 open import BitML.Predicate
 
-module BitML.Contracts.Helpers
-  (Participant : Type)
-  ⦃ _ : DecEq Participant ⦄
-  (Honest : List⁺ Participant)
-  where
+module BitML.Contracts.Helpers ⋯ (let open ⋯ ⋯) where
 
-open import BitML.Contracts.Types Participant Honest hiding (C; d)
-open import BitML.Contracts.Induction Participant Honest
+open import BitML.Contracts.Types ⋯ hiding (C; d)
+open import BitML.Contracts.Induction ⋯
 
 PutComponent = Ids × Secrets × Predicate
 
@@ -48,7 +44,7 @@ module ∣SELECT (c : Contract) (i : Index c) where
   d  = c ‼ i
   d∗ = removeTopDecorations d
 
-open import BitML.Contracts.Types Participant Honest using (d)
+open import BitML.Contracts.Types ⋯ using (d)
 
 ----------------
 -- ** Collectors

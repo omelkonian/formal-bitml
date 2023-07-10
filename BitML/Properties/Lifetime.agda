@@ -14,15 +14,14 @@ open import Prelude.ToN
 open import Prelude.Traces
 open import Prelude.InferenceRules
 
-module BitML.Properties.Lifetime
-  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
-  where
-
 open import BitML.BasicTypes
 open import BitML.Predicate
-open import BitML.Contracts Participant Honest hiding (d)
-open import BitML.Semantics Participant Honest
-open import BitML.Properties.Helpers Participant Honest
+
+module BitML.Properties.Lifetime (⋯ : ⋯) where
+
+open import BitML.Contracts ⋯ hiding (d)
+open import BitML.Semantics ⋯
+open import BitML.Properties.Helpers ⋯
 
 data _↝_ : Rel₀ Contract where
 

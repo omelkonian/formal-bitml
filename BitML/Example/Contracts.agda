@@ -19,7 +19,7 @@ open import BitML.Example.Setup
 
 open import BitML.BasicTypes
 open import BitML.Predicate
-open import BitML.Contracts.Types Participant Honest hiding (A; B)
+open import BitML.Contracts.Types ⋯ Participant , Honest ⋯ hiding (A; B)
 
 --------------------------------------------------------------------------------
 

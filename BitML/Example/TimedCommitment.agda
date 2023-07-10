@@ -14,16 +14,8 @@ open import BitML.Predicate hiding (`; ∣_∣)
 -------------------------------------------------------------------------
 
 open import BitML.Example.Setup using (Participant; Honest; A; B)
-
-open import BitML.Contracts.Types Participant Honest hiding (A; B)
-open import BitML.Contracts.Helpers Participant Honest
-open import BitML.Contracts.Validity Participant Honest
-open import BitML.Semantics.Action Participant Honest
-open import BitML.Semantics.Label Participant Honest
-open import BitML.Semantics.Configurations.Types Participant Honest
-open import BitML.Semantics.Configurations.Helpers Participant Honest
-open import BitML.Semantics.InferenceRules Participant Honest
-open import BitML.Semantics.DecidableInference Participant Honest
+open import BitML.Contracts ⋯ Participant , Honest ⋯ hiding (A; B)
+open import BitML.Semantics ⋯ Participant , Honest ⋯
 
 -------------------------------------------------------------------------
 

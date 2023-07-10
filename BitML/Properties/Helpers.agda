@@ -14,13 +14,12 @@ open import Prelude.InferenceRules
 open import Prelude.Decidable
 open import Prelude.Coercions
 
-module BitML.Properties.Helpers
-  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
-  where
-
 open import BitML.BasicTypes
-open import BitML.Contracts Participant Honest
-open import BitML.Semantics Participant Honest
+
+module BitML.Properties.Helpers (⋯ : ⋯) (let open ⋯ ⋯) where
+
+open import BitML.Contracts ⋯
+open import BitML.Semantics ⋯
 
 _∙head : (tr : Γₜ₀ —[ αs ]↠ₜ Γₜ′) → Cfgᵗ
 _∙head = λ where

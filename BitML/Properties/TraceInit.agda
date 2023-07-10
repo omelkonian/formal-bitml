@@ -12,14 +12,13 @@ open import Prelude.Setoid
 open import Prelude.Traces
 open import Prelude.ToN
 
-module BitML.Properties.TraceInit
-  (Participant : Type) ⦃ _ : DecEq Participant ⦄ (Honest : List⁺ Participant)
-  where
-
 open import BitML.BasicTypes
-open import BitML.Contracts Participant Honest
-open import BitML.Semantics Participant Honest
-open import BitML.Properties.Helpers Participant Honest
+
+module BitML.Properties.TraceInit (⋯ : ⋯) (let open ⋯ ⋯) where
+
+open import BitML.Contracts ⋯
+open import BitML.Semantics ⋯
+open import BitML.Properties.Helpers ⋯
 
 
 private
@@ -334,8 +333,8 @@ init⇒∗ Γ↠ α∈
   with _ , _ , _ , _ , xy∈ , ((_ , x≈) , (_ , y≈)) , [Action] Γ→ refl ← zoom Γ↠ α∈
      = -, -, -, -, L.Mem.∈-map⁺ (map₁₂ cfg) xy∈ , (x≈ , y≈) , init⇒ Γ→
 
-open import BitML.Properties.TraceAd Participant Honest
-open import BitML.Properties.TraceAuthInit Participant Honest
+open import BitML.Properties.TraceAd ⋯
+open import BitML.Properties.TraceAuthInit ⋯
 
 ∃ℍ[C-AuthInit]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Ad → Type
 ∃ℍ[C-AuthInit]⦅ Γ ↝ Γ′ ⦆⦅ ad ⦆ = ∃ λ A → ∃ λ x → ℍ[C-AuthInit]⦅ Γ ↝ Γ′ ⦆⦅ A , ad , x ⦆
