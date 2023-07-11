@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------
--- BitML datatypes: Contracts & Advertisements
+-- BitML datatypes: Contracts & Ads
 ------------------------------------------------------------------------
 import Data.List.NonEmpty as NE
 
@@ -50,14 +50,9 @@ variable
   cs cs′ cs″ : Contracts
   vcs vcs′ vcs″ : VContracts
 
-_⊕_ : ∀ {A : Type} → A → List A → List A
-_⊕_ = _∷_
-
-_∙ : ∀ {A : Type} → A → List A
-_∙ = [_]
-
-_⊸_ : Value → Contract → Value × Contract
-_⊸_ = _,_
+_⊕_ = (∀ {A : Type} → A → List A → List A) ∋ _∷_
+_∙  = (∀ {A : Type} → A → List A)          ∋ [_]
+_⊸_ = (∀ {A B : Type} → A → B → A × B)     ∋ _,_
 
 pattern put_&reveal_⇒_ xs as c = put xs &reveal as if `true ⇒ c
 pattern put_⇒_ xs c            = put xs &reveal [] ⇒ c
@@ -88,30 +83,23 @@ variable g g′ g″ : Precondition
 ------------------------------------------------------------------------
 -- Advertisements.
 
-record Advertisement : Type where
+record Ad : Type where
   constructor ⟨_⟩_
   field
     G : Precondition
     C : Contract
-open Advertisement public
-unquoteDecl DecEq-Advertisement =
-  DERIVE DecEq [ quote Advertisement , DecEq-Advertisement ]
+open Ad public
+unquoteDecl DecEq-Ad =
+  DERIVE DecEq [ quote Ad , DecEq-Ad ]
 
-Ad = Advertisement
-variable ad ad′ ad″ : Advertisement
+variable ad ad′ ad″ : Ad
 
 infix  2 ⟨_⟩_
-
-infix  5 _:?_at_
-infix  5 _:!_at_
-infix  5 _:secret_
+infix  5 _:?_at_ _:!_at_ _:secret_
 infixl 2 _∣∣_
 
 infixr 9 _⇒_
-infix  8 put_&reveal_if_⇒_
-infix  8 put_&reveal_⇒_
-infix  8 put_⇒_
-infix  8 reveal_⇒_
+infix  8 put_&reveal_if_⇒_ put_&reveal_⇒_ put_⇒_ reveal_⇒_
 infix  7 _⊸_
 infix  6 _∙
 infixr 5 _⊕_

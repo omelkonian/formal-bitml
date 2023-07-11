@@ -26,10 +26,10 @@ data Label : Type where
   auth-destroy⦅_,_,_⦆ : Participant → (xs : Ids) → Index xs → Label -- A:x,j
   destroy⦅_⦆ : Ids → Label -- destroy(x)
 
-  advertise⦅_⦆ : Advertisement → Label -- advertise({G}C)
+  advertise⦅_⦆ : Ad → Label -- advertise({G}C)
 
-  auth-commit⦅_,_,_⦆ : Participant → Advertisement → List (Secret × Maybe ℕ) → Label -- A:{G}C,Δ
-  auth-init⦅_,_,_⦆ : Participant → Advertisement → Id → Label -- A:{G}C,x
+  auth-commit⦅_,_,_⦆ : Participant → Ad → List (Secret × Maybe ℕ) → Label -- A:{G}C,Δ
+  auth-init⦅_,_,_⦆ : Participant → Ad → Id → Label -- A:{G}C,x
   init⦅_,_⦆ : Precondition → Contract → Label -- init(G,C)
 
   split⦅_⦆ : Id → Label -- split(y)
@@ -68,13 +68,13 @@ authDecoration = λ where
   auth-control⦅ p , _ ▷ _ ⦆    → just p
   _                            → nothing
 
-mentionedAd : Label → Maybe Advertisement
+mentionedAd : Label → Maybe Ad
 mentionedAd = λ where
-  (advertise⦅ ad ⦆) → just ad
-  (auth-commit⦅ _ , ad , _ ⦆) → just ad
-  (auth-init⦅ _ , ad , _ ⦆) → just ad
-  (init⦅ g , c ⦆) → just $ ⟨ g ⟩ c
-  _ → nothing
+  advertise⦅ ad ⦆           → just ad
+  auth-commit⦅ _ , ad , _ ⦆ → just ad
+  auth-init⦅ _ , ad , _ ⦆   → just ad
+  init⦅ g , c ⦆             → just $ ⟨ g ⟩ c
+  _                         → nothing
 
-focusOn : Advertisement → List Label → List Label
+focusOn : Ad → List Label → List Label
 focusOn ad = filter (λ l → ad ∈? mentionedAd l)

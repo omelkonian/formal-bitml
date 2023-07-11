@@ -320,7 +320,7 @@ traceAd {ad}{Γ₀}{Γ}{t}{α ∷ αs}{t′} ad∉ ad∈
 ℍ[C-Advertise]⦅ Γ ↝ Γ′ ⦆⦅ ad ⦆ = let ⟨ G ⟩ _ = ad; partG = nub-participants G in
     (Γ′ ≡ ` ad ∣ Γ)
     --
-  × ValidAdvertisement ad    -- the advertisement is valid
+  × ValidAd ad               -- the advertisement is valid
   × Any (_∈ Hon) partG       -- at least one honest participant
   × deposits ad ⊆ deposits Γ -- all persistent deposits in place
 

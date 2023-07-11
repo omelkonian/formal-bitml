@@ -2,8 +2,8 @@
 -- Denotational semantics of predicates.
 ------------------------------------------------------------------------
 open import Prelude.Init hiding (_+_)
-open SetAsType
-open Integer using (_+_; _-_; _<?_)
+open Integer using (_+_; _-_)
+open import Prelude.Ord
 open import Prelude.Lists
 open import Prelude.DecEq
 open import Prelude.Applicative
@@ -16,25 +16,22 @@ module BitML.Semantics.Predicate (⋯ : ⋯) (let open ⋯ ⋯) where
 
 open import BitML.Semantics.Configurations.Types ⋯ hiding (`_)
 
-infix 4 _<?ᵇ_
-_<?ᵇ_ : ℤ → ℤ → Bool
-x <?ᵇ y = ⌊ x <? y ⌋
-
-lookupSecretLen : Secret → Configuration → Maybe ℤ
-lookupSecretLen a (_ ∶ a′ ♯ N) = if a == a′ then ⦇ (+ N) ⦈ else nothing
-lookupSecretLen a (l ∣ r)      = lookupSecretLen a l <|> lookupSecretLen a r
-lookupSecretLen _ _            = nothing
-
-⟦_⟧ᵃʳ_ : Arith → Configuration → Maybe ℤ
-⟦ ∣ a ∣   ⟧ᵃʳ Γ = lookupSecretLen a Γ
+⟦_⟧ᵃʳ_ : Arith → Cfg → Maybe ℤ
+⟦ ∣ a ∣   ⟧ᵃʳ Γ = go Γ
+  where
+    go : Cfg → Maybe ℤ
+    go = λ where
+      (_ ∶ a′ ♯ N) → if a == a′ then ⦇ (+ N) ⦈ else nothing
+      (l ∣ r)      → go l <|> go r
+      _            → nothing
 ⟦ ` x     ⟧ᵃʳ _ = ⦇ x ⦈
 ⟦ e `+ e′ ⟧ᵃʳ Γ = ⦇ ⟦ e ⟧ᵃʳ Γ + ⟦ e′ ⟧ᵃʳ Γ ⦈
 ⟦ e `- e′ ⟧ᵃʳ Γ = ⦇ ⟦ e ⟧ᵃʳ Γ - ⟦ e′ ⟧ᵃʳ Γ ⦈
 
 
-⟦_⟧_ : Predicate → Configuration → Maybe Bool
+⟦_⟧_ : Predicate → Cfg → Maybe Bool
 ⟦ `true   ⟧ Γ = ⦇ true ⦈
 ⟦ e `∧ e′ ⟧ Γ = ⦇ ⟦ e ⟧ Γ ∧ ⟦ e′ ⟧ Γ ⦈
 ⟦ `¬ e    ⟧ Γ = ⦇ not (⟦ e ⟧ Γ) ⦈
-⟦ e `= e′ ⟧ Γ = ⦇ ⟦ e ⟧ᵃʳ Γ == ⟦ e′ ⟧ᵃʳ Γ ⦈
-⟦ e `< e′ ⟧ Γ = ⦇ ⟦ e ⟧ᵃʳ Γ <?ᵇ ⟦ e′ ⟧ᵃʳ Γ ⦈
+⟦ e `= e′ ⟧ Γ = ⦇ ⟦ e ⟧ᵃʳ Γ ==  ⟦ e′ ⟧ᵃʳ Γ ⦈
+⟦ e `< e′ ⟧ Γ = ⦇ ⟦ e ⟧ᵃʳ Γ <ᵇ ⟦ e′ ⟧ᵃʳ Γ ⦈

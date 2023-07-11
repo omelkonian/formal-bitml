@@ -34,7 +34,7 @@ open import BitML.Semantics.Predicate ⋯
 -- i.e. using `ids Γ` does not examine names in authorization
 
 infix -1 _—[_]→_ _—[_]↛_
-data _—[_]→_ : Configuration → Label → Configuration → Type where
+data _—[_]→_ : Cfg → Label → Cfg → Type where
 
   ------------------------------
   -- i) Rules for deposits
@@ -125,7 +125,7 @@ data _—[_]→_ : Configuration → Label → Configuration → Type where
 
   [C-Advertise] : let ⟨ G ⟩ _ = ad; partG = nub-participants G in
 
-    ∙ ValidAdvertisement ad    -- the advertisement is valid
+    ∙ ValidAd ad               -- the advertisement is valid
     ∙ Any (_∈ Hon) partG       -- at least one honest participant
     ∙ deposits ad ⊆ deposits Γ -- all persistent deposits in place
       ────────────────────────────────────────────────────────────
@@ -256,11 +256,11 @@ data _—[_]→_ : Configuration → Label → Configuration → Type where
 -- Semantic rules for timed configurations.
 
 infix 3 _≈ₜ_
-_≈ₜ_ : TimedConfiguration → TimedConfiguration → Type
+_≈ₜ_ : Cfgᵗ → Cfgᵗ → Type
 c ≈ₜ c′ = (time c ≡ time c′) × (cfg c ≈ cfg c′)
 
 infix -1 _—[_]→ₜ_
-data _—[_]→ₜ_ : TimedConfiguration → Label → TimedConfiguration → Type where
+data _—[_]→ₜ_ : Cfgᵗ → Label → Cfgᵗ → Type where
 
   -- iv) Rules for handling time
   [Action] :
@@ -289,10 +289,10 @@ data _—[_]→ₜ_ : TimedConfiguration → Label → TimedConfiguration → Ty
       (⟨ c , v ⟩at x ∣ Γ) at t —[ α ]→ₜ Γ′ at t
 
 
-_—[_]↛_ : Configuration → Label → Configuration → Type
+_—[_]↛_ : Cfg → Label → Cfg → Type
 Γ —[ α ]↛ Γ′ = ¬ (Γ —[ α ]→ Γ′)
 
-_—[_]↛ₜ_ : TimedConfiguration → Label → TimedConfiguration → Type
+_—[_]↛ₜ_ : Cfgᵗ → Label → Cfgᵗ → Type
 Γₜ —[ α ]↛ₜ Γₜ′ = ¬ (Γₜ —[ α ]→ₜ Γₜ′)
 
 -----------------------------------------------------------------------------------

@@ -281,7 +281,7 @@ instance
     _              → []
 
   -- ** See `authorizedHonAds` below
-  HAᵇᶜᶠ : BaseCfg has Advertisement
+  HAᵇᶜᶠ : BaseCfg has Ad
   HAᵇᶜᶠ .collect = λ where
     (A `auth[ ♯▷ ad ]) → if does (A ∈? Hon) then [ ad ] else []
     _                  → []
@@ -292,11 +292,11 @@ instance
 authorizedActions : ⦃ _ :  X has Action ⦄ → X → List Action
 authorizedActions = collect
 
-advertisements : ⦃ _ :  X has Advertisement ⦄ → X → List Advertisement
+advertisements : ⦃ _ :  X has Ad ⦄ → X → List Ad
 advertisements = collect
 authorizedHonAds = advertisements
 
--- authorizedAds : ⦃ _ :  X has Action ⦄ → X → List Advertisement
+-- authorizedAds : ⦃ _ :  X has Action ⦄ → X → List Ad
 -- authorizedAds = mapMaybe (λ where (♯▷ ad) → just ad; _ → nothing)
 --               ∘ authorizedActions
 
@@ -337,7 +337,7 @@ secretsOfᶜᶠ A = {- Set'.nub ∘-} go
     go (l ∣ r)         = go l ++ go r
     go _               = []
 
-committedParticipants : Advertisement → Cfg → List Participant
+committedParticipants : Ad → Cfg → List Participant
 committedParticipants ad = collect
   module ∣committedParticipants∣ where
     instance

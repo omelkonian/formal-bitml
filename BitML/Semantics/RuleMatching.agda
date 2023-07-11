@@ -80,7 +80,7 @@ cv≡⇒st ([C-Control] _ _ _ _) _ = inj₂ $ inj₂ $ inj₂ tt
 
 -- ** extracting inner subexpressions from a rule
 
-innerL : (st : Γ —[ α ]→ Γ′) → {isControl st} → Configuration
+innerL : (st : Γ —[ α ]→ Γ′) → {isControl st} → Cfg
 innerL ([C-Control] {c}{L = L}{v}{x} {i = i} _ _ _ _) =
   ⟨ [ removeTopDecorations (c ‼ i) ] , v ⟩at x ∣ L
 
@@ -90,7 +90,7 @@ innerStep ([C-Control] _ _ L→ _) = L→
 innerCI : (st : Γ —[ α ]→ Γ′) → {isControl st} → ∃ λ (c : Contract) → Index c
 innerCI ([C-Control] {c = c} {i = i} _ _ _ _) = c , i
 
-innerLₜ : (stₜ : Γₜ —[ α ]→ₜ Γₜ′) → {isTimeout stₜ} → Configuration
+innerLₜ : (stₜ : Γₜ —[ α ]→ₜ Γₜ′) → {isTimeout stₜ} → Cfg
 innerLₜ ([Timeout] {c = c} {v = v} {x = x} {Γ = Γ} {i = i} _ _ _ _) =
   ⟨ [ removeTopDecorations (c ‼ i) ] , v ⟩at x ∣ Γ
 

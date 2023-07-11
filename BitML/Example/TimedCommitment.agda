@@ -22,7 +22,7 @@ open import BitML.Semantics ⋯ Participant , Honest ⋯
 -- Do not postulate constants, in order for computation to go through
 a = "CHANGE_ME" ; N = 9 ; t = 42 ; x = "x" ; y = "y" ; x₁ = "x₁" ; x₂ = "x₂" ; x₃ = "x₃"; y₁ = "y₁"
 
-tc : Advertisement
+tc : Ad
 tc = ⟨ A :! 1 at x ∣∣ A :secret a ∣∣ B :! 0 at y ⟩
        reveal [ a ] ⇒ [ withdraw A ]
      ⊕ after t ⇒ withdraw B

@@ -45,12 +45,12 @@ ex-contracts₄ = A ⇒ withdraw B
 
 
 -- see BitML paper, Section 2
-pay-or-refund : Advertisement
+pay-or-refund : Ad
 pay-or-refund = ⟨ A :! 1 at "x" ∣∣ B :! 0 at "y" ⟩
                 ( A ⇒ withdraw B
                 ⊕ B ⇒ withdraw A
                 ∙)
 
 
-ex-ad : Advertisement
+ex-ad : Ad
 ex-ad = ⟨ B :! 2 at "x" ∣∣ A :! 3 at "y" ∣∣ A :? 100 at "z" ⟩ ex-contracts₃

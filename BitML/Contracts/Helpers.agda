@@ -101,7 +101,7 @@ instance
   ... | p :secret _ = [ p ]
   ... | p₁ ∣∣ p₂    = collect p₁ ++ collect p₂
 
-  HPᵃ : Advertisement has Participant
+  HPᵃ : Ad has Participant
   -- HPᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
   HPᵃ .collect = collect ∘ G
 
@@ -139,7 +139,7 @@ instance
   ... | _ :secret a = [ inj₁ a ]
   ... | p₁ ∣∣ p₂    = collect p₁ ++ collect p₂
 
-  HNᵃ : Advertisement has Name
+  HNᵃ : Ad has Name
   -- HNᵃ .collect (⟨ g ⟩ c) = collect g ++ collect c
   HNᵃ .collect = collect ∘ G
 
@@ -213,10 +213,10 @@ instance
   HDᵖ : Precondition has DepositRef
   HDᵖ .collect = map proj₂ ∘ collect
 
-  HTDᵃ : Advertisement has TDepositRef
+  HTDᵃ : Ad has TDepositRef
   HTDᵃ .collect = collect ∘ G
 
-  HDᵃ : Advertisement has DepositRef
+  HDᵃ : Ad has DepositRef
   HDᵃ .collect = map proj₂ ∘ collect
 
 tdeposits : ⦃ _ :  X has TDepositRef ⦄ → X → List TDepositRef
@@ -231,7 +231,7 @@ private
   ∀C A = (Branch → List A) × (Contract → List A) × (VContracts → List A)
 
   ∀P : Type → Type
-  ∀P A = (Precondition → List A) × (Advertisement → List A)
+  ∀P A = (Precondition → List A) × (Ad → List A)
 
   ∀∀ : Type → Type
   ∀∀ A = ∀C A × ∀P A
@@ -488,7 +488,7 @@ subtermsᵛ⁺ = subterms⁺ ∘ VCS
 subtermsᵛ  = subterms  ∘ VCS
 -- {-# DISPLAY subterms′ (VCS vcs) = subtermsᵛ′ vcs #-}
 
-subtermsᵃ′ subtermsᵃ⁺ subtermsᵃ : Advertisement → List Branch
+subtermsᵃ′ subtermsᵃ⁺ subtermsᵃ : Ad → List Branch
 subtermsᵃ′ (⟨ _ ⟩ c) = subtermsᶜ′ c
 subtermsᵃ⁺ (⟨ _ ⟩ c) = subtermsᶜ⁺ c
 subtermsᵃ  (⟨ _ ⟩ c) = subtermsᶜ  c

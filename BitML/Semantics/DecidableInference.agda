@@ -70,7 +70,7 @@ DEP-AuthDestroy :
 DEP-AuthDestroy {p = p} = [DEP-AuthDestroy] (toWitness p)
 
 C-Advertise : let ⟨ G ⟩ _ = ad; partG = nub-participants G in
-  ∀ {p₁ : auto∶ ValidAdvertisement ad} -- [BUG] Valid ad (order matters!)
+  ∀ {p₁ : auto∶ ValidAd ad} -- [BUG] Valid ad (order matters!)
     {p₂ : auto∶ Any (_∈ Hon) partG}
     {p₃ : auto∶ deposits ad ⊆ deposits Γ} →
   ────────────────────────────────────────────────────────────
@@ -149,7 +149,7 @@ C-AuthControl :
 C-AuthControl {p₁ = p₁} = [C-AuthControl] (toWitness p₁)
 
 -- T0D0 can we decide which transition to choose?
--- _—→?[_]_ : (Γ : Configuration) → (α : Label) → (Γ′ : Configuration) → Dec (Γ —→[ α ] Γ′)
+-- _—→?[_]_ : (Γ : Cfg) → (α : Label) → (Γ′ : Cfg) → Dec (Γ —→[ α ] Γ′)
 -- Γ —→?[ α ] Γ′ = ?
 
 C-Control :

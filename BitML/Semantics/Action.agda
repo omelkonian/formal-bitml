@@ -17,10 +17,10 @@ open import BitML.Contracts.Helpers ⋯
 data Action : Type where
 
   -- commit secrets to stipulate {G}C
-  ♯▷_ : Advertisement → Action
+  ♯▷_ : Ad → Action
 
   -- spend x to stipulate {G}C
-  _▷ˢ_ : Id → Advertisement → Action
+  _▷ˢ_ : Id → Ad → Action
 
   -- take branch
   _▷_ : Id → Branch → Action
