@@ -111,11 +111,11 @@ data _—[_]→_ : Cfg → Label → Cfg → Type where
 
     let
       xs = map select₃ ds
-      Δ  = || map (λ{ (i , Aᵢ , vᵢ , xᵢ) →
-                ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ]
-              }) (enumerate ds)
+      Δ  = || map (λ (i , Aᵢ , vᵢ , xᵢ) →
+                     ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xs , ‼-map {xs = ds} i ▷ᵈˢ y ]
+                  ) (enumerate ds)
     in
-    ────────────────────────────────────────────────────────────────────────
+    ─────────────────────────────────────────────────────────────────────────────
     Δ ∣ Γ
       —[ destroy⦅ xs ⦆ ]→
     Γ
@@ -168,10 +168,10 @@ data _—[_]→_ : Cfg → Label → Cfg → Type where
     in
 
     x ∉ xs ++ ids Γ -- x fresh
-    ──────────────────────────────────────────────────────────────────────────────────
+    ──────────────────────────────────────────────────────────────────────────────
     ` ad
     ∣ Γ
-    ∣ || map (λ{ (Aᵢ , vᵢ , xᵢ) → ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xᵢ ▷ˢ ad ] }) toSpend
+    ∣ || map (λ (Aᵢ , vᵢ , xᵢ) → ⟨ Aᵢ has vᵢ ⟩at xᵢ ∣ Aᵢ auth[ xᵢ ▷ˢ ad ]) toSpend
     ∣ || map _auth[ ♯▷ ad ] partG
       —[ init⦅ G , C ⦆ ]→
     ⟨ C , sum vs ⟩at x ∣ Γ
