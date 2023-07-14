@@ -183,7 +183,7 @@ match-put :
    × (xs ≡ _xs)
    × (as ≡ _as)
    × (z ∉ y L.∷ ids (_Γ ∣ ΔΓ′))
-   × (⟦ p ⟧ Δ ≡ just true)
+   × (⟦ p ⟧ᵖ Δ ≡ just true)
 match-put ([C-PutRev] {ds = ds}{ss} fresh-z p≡) _ =
   ds , ss , -, -, -, -, -, refl , refl , refl , refl , fresh-z , p≡
 match-put ([C-Control] _ _ _ _) ¬ctrl = ⊥-elim $ ¬ctrl tt
@@ -261,7 +261,7 @@ match-putₜ :
   × (xs ≡ _xs)
   × (as ≡ _as)
   × (z ∉ y L.∷ ids (_Γ ∣ ΔΓ′))
-  × (⟦ p ⟧ Δ ≡ just true)
+  × (⟦ p ⟧ᵖ Δ ≡ just true)
 match-putₜ stepₜ@([Timeout] {c = c} {i = i} As≡∅ ∀t≤ Γ→ refl) tt
   with ds , ss , p , c , v , Γ₀ , z , Γ≡ , ⋯⋯ ← match-put Γ→ (timeout⇒¬control stepₜ tt)
   with d≡ , v≡ , x≡ , Γ≡′ ← ⟨⟩∘∣-injective Γ≡

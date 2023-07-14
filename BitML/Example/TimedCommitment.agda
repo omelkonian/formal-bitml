@@ -1,6 +1,6 @@
 module BitML.Example.TimedCommitment where -- (see BitML paper, Section 2)
 
-open import Prelude.Init
+open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
 open import Prelude.Lists
 open import Prelude.Lists.Dec
@@ -13,7 +13,13 @@ open import BitML.Predicate hiding (`; ∣_∣)
 
 -------------------------------------------------------------------------
 
-open import BitML.Example.Setup using (Participant; Honest; A; B)
+data Participant : Type where
+  A B : Participant
+unquoteDecl DecEqₚ = DERIVE DecEq [ quote Participant , DecEqₚ ]
+
+Honest : List⁺ Participant
+Honest = A ∷ []
+
 open import BitML.Contracts ⋯ Participant , Honest ⋯ hiding (A; B)
 open import BitML.Semantics ⋯ Participant , Honest ⋯
 
@@ -130,7 +136,6 @@ tc-stepsₜ =
     (⟨ A has 1 ⟩at x₃ ∣ A ∶ a ♯ N) at 0
   ∎ₜ
 
-
 tc-steps′ :
   ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
     —[ advertise⦅ tc ⦆
@@ -197,3 +202,51 @@ tc-steps′ =
     ⟨ A has 1 ⟩at x₃ ∣ A ∶ a ♯ N
 -}
   ∎
+
+tc-stepsₜ′ :
+  (⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y) at t
+    —[ advertise⦅ tc ⦆
+     ∷ auth-commit⦅ A , tc , [ a , just N ] ⦆
+     ∷ auth-commit⦅ B , tc , [] ⦆
+     ∷ auth-init⦅ A , tc , x ⦆
+     ∷ auth-init⦅ B , tc , y ⦆
+     ∷ init⦅ G tc , tc .C ⦆
+     ∷ delay⦅ 1 ⦆
+     ∷ withdraw⦅ B , 1 , x₁ ⦆
+     ∷ []
+     ]↠ₜ
+  (⟨ B has 1 ⟩at x₂ ∣ ⟨ A ∶ a ♯ just N ⟩) at suc t
+tc-stepsₜ′ =
+  beginₜ
+    (⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y) at t
+  —→ₜ⟨ Act {t = t}
+     $ C-Advertise {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} ⟩
+    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y) at t
+  —→ₜ⟨ Act {t = t}
+     $ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} {secrets = [ a , just N ]} ⟩
+    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩ ∣ A auth[ ♯▷ tc ]) at t
+  —→ₜ⟨ Act {t = t}
+     $ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩
+                       ∣ A auth[ ♯▷ tc ]} {secrets = []} ⟩
+    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩
+          ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]) at t
+  —→ₜ⟨ Act {t = t}
+     $ C-AuthInit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩
+                     ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]} {v = 1} ⟩
+    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩ ∣ A auth[ ♯▷ tc ]
+          ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ]) at t
+  —→ₜ⟨ Act {t = t}
+     $ C-AuthInit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩
+                       ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ]}
+                  {v = 0} ⟩
+    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩ ∣ A auth[ ♯▷ tc ]
+          ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ] ∣ B auth[ y ▷ˢ tc ]) at t
+  —→ₜ⟨ Act {t = t}
+     $ C-Init {x = x₁} {Γ = ⟨ A ∶ a ♯ just N ⟩} ⟩
+    (⟨ tc .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just N ⟩) at t
+  —→ₜ⟨ Delay {Γ = ⟨ tc .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just N ⟩} {t = t} ⟩
+    (⟨ tc .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just N ⟩) at suc t
+  —→ₜ⟨ Timeout {c = tc .C} {t = suc t} {v = 1} {i = 1F}
+     $ C-Withdraw {x = x₂} {y = x₁} {Γ = ⟨ A ∶ a ♯ just N ⟩} ⟩
+    (⟨ B has 1 ⟩at x₂ ∣ ⟨ A ∶ a ♯ just N ⟩) at suc t
+  ∎ₜ

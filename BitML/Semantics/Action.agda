@@ -2,8 +2,8 @@
 -- Types of actions.
 ------------------------------------------------------------------------
 open import Prelude.Init; open SetAsType
-open import Prelude.Lists
 open import Prelude.DecEq
+open import Prelude.Lists
 
 open import BitML.BasicTypes
 
@@ -44,3 +44,16 @@ Actions = List Action
 variable
   act act′ : Action
   acts acts′ : Actions
+
+open import Prelude.General; open MultiTest
+open import Prelude.Nary
+private module _ (ad : Ad) d ds (let c = d ∷ ds) (A B : Participant) where
+  _ = Action
+   ∋⋮ ♯▷ ad                              -- commit secret
+    ⋮ "x" ▷ˢ ad                          -- spend
+    ⋮ "x" ▷ (c ‼ 0F)                     -- take branch
+    ⋮ "x" ↔ "y" ▷⟨ A , 10 ⟩              -- join
+    ⋮ "x" ▷⟨ A , 33 , 67 ⟩               -- divide
+    ⋮ "x" ▷ᵈ B                           -- donate
+    ⋮ ⟦ "x₀", "x₁" , "x₂" ⟧ , 1F ▷ᵈˢ "y" -- destroy
+    ⋮∅

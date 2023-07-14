@@ -11,4 +11,4 @@ open import BitML.Semantics ⋯ public
 open import BitML.Properties ⋯ public
 open import BitML.BasicTypes public
 
-open import BitML.Example.Main
+open import BitML.Example.TimedCommitment

@@ -1,11 +1,8 @@
 ------------------------------------------------------------------------
 -- BitML datatypes: Contracts & Ads
 ------------------------------------------------------------------------
-import Data.List.NonEmpty as NE
-
 open import Prelude.Init; open SetAsType
 open import Prelude.DecEq
-open import Prelude.Lists
 
 open import BitML.BasicTypes
 open import BitML.Predicate
@@ -111,3 +108,30 @@ DepositRef   = Participant × Value × Id
 DepositRefs  = List DepositRef
 TDepositRef  = DepositType × DepositRef
 TDepositRefs = List TDepositRef
+
+private module _ (A B : Participant) where
+  open import Prelude.General; open MultiTest
+  _ = Contract
+   ∋⋮ (withdraw A ∙)
+    ⋮ (A ⇒ withdraw A)
+    ⊕ (put [] ⇒ (withdraw A ∙))
+    ∙
+    ⋮ (put [ "x" ] ⇒ (withdraw A ∙))
+    ∙
+    ⋮ A ⇒ withdraw B
+    ⊕ B ⇒ split ( 2 ⊸ (withdraw A ∙)
+                ⊕ 3 ⊸ (after 100 ⇒ withdraw B ∙)
+                ⊕ 0 ⊸ (put [ "y" ] ⇒ (A ⇒ withdraw B ∙) ∙)
+                ∙)
+    ∙
+    ⋮∅
+
+  _ = Ad
+   ∋⋮ ⟨ A :! 1 at "x" ∣∣ B :! 0 at "y" ⟩
+        A ⇒ withdraw B
+      ⊕ B ⇒ withdraw A
+      ∙  -- pay or refund, see §2 of BitML paper
+    ⋮ ⟨ B :! 2 at "x" ∣∣ A :! 3 at "y" ∣∣ B :? 100 at "z" ⟩
+      put [ "z" ] ⇒ (withdraw A ∙)
+      ∙
+    ⋮∅
