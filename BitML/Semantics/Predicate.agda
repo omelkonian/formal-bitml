@@ -29,9 +29,9 @@ open import BitML.Semantics.Configurations.Types ⋯ hiding (`_)
 ⟦ e `- e′ ⟧ᵃʳ Γ = ⦇ ⟦ e ⟧ᵃʳ Γ - ⟦ e′ ⟧ᵃʳ Γ ⦈
 
 
-⟦_⟧_ : Predicate → Cfg → Maybe Bool
-⟦ `true   ⟧ Γ = ⦇ true ⦈
-⟦ e `∧ e′ ⟧ Γ = ⦇ ⟦ e ⟧ Γ ∧ ⟦ e′ ⟧ Γ ⦈
-⟦ `¬ e    ⟧ Γ = ⦇ not (⟦ e ⟧ Γ) ⦈
-⟦ e `= e′ ⟧ Γ = ⦇ ⟦ e ⟧ᵃʳ Γ ==  ⟦ e′ ⟧ᵃʳ Γ ⦈
-⟦ e `< e′ ⟧ Γ = ⦇ ⟦ e ⟧ᵃʳ Γ <ᵇ ⟦ e′ ⟧ᵃʳ Γ ⦈
+⟦_⟧ᵖ_ : Predicate → Cfg → Maybe Bool
+⟦ `true   ⟧ᵖ Γ = ⦇ true ⦈
+⟦ e `∧ e′ ⟧ᵖ Γ = ⦇ ⟦ e ⟧ᵖ Γ ∧ ⟦ e′ ⟧ᵖ Γ ⦈
+⟦ `¬ e    ⟧ᵖ Γ = ⦇ not (⟦ e ⟧ᵖ Γ) ⦈
+⟦ e `= e′ ⟧ᵖ Γ = ⦇ ⟦ e ⟧ᵃʳ Γ ==  ⟦ e′ ⟧ᵃʳ Γ ⦈
+⟦ e `< e′ ⟧ᵖ Γ = ⦇ ⟦ e ⟧ᵃʳ Γ <ᵇ  ⟦ e′ ⟧ᵃʳ Γ ⦈

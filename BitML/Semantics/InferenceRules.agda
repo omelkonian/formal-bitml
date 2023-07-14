@@ -2,12 +2,12 @@
 -- Small-step semantics for the BitML calculus
 -----------------------------------------------
 open import Prelude.Init; open SetAsType
+open L.Mem
 open import Prelude.Lists
 open import Prelude.Lists.Dec
-open import Prelude.Membership
 open import Prelude.DecEq
 open import Prelude.Sets
-open import Prelude.Nary hiding (⟦_⟧)
+open import Prelude.Nary
 open import Prelude.Setoid
 open import Prelude.Ord
 open import Prelude.General
@@ -49,7 +49,7 @@ data _—[_]→_ : Cfg → Label → Cfg → Type where
 
   [DEP-Join] :
 
-    z ∉ x L.∷ y ∷ ids Γ -- z fresh
+    z ∉ x ∷ y ∷ ids Γ -- z fresh
     ────────────────────────────────────────────────────────────────────────
     ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
       —[ join⦅ x ↔ y ⦆ ]→
@@ -66,7 +66,7 @@ data _—[_]→_ : Cfg → Label → Cfg → Type where
 
   [DEP-Divide] :
 
-    All (_∉ x L.∷ ids Γ) (y ∷ y′ ∷ []) -- y, y′ fresh
+    All (_∉ x ∷ ids Γ) ⟦ y , y′ ⟧ -- y, y′ fresh
     ────────────────────────────────────────────────────────
     ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
       —[ divide⦅ x ▷ v , v′ ⦆ ]→
@@ -83,7 +83,7 @@ data _—[_]→_ : Cfg → Label → Cfg → Type where
 
   [DEP-Donate] :
 
-    y ∉ x L.∷ ids Γ -- y fresh
+    y ∉ x ∷ ids Γ -- y fresh
     ──────────────────────────────────────
     ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
       —[ donate⦅ x ▷ᵈ B ⦆ ]→
@@ -184,7 +184,7 @@ data _—[_]→_ : Cfg → Label → Cfg → Type where
 
     let (vs , cs , ys) = unzip₃ vcis in
 
-    All (_∉ y L.∷ ids Γ) ys -- ys fresh
+    All (_∉ y ∷ ids Γ) ys -- ys fresh
     ──────────────────────────────────────────
     ⟨ [ split (zip vs cs) ] , sum vs ⟩at y ∣ Γ
       —[ split⦅ y ⦆ ]→
@@ -210,8 +210,8 @@ data _—[_]→_ : Cfg → Label → Cfg → Type where
         ΔΓ′ = Δ ∣ Γ′
     in
 
-    ∙ z ∉ y L.∷ ids (Γ ∣ ΔΓ′) -- z fresh
-    ∙ ⟦ p ⟧ Δ ≡ just true -- predicate is true
+    ∙ z ∉ y ∷ ids (Γ ∣ ΔΓ′) -- z fresh
+    ∙ ⟦ p ⟧ᵖ Δ ≡ just true -- predicate is true
       ──────────────────────────────────────────────────────
       ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ (Γ ∣ ΔΓ′)
         —[ put⦅ xs , as , y ⦆ ]→
@@ -220,7 +220,7 @@ data _—[_]→_ : Cfg → Label → Cfg → Type where
 
   [C-Withdraw] :
 
-    x ∉ y L.∷ ids Γ -- x fresh
+    x ∉ y ∷ ids Γ -- x fresh
     ──────────────────────────────
     ⟨ [ withdraw A ] , v ⟩at y ∣ Γ
       —[ withdraw⦅ A , v , y ⦆ ]→

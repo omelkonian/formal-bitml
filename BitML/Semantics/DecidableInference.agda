@@ -2,17 +2,17 @@
 -- Decision procedure for BitML's small-step semantics.
 ------------------------------------------------------------------------
 open import Prelude.Init; open SetAsType
+open L.Mem
 open import Prelude.General
 open import Prelude.Lists
 open import Prelude.Lists.Dec
 open import Prelude.DecEq
 open import Prelude.Decidable
-open import Prelude.Membership
 open import Prelude.Sets
 open import Prelude.Setoid
 open import Prelude.Validity
 open import Prelude.Ord
-open import Prelude.Nary hiding (⟦_⟧)
+open import Prelude.Nary
 open import Prelude.InferenceRules
 open import Prelude.Null
 
@@ -32,7 +32,7 @@ open import BitML.Semantics.Predicate ⋯
 open import BitML.Semantics.InferenceRules ⋯
 
 DEP-Join :
-  ∀ {p : auto∶ z ∉ x L.∷ y ∷ ids Γ} →
+  ∀ {p : auto∶ z ∉ x ∷ y ∷ ids Γ} →
   ────────────────────────────────────────────────────────────────────────
   ⟨ A has v ⟩at x ∣ ⟨ A has v′ ⟩at y ∣ A auth[ x ↔ y ▷⟨ A , v + v′ ⟩ ] ∣ Γ
     —[ join⦅ x ↔ y ⦆ ]→
@@ -40,7 +40,7 @@ DEP-Join :
 DEP-Join {p = p} = [DEP-Join] (toWitness p)
 
 DEP-Divide :
-  ∀ {p : auto∶ All (_∉ x L.∷ ids Γ) (y ∷ y′ ∷ [])} →
+  ∀ {p : auto∶ All (_∉ x ∷ ids Γ) ⟦ y , y′ ⟧} →
   ────────────────────────────────────────────────────────
   ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
     —[ divide⦅ x ▷ v , v′ ⦆ ]→
@@ -48,7 +48,7 @@ DEP-Divide :
 DEP-Divide {p = p} = [DEP-Divide] (toWitness p)
 
 DEP-Donate :
-  ∀ {p : auto∶ y ∉ x L.∷ ids Γ} →
+  ∀ {p : auto∶ y ∉ x ∷ ids Γ} →
   ──────────────────────────────────────
   ⟨ A has v ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ Γ
     —[ donate⦅ x ▷ᵈ B ⦆ ]→
@@ -111,7 +111,7 @@ C-Init {p = p} = [C-Init] (toWitness p)
 C-Split :
   ∀ {vcis : VIContracts} →
   let (vs , cs , ys) = unzip₃ vcis in
-  ∀ {p : auto∶ All (_∉ y L.∷ ids Γ) ys} →
+  ∀ {p : auto∶ All (_∉ y ∷ ids Γ) ys} →
   ──────────────────────────────────────────
   ⟨ [ split (zip vs cs) ] , sum vs ⟩at y ∣ Γ
     —[ split⦅ y ⦆ ]→
@@ -127,15 +127,15 @@ C-PutRev :
         Δ = || map (λ{ (Bi , ai , Ni) → Bi ∶ ai ♯ Ni}) ss
         ΔΓ′ = Δ ∣ Γ′
     in
-    {p₀ : auto∶ z ∉ y L.∷ ids (Γ ∣ ΔΓ′)}
-    {p₁ : auto∶ ⟦ p ⟧ Δ ≡ just true}
+    {p₀ : auto∶ z ∉ y ∷ ids (Γ ∣ ΔΓ′)}
+    {p₁ : auto∶ ⟦ p ⟧ᵖ Δ ≡ just true}
   → ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ (Γ ∣ ΔΓ′)
       —[ put⦅ xs , as , y ⦆ ]→
     ⟨ c , v + sum vs ⟩at z ∣ ΔΓ′
 C-PutRev {ds = ds}{ss}{p₀}{p₁} = [C-PutRev] {ds = ds} {ss = ss} (toWitness p₀) (toWitness p₁)
 
 C-Withdraw :
-  ∀ {p : auto∶ x ∉ y L.∷ ids Γ} →
+  ∀ {p : auto∶ x ∉ y ∷ ids Γ} →
   ⟨ [ withdraw A ] , v ⟩at y ∣ Γ
     —[ withdraw⦅ A , v , y ⦆ ]→
   ⟨ A has v ⟩at x ∣ Γ
