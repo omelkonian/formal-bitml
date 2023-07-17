@@ -1,6 +1,6 @@
 TOTAL: 4m10s
 BitML/BasicTypes: 0m27s
-BitML/Predicate: 0m2s
+BitML/Predicate: 0m1s
 BitML/Contracts/Types: 0m3s
 BitML/Contracts/Induction: 0m2s
 BitML/Contracts/Helpers: 0m13s
@@ -9,10 +9,10 @@ BitML/Contracts: 0m0s
 BitML/Semantics/Action: 0m3s
 BitML/Semantics/Configurations/Types: 0m6s
 BitML/Semantics/Configurations/Helpers: 0m15s
-BitML/Semantics/Label: 0m16s
+BitML/Semantics/Label: 0m17s
 BitML/Semantics/Predicate: 0m2s
-BitML/Semantics/InferenceRules: 0m3s
-BitML/Semantics/RuleMatching: 0m15s
+BitML/Semantics/InferenceRules: 0m2s
+BitML/Semantics/RuleMatching: 0m16s
 BitML/Semantics/DecidableInference: 0m6s
 BitML/Semantics: 0m1s
 BitML/Properties/Helpers: 0m11s
