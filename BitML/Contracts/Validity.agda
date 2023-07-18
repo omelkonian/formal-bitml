@@ -43,10 +43,10 @@ splitsOK G C₀ = goᶜ C₀ (persistentValue G)
     goᶜ [] _ = true
     goᶜ (c ∷ cs) v = goᵈ c v ∧ goᶜ cs v
 
-    goᵈ c₀@(put xs &reveal as if p ⇒ c) v
-      with sequenceM $ map (λ x → checkDeposit volatile x G) xs
-    ... | nothing = false
-    ... | just vs = goᶜ c (∑ℕ vs)
+    goᵈ c₀@(put xs &reveal as if p ⇒ c) v =
+      case sequenceM $ map (λ x → checkDeposit volatile x G) xs of λ where
+        nothing   → false
+        (just vs) → goᶜ c (v + ∑ℕ vs)
     goᵈ (split vcs)   v = (∑₁ vcs == v) ∧ goᵛᶜ vcs
     goᵈ (after _ ⇒ c) v = goᵈ c v
     goᵈ (_ ⇒ c)       v = goᵈ c v
