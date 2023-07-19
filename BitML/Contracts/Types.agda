@@ -52,8 +52,10 @@ _∙  = (∀ {A : Type} → A → List A)          ∋ [_]
 _⊸_ = (∀ {A B : Type} → A → B → A × B)     ∋ _,_
 
 pattern put_&reveal_⇒_ xs as c = put xs &reveal as if `true ⇒ c
-pattern put_⇒_ xs c            = put xs &reveal [] ⇒ c
-pattern reveal_⇒_ as c         = put [] &reveal as ⇒ c
+pattern put_⇒_ xs c            = put xs &reveal []          ⇒ c
+pattern put_if_⇒_ xs p c       = put xs &reveal [] if p     ⇒ c
+pattern reveal_if_⇒_ as p c    = put [] &reveal as if p     ⇒ c
+pattern reveal_⇒_ as c         = put [] &reveal as          ⇒ c
 
 -------------------------------------------------------------------
 -- Contract preconditions.
@@ -109,8 +111,10 @@ DepositRefs  = List DepositRef
 TDepositRef  = DepositType × DepositRef
 TDepositRefs = List TDepositRef
 
-private module _ (A B : Participant) where
-  open import Prelude.General; open MultiTest
+-- Examples.
+
+open import Prelude.General; open MultiTest
+module _ (A B : Participant) where
   _ = Contract
    ∋⋮ (withdraw A ∙)
     ⋮ (A ⇒ withdraw A)
@@ -127,11 +131,6 @@ private module _ (A B : Participant) where
     ⋮∅
 
   _ = Ad
-   ∋⋮ ⟨ A :! 1 at "x" ∣∣ B :! 0 at "y" ⟩
-        A ⇒ withdraw B
-      ⊕ B ⇒ withdraw A
-      ∙  -- pay or refund, see §2 of BitML paper
-    ⋮ ⟨ B :! 2 at "x" ∣∣ A :! 3 at "y" ∣∣ B :? 100 at "z" ⟩
-      put [ "z" ] ⇒ (withdraw A ∙)
-      ∙
+   ∋⋮ ⟨ B :! 2 at "x" ∣∣ A :! 3 at "y" ∣∣ B :? 100 at "z" ⟩
+      put [ "z" ] ⇒ (withdraw A ∙) ∙
     ⋮∅

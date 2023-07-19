@@ -11,22 +11,14 @@ open import Prelude.Ord
 open import BitML.BasicTypes hiding (a; x; y; t)
 open import BitML.Predicate hiding (`; ∣_∣)
 
--------------------------------------------------------------------------
-
-data Participant : Type where
-  A B : Participant
-unquoteDecl DecEqₚ = DERIVE DecEq [ quote Participant , DecEqₚ ]
-
-Honest : List⁺ Participant
-Honest = A ∷ []
+open import BitML.Example.Setup hiding (C)
 
 open import BitML.Contracts ⋯ Participant , Honest ⋯ hiding (A; B)
 open import BitML.Semantics ⋯ Participant , Honest ⋯
 
--------------------------------------------------------------------------
-
 -- Do not postulate constants, in order for computation to go through
-a = "CHANGE_ME" ; N = 9 ; t = 42 ; x = "x" ; y = "y" ; x₁ = "x₁" ; x₂ = "x₂" ; x₃ = "x₃"; y₁ = "y₁"
+a = "CHANGE_ME"; N = 9; t = 42
+x = "x"; y = "y"; x₁ = "x₁"; x₂ = "x₂"; x₃ = "x₃"; y₁ = "y₁"
 
 tc : Ad
 tc = ⟨ A :! 1 at x ∣∣ A :secret a ∣∣ B :! 0 at y ⟩
@@ -41,7 +33,7 @@ tc-steps :
      ∷ auth-commit⦅ B , tc , [] ⦆
      ∷ auth-init⦅ A , tc , x ⦆
      ∷ auth-init⦅ B , tc , y ⦆
-     ∷ init⦅ G tc , tc .C ⦆
+     ∷ init⦅ tc .G , tc .C ⦆
      ∷ auth-rev⦅ A , a ⦆
      ∷ put⦅ [] , [ a ] , x₁ ⦆
      ∷ withdraw⦅ A , 1 , x₂ ⦆
@@ -90,7 +82,7 @@ tc-stepsₜ :
      ∷ auth-commit⦅ B , tc , [] ⦆
      ∷ auth-init⦅ A , tc , x ⦆
      ∷ auth-init⦅ B , tc , y ⦆
-     ∷ init⦅ G tc , tc .C ⦆
+     ∷ init⦅ tc .G , tc .C ⦆
      ∷ auth-rev⦅ A , a ⦆
      ∷ put⦅ [] , [ a ] , x₁ ⦆
      ∷ withdraw⦅ A , 1 , x₂ ⦆
@@ -210,7 +202,7 @@ tc-stepsₜ′ :
      ∷ auth-commit⦅ B , tc , [] ⦆
      ∷ auth-init⦅ A , tc , x ⦆
      ∷ auth-init⦅ B , tc , y ⦆
-     ∷ init⦅ G tc , tc .C ⦆
+     ∷ init⦅ tc .G , tc .C ⦆
      ∷ delay⦅ 1 ⦆
      ∷ withdraw⦅ B , 1 , x₁ ⦆
      ∷ []

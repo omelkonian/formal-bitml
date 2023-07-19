@@ -47,7 +47,7 @@ variable
 
 open import Prelude.General; open MultiTest
 open import Prelude.Nary
-private module _ (ad : Ad) d ds (let c = d ∷ ds) (A B : Participant) where
+module _ (ad : Ad) d ds (let c = d ∷ ds) (A B : Participant) where
   _ = Action
    ∋⋮ ♯▷ ad                              -- commit secret
     ⋮ "x" ▷ˢ ad                          -- spend
