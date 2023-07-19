@@ -3,18 +3,15 @@
 ------------------------------------------------------------------------
 open import Function using (id)
 
-open import Data.List.Membership.Propositional.Properties
-open import Data.List.Relation.Binary.Subset.Propositional.Properties
-
-open import Prelude.Init; open SetAsType
+open import Prelude.Init hiding (_⊆_); open SetAsType
+open L.Mem
 open import Prelude.General
-open import Prelude.Lists
-open import Prelude.Lists.Dec
+open import Prelude.Lists renaming (_⊆′_ to _⊆_)
+open import Prelude.Lists.Dec hiding (_⊆?_) renaming (_⊆′?_ to _⊆?_)
 open import Prelude.DecEq
 open import Prelude.Sets
 open import Prelude.Measurable
 open import Prelude.Lists.Collections
-open import Prelude.Membership
 open import Prelude.Functor
 open import Prelude.Foldable
 open import Prelude.Traversable
@@ -99,11 +96,13 @@ instance
 -- Properties.
 
 Valid⇒part⊆ : let ⟨ G ⟩ C = ad in
-  Valid ad → participants C ⊆ participants G
+  Valid ad → participants C L.SubS.⊆ participants G
 Valid⇒part⊆ {⟨ G ⟩ C} vad
   = persistentParticipants⊆ {g = G}
-  ∘ vad .parts-⊆
+  ∘ vad .parts-⊆ .unmk⊆
   ∘ ∈-++⁺ʳ (participants G)
 
-subterms′-part⊆ᵃ : Valid ad → d ∈ subtermsᵃ′ ad → participants d ⊆ participants (ad .G)
-subterms′-part⊆ᵃ {ad@(⟨ G ⟩ C)}{d} vad d∈ = Valid⇒part⊆ vad ∘ subterms′-part⊆ᶜ {ds = C} d∈
+subterms′-part⊆ᵃ : Valid ad → d ∈ subtermsᵃ′ ad →
+  participants d L.SubS.⊆ participants (ad .G)
+subterms′-part⊆ᵃ {ad@(⟨ G ⟩ C)}{d} vad d∈ =
+  Valid⇒part⊆ vad ∘ subterms′-part⊆ᶜ {ds = C} d∈

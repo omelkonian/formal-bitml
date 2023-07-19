@@ -40,11 +40,12 @@ PayOrRefund = A ⇒ withdraw B
             ∙
 
 Resolve : Value → Value → Branch
-Resolve v v′ = split ( v  ⊸ (withdraw M ∙)
-                      ⊕ v′ ⊸ ( M ⇒ withdraw A
-                            ⊕ M ⇒ withdraw B
-                            ∙)
-                      ∙)
+Resolve v v′ =
+  split ( v  ⊸ (withdraw M ∙)
+        ⊕ v′ ⊸ ( M ⇒ withdraw A
+               ⊕ M ⇒ withdraw B
+               ∙)
+        ∙)
 
 Escrow : Contract
 Escrow = PayOrRefund
@@ -54,7 +55,7 @@ Escrow = PayOrRefund
 
 TC : Contract
 TC = reveal [ a ] ⇒ (withdraw A ∙)
-    ⊕ after t      ⇒ withdraw B
+    ⊕ after t     ⇒ withdraw B
     ∙
 
 EscrowPut : Contract
@@ -101,14 +102,7 @@ PayOrRefundAd =
   ⟨ A :! 1 at "𝔸" ∣∣ B :! 0 at "𝔹" ⟩
   PayOrRefund
 
-_ : Valid PayOrRefundAd
-_ = record
-      { names-uniq = auto
-      ; names-⊆    = auto
-      ; names-put  = auto
-      ; parts-⊆    = toWitness {Q = _ ⊆? _} tt
-      ; splits-OK  = auto
-      }
+_ = Valid PayOrRefundAd ∋ auto
 
 OddsEvens : Ad
 OddsEvens =
@@ -127,14 +121,7 @@ OddsEvens =
         ∙)
   ∙
 
-_ : Valid OddsEvens
-_ = record
-      { names-uniq = auto
-      ; names-⊆    = toWitness {Q = _ ⊆? _} tt
-      ; names-put  = auto
-      ; parts-⊆    = toWitness {Q = _ ⊆? _} tt
-      ; splits-OK  = auto
-      }
+_ = Valid OddsEvens ∋ auto
 
 EscrowPutAd : Ad
 EscrowPutAd =
@@ -143,14 +130,7 @@ EscrowPutAd =
   ⟩
   EscrowPut
 
-_ : Valid EscrowPutAd
-_ = record
-      { names-uniq = auto
-      ; names-⊆    = toWitness {Q = _ ⊆? _} tt
-      ; names-put  = auto
-      ; parts-⊆    = toWitness {Q = _ ⊆? _} tt
-      ; splits-OK  = auto
-      }
+_ = Valid EscrowPutAd ∋ auto
 
 -- §A.1
 
@@ -167,14 +147,7 @@ IntermediatedPayment =
   ⊕ after t ⇒ withdraw A
   ∙
 
-_ : Valid IntermediatedPayment
-_ = record
-      { names-uniq = auto
-      ; names-⊆    = toWitness {Q = _ ⊆? _} tt
-      ; names-put  = auto
-      ; parts-⊆    = toWitness {Q = _ ⊆? _} tt
-      ; splits-OK  = auto
-      }
+_ = Valid IntermediatedPayment ∋ auto
 
 v = 10
 
@@ -196,14 +169,7 @@ MutualTC =
   ⊕ after t ⇒ withdraw B
   ∙
 
-_ : Valid MutualTC
-_ = record
-      { names-uniq = auto
-      ; names-⊆    = toWitness {Q = _ ⊆? _} tt
-      ; names-put  = auto
-      ; parts-⊆    = toWitness {Q = _ ⊆? _} tt
-      ; splits-OK  = auto
-      }
+_ = Valid MutualTC ∋ auto
 
 ZeroCollateralLottery : Ad
 ZeroCollateralLottery =
@@ -218,14 +184,7 @@ ZeroCollateralLottery =
   ⊕ after t ⇒ withdraw A
   ∙
 
-_ : Valid ZeroCollateralLottery
-_ = record
-      { names-uniq = auto
-      ; names-⊆    = toWitness {Q = _ ⊆? _} tt
-      ; names-put  = auto
-      ; parts-⊆    = toWitness {Q = _ ⊆? _} tt
-      ; splits-OK  = auto
-      }
+_ = Valid ZeroCollateralLottery ∋ auto
 
 RockPaperScissors : Ad
 RockPaperScissors =
@@ -254,11 +213,4 @@ RockPaperScissors =
          `∨ (n `= ` 2ℤ `∧ m `= ` 1ℤ)
          `∨ (n `= ` 1ℤ `∧ m `= ` 0ℤ)
 
-_ : Valid RockPaperScissors
-_ = record
-      { names-uniq = auto
-      ; names-⊆    = toWitness {Q = _ ⊆? _} tt
-      ; names-put  = auto
-      ; parts-⊆    = toWitness {Q = _ ⊆? _} tt
-      ; splits-OK  = auto
-      }
+_ = Valid RockPaperScissors ∋ auto
