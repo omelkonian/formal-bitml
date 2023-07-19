@@ -25,10 +25,23 @@ variable p p′ : Predicate
 
 infix  4 ∣_∣
 infixr 3 _`+_ _`-_
-infix  2 _`=_ _`<_
-infixr 1 _`∧_
+infix  2 _`=_ _`<_ _`≠_ _`≤_ _`≮_ _`≰_ _`>_ _`≥_ _`≯_ _`≱_
+infixr 1 _`∧_ _`∨_
 
-private
-  _ : Predicate
-  _ = ∣ "change_me" ∣ `= ∣ "change_me" ∣
-   `∧ ` (+ 5) `= (` (+ 3) `+ ` (+ 2))
+_`∨_ : Op₂ Predicate
+p `∨ q = `¬ (`¬ p `∧ `¬ q)
+
+_`≠_ _`≤_ _`≮_ _`≰_ _`>_ _`≥_ _`≯_ _`≱_ : Arith → Arith → Predicate
+x `≠ y = `¬ (x `= y)
+x `≤ y = (x `= y) `∨ (x `< y)
+x `≮ y = `¬ (x `< y)
+x `≰ y = `¬ (x `≤ y)
+_`>_ = flip _`<_; _`≥_ = flip _`≤_; _`≯_ = flip _`≮_; _`≱_ = flip _`≰_
+
+_`≤_`≤_ _`≥_`≥_ : Arith → Arith → Arith → Predicate
+x `≤ y `≤ z = (x `≤ y) `∧ (y `≤ z)
+x `≥ y `≥ z = (x `≥ y) `∧ (y `≥ z)
+
+_ : Predicate
+_ = ∣ "change_me" ∣ `= ∣ "change_me" ∣
+  `∧ ` 5ℤ `= ` 3ℤ `+ ` 2ℤ
