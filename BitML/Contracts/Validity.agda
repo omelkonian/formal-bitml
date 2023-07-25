@@ -49,27 +49,28 @@ splitsOK G C₀ = goᶜ C₀ (persistentValue G)
     goᵈ (_ ⇒ c)       v = goᵈ c v
     goᵈ (withdraw _)  _ = true
 
-record ValidAd (ad : Ad) : Type where
-  field
-    -- (i) names in G are distinct
-    names-uniq :
-      Unique (names $ G ad)
+module _ (ad : Ad) (let ⟨ G ⟩ C = ad) where
+  record ValidAd : Type where
+    field
+      -- (i) names in G are distinct
+      names-uniq :
+        Unique $ names G
 
-    -- (ii) each name in C appears in G
-    names-⊆ :
-      names (C ad) ⊆ names (G ad)
+      -- (ii) each name in C appears in G
+      names-⊆ :
+        names C ⊆ names G
 
-    -- (iii) names in `put&reveal` are distinct and secrets in `if` appear in `reveal`
-    names-put :
-      All (λ (xs , as , p) → Unique xs × secrets p ⊆ as) (putComponents $ C ad)
+      -- (iii) names in `put&reveal` are distinct and secrets in `if` appear in `reveal`
+      names-put :
+        All (λ (xs , as , p) → Unique xs × secrets p ⊆ as) (putComponents C)
 
-    -- (iv) each participant has a persistent deposit in G
-    parts-⊆ :
-      participants (G ad) ++ participants (C ad) ⊆ persistentParticipants (G ad)
+      -- (iv) each participant has a persistent deposit in G
+      parts-⊆ :
+        participants G ++ participants C ⊆ persistentParticipants G
 
-    -- (extra) split commands are valid
-    splits-OK :
-      T $ splitsOK (G ad) (C ad)
+      -- (extra) split commands are valid
+      splits-OK :
+        T $ splitsOK G C
 
 open ValidAd public
 
@@ -79,11 +80,11 @@ instance
 
   Dec-𝕍Ad : Valid ⁇¹
   Dec-𝕍Ad {x = ⟨ G ⟩ C} .dec
-    with unique? (names G)
+    with unique? $ names G
        | names C ⊆? names G
        | all? (λ (xs , as , p) → unique? xs ×-dec secrets p ⊆? as) (putComponents C)
        | participants G ++ participants C ⊆? persistentParticipants G
-       | T? (splitsOK G C)
+       | T? $ splitsOK G C
   ... | no ¬names-uniq | _ | _ | _ | _             = no $ ¬names-uniq ∘ names-uniq
   ... | _ | no ¬names-⊆ | _ | _ | _                = no $ ¬names-⊆    ∘ names-⊆
   ... | _ | _ | no ¬names-put | _ | _              = no $ ¬names-put  ∘ names-put

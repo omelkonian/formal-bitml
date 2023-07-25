@@ -10,9 +10,6 @@ open import BitML.BasicTypes
 module BitML.Semantics.Action (⋯ : ⋯) (let open ⋯ ⋯) where
 
 open import BitML.Contracts.Types ⋯ hiding (A; B)
-open import BitML.Contracts.Helpers ⋯
-
---------------------------------------------------------------------------------
 
 data Action : Type where
 
