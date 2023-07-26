@@ -45,8 +45,8 @@ splitsOK G C₀ = goᶜ C₀ (persistentValue G)
         nothing   → false
         (just vs) → goᶜ c (v + ∑ℕ vs)
     goᵈ (split vcs)   v = (∑₁ vcs == v) ∧ goᵛᶜ vcs
-    goᵈ (after _ ⇒ c) v = goᵈ c v
-    goᵈ (_ ⇒ c)       v = goᵈ c v
+    goᵈ (after _ ∶ c) v = goᵈ c v
+    goᵈ (_ ∶ c)       v = goᵈ c v
     goᵈ (withdraw _)  _ = true
 
 module _ (ad : Ad) (let ⟨ G ⟩ C = ad) where

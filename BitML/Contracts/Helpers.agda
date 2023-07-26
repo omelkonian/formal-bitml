@@ -24,14 +24,14 @@ open import BitML.Contracts.Induction ⋯
 PutComponent = Ids × Secrets × Predicate
 
 removeTopDecorations : Branch → Branch
-removeTopDecorations (_       ⇒ d) = removeTopDecorations d
-removeTopDecorations (after _ ⇒ d) = removeTopDecorations d
+removeTopDecorations (_       ∶ d) = removeTopDecorations d
+removeTopDecorations (after _ ∶ d) = removeTopDecorations d
 removeTopDecorations d             = d
 
 removeTopDecorations-idemp : Alg≡.IdempotentFun removeTopDecorations
 removeTopDecorations-idemp = λ where
-  (_ ⇒ d)       → removeTopDecorations-idemp d
-  (after _ ⇒ d) → removeTopDecorations-idemp d
+  (_ ∶ d)       → removeTopDecorations-idemp d
+  (after _ ∶ d) → removeTopDecorations-idemp d
   (withdraw _)               → refl
   (put _ &reveal _ if _ ⇒ _) → refl
   (split _)                  → refl
@@ -81,8 +81,8 @@ participantsℂ = mkCollect go
     ... | put _ &reveal _ if _ ⇒ c = f (C c) ≺-put -- it
     ... | withdraw p               = [ p ]
     ... | split vcs                = f (VCS vcs) ≺-split -- it
-    ... | p ⇒ d′                   = p ∷ f (D d′) ≺-auth -- it
-    ... | after _ ⇒ d′             = f (D d′) ≺-after -- it
+    ... | p ∶ d′                   = p ∷ f (D d′) ≺-auth -- it
+    ... | after _ ∶ d′             = f (D d′) ≺-after -- it
 
 instance
   HPᵈ : Branch has Participant
@@ -119,8 +119,8 @@ namesℂ = mkCollect go
     ... | put xs &reveal as if _ ⇒ c = map inj₂ xs ++ map inj₁ as ++ f (C c) ≺-put -- it
     ... | withdraw _                 = []
     ... | split vcs                  = f (VCS vcs) ≺-split -- it
-    ... | _ ⇒ d′                     = f (D d′) ≺-auth -- it
-    ... | after _ ⇒ d′               = f (D d′) ≺-after -- it
+    ... | _ ∶ d′                     = f (D d′) ≺-auth -- it
+    ... | after _ ∶ d′               = f (D d′) ≺-after -- it
 
 instance
   HNᵈ : Branch has Name
@@ -181,8 +181,8 @@ putComponentsℂ = mkCollect go
     ... | put xs &reveal as if p ⇒ c = (xs , as , p) ∷ f (C c) ≺-put -- it
     ... | withdraw _                 = []
     ... | split vcs                  = f (VCS vcs) ≺-split -- it
-    ... | _ ⇒ d′                     = f (D d′) ≺-auth -- it
-    ... | after _ ⇒ d′               = f (D d′) ≺-after -- it
+    ... | _ ∶ d′                     = f (D d′) ≺-auth -- it
+    ... | after _ ∶ d′               = f (D d′) ≺-after -- it
 
 instance
   HPCᵈ : Branch has PutComponent
@@ -389,8 +389,8 @@ getName {g = l ∣∣ r}      d∈
 -- Decorations
 
 decorations⊎ : Branch → List (Participant ⊎ Time)
-decorations⊎ (A       ⇒ d) = inj₁ A ∷ decorations⊎ d
-decorations⊎ (after t ⇒ d) = inj₂ t ∷ decorations⊎ d
+decorations⊎ (A       ∶ d) = inj₁ A ∷ decorations⊎ d
+decorations⊎ (after t ∶ d) = inj₂ t ∷ decorations⊎ d
 decorations⊎ _             = []
 
 decorations : Branch → List Participant × List Time
@@ -407,12 +407,12 @@ auth⊆part {d = d₀} with d₀
 ... | put _ &reveal _ if _ ⇒ _ = λ ()
 ... | withdraw _               = λ ()
 ... | split _                  = λ ()
-... | p ⇒ d                    = λ{ (here refl) → here refl; (there p∈)  → there $ auth⊆part {d = d} p∈ }
-... | after _ ⇒ d              = auth⊆part {d = d}
+... | p ∶ d                    = λ{ (here refl) → here refl; (there p∈)  → there $ auth⊆part {d = d} p∈ }
+... | after _ ∶ d              = auth⊆part {d = d}
 
 decorations∘remove≡[] : decorations⊎ (removeTopDecorations d) ≡ []
-decorations∘remove≡[] {_ ⇒ d}       = decorations∘remove≡[] {d}
-decorations∘remove≡[] {after _ ⇒ d} = decorations∘remove≡[] {d}
+decorations∘remove≡[] {_ ∶ d}       = decorations∘remove≡[] {d}
+decorations∘remove≡[] {after _ ∶ d} = decorations∘remove≡[] {d}
 decorations∘remove≡[] {withdraw _} = refl
 decorations∘remove≡[] {split _} = refl
 decorations∘remove≡[] {put _ &reveal _ if _ ⇒ _} = refl
@@ -428,15 +428,15 @@ _≡⋯∶_ : Rel₀ Branch
 d ≡⋯∶ d′ = removeTopDecorations d ≡ d′
 
 remove-putComponents : (putComponents d) ≡ putComponents (removeTopDecorations d)
-remove-putComponents {_       ⇒ d} rewrite remove-putComponents {d} = refl
-remove-putComponents {after _ ⇒ d} rewrite remove-putComponents {d} = refl
+remove-putComponents {_       ∶ d} rewrite remove-putComponents {d} = refl
+remove-putComponents {after _ ∶ d} rewrite remove-putComponents {d} = refl
 remove-putComponents {put _ &reveal _ if _ ⇒ _} = refl
 remove-putComponents {withdraw _}               = refl
 remove-putComponents {split _}                  = refl
 
 remove-names : names d ≡ names (removeTopDecorations d)
-remove-names {_       ⇒ d} rewrite remove-names {d} = refl
-remove-names {after _ ⇒ d} rewrite remove-names {d} = refl
+remove-names {_       ∶ d} rewrite remove-names {d} = refl
+remove-names {after _ ∶ d} rewrite remove-names {d} = refl
 remove-names {put _ &reveal _ if _ ⇒ _} = refl
 remove-names {withdraw _}               = refl
 remove-names {split _}                  = refl
@@ -453,15 +453,15 @@ subterms⁺ = mkCollect go
   where
     go : ∀ d → (∀ d′ → d′ ≺ D d → Contract) → Contract
     go d f with d
-    ... | _       ⇒ d              = f (D d) ≺-auth -- it
-    ... | after _ ⇒ d              = f (D d) ≺-after -- it
+    ... | _       ∶ d              = f (D d) ≺-auth -- it
+    ... | after _ ∶ d              = f (D d) ≺-after -- it
     ... | split vcs                = d ∷ f (VCS vcs) ≺-split -- it
     ... | put _ &reveal _ if _ ⇒ c = d ∷ f (C c) ≺-put -- it
     ... | withdraw _               = d ∷ []
 
 subterms′ (D d) with d
-... | _       ⇒ d              = subterms′ (D d)
-... | after _ ⇒ d              = subterms′ (D d)
+... | _       ∶ d              = subterms′ (D d)
+... | after _ ∶ d              = subterms′ (D d)
 ... | split vcs                = subterms′ (VCS vcs)
 ... | put _ &reveal _ if _ ⇒ c = subterms′ (C c)
 ... | withdraw _               = []
@@ -497,7 +497,7 @@ subtermsᵃ  (⟨ _ ⟩ c) = subtermsᶜ  c
 _ : subtermsᵈ⁺ (put xs &reveal as if p ⇒ c) ≡ (put xs &reveal as if p ⇒ c) ∷ subtermsᶜ⁺ c
 _ = refl
 
-_ : subtermsᵈ⁺ (A ⇒ d) ≡ subtermsᵈ⁺ d
+_ : subtermsᵈ⁺ (A ∶ d) ≡ subtermsᵈ⁺ d
 _ = refl
 
 _ : subtermsᵈ⁺ (split vcs) ≡ split vcs ∷ subtermsᵛ⁺ vcs
@@ -507,8 +507,8 @@ subterms⊆ : ∀ 𝕔 → subterms⁺ 𝕔 ⊆ subterms′ 𝕔
 subterms⊆ (C (put x &reveal x₁ if x₂ ⇒ x₃)) = {!!}
 subterms⊆ (C (withdraw x)) = {!!}
 subterms⊆ (C (split x)) = {!!}
-subterms⊆ (C (x ⇒ c)) = {!!}
-subterms⊆ (C (after x ⇒ c)) = {!!}
+subterms⊆ (C (x ∶ c)) = {!!}
+subterms⊆ (C (after x ∶ c)) = {!!}
 subterms⊆ (CS  cs)  = {!!}
 subterms⊆ (VCS vcs) = {!!}
 
@@ -516,8 +516,8 @@ subterms⊆∗ : removeTopDecorations d ∈ subtermsᶜ′ [ removeTopDecoration
 subterms⊆∗ {put x &reveal x₁ if x₂ ⇒ x₃} = here refl
 subterms⊆∗ {withdraw x} = here refl
 subterms⊆∗ {split x} = here refl
-subterms⊆∗ {x ⇒ d} rewrite L.++-identityʳ (subtermsᵈ′ d) = there (∈-++⁺ˡ {!subterms⊆∗ {d}!})
-subterms⊆∗ {after x ⇒ d} = there {!!}
+subterms⊆∗ {x ∶ d} rewrite L.++-identityʳ (subtermsᵈ′ d) = there (∈-++⁺ˡ {!subterms⊆∗ {d}!})
+subterms⊆∗ {after x ∶ d} = there {!!}
 
 mutual
   subterms⁺⊆ᵈ′ : subtermsᵈ⁺ d ⊆ removeTopDecorations d ∷ subtermsᵈ′ d
@@ -529,8 +529,8 @@ mutual
   subterms⁺⊆ᵈ′ {split vcs} = λ where
     (here refl) → here refl
     (there x∈)  → there (subterms⁺⊆ᵛ′ {vcs} x∈)
-  subterms⁺⊆ᵈ′ {_ ⇒ d} = subterms⁺⊆ᵈ′ {d}
-  subterms⁺⊆ᵈ′ {after _ ⇒ d} = subterms⁺⊆ᵈ′ {d}
+  subterms⁺⊆ᵈ′ {_ ∶ d} = subterms⁺⊆ᵈ′ {d}
+  subterms⁺⊆ᵈ′ {after _ ∶ d} = subterms⁺⊆ᵈ′ {d}
 
   subterms⁺⊆ᶜ′ : subtermsᶜ⁺ c ⊆ subtermsᶜ′ c
   subterms⁺⊆ᶜ′ {[]} = id
@@ -569,16 +569,16 @@ h-subᵛ :
 
 h-subᵈ {d} {put _ &reveal _ if _ ⇒ cs} d∈ = there $ h-subᶜ {ds = cs} d∈
 h-subᵈ {d} {split vcs}                 d∈ = there $ h-subᵛ {vcs = vcs} d∈
-h-subᵈ {d} {_       ⇒ d′} d∈ = h-subᵈ {d′ = d′} d∈
-h-subᵈ {d} {after _ ⇒ d′} d∈ = h-subᵈ {d′ = d′} d∈
+h-subᵈ {d} {_       ∶ d′} d∈ = h-subᵈ {d′ = d′} d∈
+h-subᵈ {d} {after _ ∶ d′} d∈ = h-subᵈ {d′ = d′} d∈
 
 h-subᶜ {.d} {d ∷ ds} (here refl)
   with d
 ... | put _ &reveal _ if _ ⇒ _ = here refl
 ... | withdraw _               = here refl
 ... | split _                  = here refl
-... | _       ⇒ d′ = h-subᶜ {ds = d′ ∷ ds} (here refl)
-... | after _ ⇒ d′ = h-subᶜ {ds = d′ ∷ ds} (here refl)
+... | _       ∶ d′ = h-subᶜ {ds = d′ ∷ ds} (here refl)
+... | after _ ∶ d′ = h-subᶜ {ds = d′ ∷ ds} (here refl)
 h-subᶜ {d} {d′ ∷ ds} (there d∈)
   with ∈-++⁻ (subtermsᵈ′ d′) d∈
 ... | inj₂ d∈ʳ = ∈-++⁺ʳ (subtermsᵈ⁺ d′) (h-subᶜ {ds = ds} d∈ʳ)
@@ -586,8 +586,8 @@ h-subᶜ {d} {d′ ∷ ds} (there d∈)
   with d′ | d∈ˡ
 ... | put _ &reveal _ if _ ⇒ cs | d∈ˡ′ = there $ ∈-++⁺ˡ $ h-subᶜ {ds = cs} d∈ˡ′
 ... | split vcs                 | d∈ˡ′ = there $ ∈-++⁺ˡ $ h-subᵛ {vcs = vcs} d∈ˡ′
-... | _       ⇒ d″ | d∈ˡ′ = ∈-++⁺ˡ $ h-subᵈ {d′ = d″} d∈ˡ′
-... | after _ ⇒ d″ | d∈ˡ′ = ∈-++⁺ˡ $ h-subᵈ {d′ = d″} d∈ˡ′
+... | _       ∶ d″ | d∈ˡ′ = ∈-++⁺ˡ $ h-subᵈ {d′ = d″} d∈ˡ′
+... | after _ ∶ d″ | d∈ˡ′ = ∈-++⁺ˡ $ h-subᵈ {d′ = d″} d∈ˡ′
 
 h-subᵛ {d} {(_ , cs) ∷ vcs} d∈
   with ∈-++⁻ (subtermsᶜ′ cs) d∈
@@ -595,8 +595,8 @@ h-subᵛ {d} {(_ , cs) ∷ vcs} d∈
 ... | inj₂ d∈ʳ = ∈-++⁺ʳ (subtermsᶜ⁺ cs) $ h-subᵛ {vcs = vcs} d∈ʳ
 
 h-sub∗ : subtermsᵈ′ (removeTopDecorations d) ⊆ subtermsᵈ′ d
-h-sub∗ {_ ⇒ d} = h-sub∗ {d}
-h-sub∗ {after _ ⇒ d} = h-sub∗ {d}
+h-sub∗ {_ ∶ d} = h-sub∗ {d}
+h-sub∗ {after _ ∶ d} = h-sub∗ {d}
 h-sub∗ {put _ &reveal _ if _ ⇒ _} = id
 h-sub∗ {withdraw _} = id
 h-sub∗ {split _} = id
@@ -650,8 +650,8 @@ mutual
   ... | put xs &reveal as if _ ⇒ ds = λ x∈ → ∈-++⁺ʳ (map inj₂ xs) ∘ ∈-++⁺ʳ (map inj₁ as) ∘ subterms′-names⊆ᶜ {ds = ds} x∈
   ... | withdraw _                  = λ ()
   ... | split vcs                   = subterms′-names⊆ᵛ {vcs = vcs}
-  ... | _ ⇒ d′                      = subterms′-names⊆ᵈ {d′ = d′}
-  ... | after _ ⇒ d′                = subterms′-names⊆ᵈ {d′ = d′}
+  ... | _ ∶ d′                      = subterms′-names⊆ᵈ {d′ = d′}
+  ... | after _ ∶ d′                = subterms′-names⊆ᵈ {d′ = d′}
 
   subterms′-names⊆ᶜ : d ∈ subterms′ (C ds) → names d ⊆ names ds
   subterms′-names⊆ᶜ {ds = d ∷ ds} (here refl) = ∈-++⁺ˡ
@@ -673,8 +673,8 @@ mutual
   ... | put _ &reveal _ if _ ⇒ ds = λ x∈ → there ∘ subterms′-putComponents⊆ᶜ {ds = ds} x∈
   ... | withdraw _                = λ ()
   ... | split vcs                 = subterms′-putComponents⊆ᵛ {vcs = vcs}
-  ... | _ ⇒ d′                    = subterms′-putComponents⊆ᵈ {d′ = d′}
-  ... | after _ ⇒ d′              = subterms′-putComponents⊆ᵈ {d′ = d′}
+  ... | _ ∶ d′                    = subterms′-putComponents⊆ᵈ {d′ = d′}
+  ... | after _ ∶ d′              = subterms′-putComponents⊆ᵈ {d′ = d′}
 
   subterms′-putComponents⊆ᶜ : d ∈ subterms′ (C ds) → putComponents d ⊆ putComponents ds
   subterms′-putComponents⊆ᶜ {ds = _ ∷ _}  (here refl) = ∈-++⁺ˡ
@@ -696,8 +696,8 @@ mutual
   ... | put _ &reveal _ if _ ⇒ ds = subterms′-part⊆ᶜ {ds = ds}
   ... | withdraw _                = λ ()
   ... | split vcs                 = subterms′-part⊆ᵛ {vcs = vcs}
-  ... | _ ⇒ d′                    = λ x∈ → there ∘ subterms′-part⊆ᵈ {d′ = d′} x∈
-  ... | after _ ⇒ d′              = subterms′-part⊆ᵈ {d′ = d′}
+  ... | _ ∶ d′                    = λ x∈ → there ∘ subterms′-part⊆ᵈ {d′ = d′} x∈
+  ... | after _ ∶ d′              = subterms′-part⊆ᵈ {d′ = d′}
 
   subterms′-part⊆ᶜ : d ∈ subtermsᶜ′ ds → participants d ⊆ participants ds
   subterms′-part⊆ᶜ {ds = d ∷ ds} (here refl) = ∈-++⁺ˡ

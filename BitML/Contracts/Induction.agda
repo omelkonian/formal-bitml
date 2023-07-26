@@ -23,8 +23,8 @@ data _≺_ : Rel₀ ℂ where
   ≺-∈ᵛ : ds ∈ map proj₂ vcs → C ds ≺ VCS vcs
   instance
     ≺-put   : C ds    ≺ D (put xs &reveal as if p ⇒ ds)
-    ≺-auth  : D d     ≺ D (A ⇒ d)
-    ≺-after : D d     ≺ D (after t ⇒ d)
+    ≺-auth  : D d     ≺ D (A ∶ d)
+    ≺-after : D d     ≺ D (after t ∶ d)
     ≺-split : VCS vcs ≺ D (split vcs)
 
 ≺-wf : WellFounded _≺_
@@ -37,8 +37,8 @@ data _≺_ : Rel₀ ℂ where
     (.(VCS (_ ∷ _)) ≻ .(C _)) (≺-∈ᵛ {vcs = _ ∷ _} (there p))   = (_ ≻ _) (≺-∈ᵛ p)
 
     (.(D (put _ &reveal _ if _ ⇒ _)) ≻ .(C _))   ≺-put   = acc (_ ≻_)
-    (.(D (_ ⇒ _))                    ≻ .(D _))   ≺-auth  = acc (_ ≻_)
-    (.(D (after _ ⇒ _))              ≻ .(D _))   ≺-after = acc (_ ≻_)
+    (.(D (_ ∶ _))                    ≻ .(D _))   ≺-auth  = acc (_ ≻_)
+    (.(D (after _ ∶ _))              ≻ .(D _))   ≺-after = acc (_ ≻_)
     (.(D (split _))                  ≻ .(VCS _)) ≺-split = acc (_ ≻_)
 
 ≺-rec : Recursor (WF.WfRec _≺_)

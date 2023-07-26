@@ -62,13 +62,13 @@ data ℍ[Contract]⦅_—[_]↝_⦆⦅_⦆ : Cfg → Label → Cfg → Contract 
 
 open import BitML.Contracts ⋯ using (d)
 
-d∗≢auth : removeTopDecorations d ≢ A ⇒ d′
-d∗≢auth {_ ⇒ d}       eq = d∗≢auth {d} eq
-d∗≢auth {after _ ⇒ d} eq = d∗≢auth {d} eq
+d∗≢auth : removeTopDecorations d ≢ A ∶ d′
+d∗≢auth {_ ∶ d}       eq = d∗≢auth {d} eq
+d∗≢auth {after _ ∶ d} eq = d∗≢auth {d} eq
 
-d∗≢time : removeTopDecorations d ≢ after t ⇒ d′
-d∗≢time {_ ⇒ d}       eq = d∗≢time {d} eq
-d∗≢time {after _ ⇒ d} eq = d∗≢time {d} eq
+d∗≢time : removeTopDecorations d ≢ after t ∶ d′
+d∗≢time {_ ∶ d}       eq = d∗≢time {d} eq
+d∗≢time {after _ ∶ d} eq = d∗≢time {d} eq
 
 private
   ¬AuthControl :

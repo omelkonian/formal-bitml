@@ -33,10 +33,10 @@ data Branch where
   split : VContracts → Branch
 
   -- wait for participant's authorization
-  _⇒_ : Participant → Branch → Branch
+  _∶_ : Participant → Branch → Branch
 
   -- wait of a period of time
-  after_⇒_ : Time → Branch → Branch
+  after_∶_ : Time → Branch → Branch
 
 {-# TERMINATING #-}
 unquoteDecl DecEq-Branch = DERIVE DecEq [ quote Branch , DecEq-Branch ]
@@ -46,10 +46,6 @@ variable
   ds ds′ ds″ c c′ c″ : Contract
   cs cs′ cs″ : Contracts
   vcs vcs′ vcs″ : VContracts
-
-_⊕_ = (∀ {A : Type} → A → List A → List A) ∋ _∷_
-_∙  = (∀ {A : Type} → A → List A)          ∋ [_]
-_⊸_ = (∀ {A B : Type} → A → B → A × B)     ∋ _,_
 
 pattern put_&reveal_⇒_ xs as c = put xs &reveal as if `true ⇒ c
 pattern put_⇒_ xs c            = put xs &reveal []          ⇒ c
@@ -88,20 +84,9 @@ record Ad : Type where
     G : Precondition
     C : Contract
 open Ad public
-unquoteDecl DecEq-Ad =
-  DERIVE DecEq [ quote Ad , DecEq-Ad ]
+unquoteDecl DecEq-Ad = DERIVE DecEq [ quote Ad , DecEq-Ad ]
 
 variable ad ad′ ad″ : Ad
-
-infix  2 ⟨_⟩_
-infix  5 _:?_at_ _:!_at_ _:secret_
-infixl 2 _∣∣_
-
-infixr 9 _⇒_
-infix  8 put_&reveal_if_⇒_ put_&reveal_⇒_ put_⇒_ reveal_⇒_
-infix  7 _⊸_
-infix  6 _∙
-infixr 5 _⊕_
 
 data DepositType : Type where
   volatile persistent : DepositType
@@ -111,26 +96,79 @@ DepositRefs  = List DepositRef
 TDepositRef  = DepositType × DepositRef
 TDepositRefs = List TDepositRef
 
--- Examples.
+-- Notation.
+open import Prelude.Lists.NoNil as NN
+  using (List?; toL)
+Contract?   = List? Branch
+VContracts? = List? (Value × Contract)
+infixr 4 _⊕_ _⊗_
+_⊕_ = NN._⊕_ {X = Branch}
+_⊗_ = NN._⊕_ {X = Value × Contract}
 
 open import Prelude.General; open MultiTest
+module _ (b b′ : Branch) (c c′ : Contract) where
+  _ = Contract
+   ∋⋮ b ⊕ b′
+    ⋮ b ⊕ c
+    ⋮ c ⊕ b
+    ⋮ c ⊕ c′
+    ⋮∅
+module _ (b b′ : Value × Contract) (c c′ : VContracts) where
+  _ = VContracts
+   ∋⋮ b ⊗ b′
+    ⋮ b ⊗ c
+    ⋮ c ⊗ b
+    ⋮ c ⊗ c′
+    ⋮∅
+
+private variable X Y Z : Type
+
+_⊸_ : Value → X → ⦃ _ : Contract? X ⦄ → VContracts
+v ⊸ c = toL (v , toL c)
+
+module _ ⦃ _ : List? Id X ⦄ ⦃ _ : List? Secret Y ⦄ ⦃ _ : List? Branch Z ⦄ where
+  put_&reveal_if_∙_ : X → Y → Predicate → Z → Branch
+  put xs &reveal as if p ∙ bs = put toL xs &reveal toL as if p ⇒ toL bs
+
+  put_&reveal_∙_ : X → Y → Z → Branch
+  put xs &reveal as ∙ bs = put toL xs &reveal toL as ⇒ toL bs
+
+  infix 8 put_&reveal_if_∙_ put_&reveal_∙_
+
+module _ ⦃ _ : List? String X ⦄ ⦃ _ : List? Branch Y ⦄ where
+  put_∙_ reveal_∙_ : X → Y → Branch
+  put    xs ∙ bs = put    toL xs ⇒ toL bs
+  reveal as ∙ bs = reveal toL as ⇒ toL bs
+
+  put_if_∙_ reveal_if_∙_ : X → Predicate → Y → Branch
+  put    xs if p ∙ bs = put    toL xs if p ⇒ toL bs
+  reveal as if p ∙ bs = reveal toL as if p ⇒ toL bs
+
+  infix 8 put_∙_ put_if_∙_ reveal_∙_ reveal_if_∙_
+
+infix  2 ⟨_⟩_
+infix  5 _:?_at_ _:!_at_ _:secret_
+infixl 2 _∣∣_
+
+infixr 9 _∶_ after_∶_
+infix  8 put_&reveal_if_⇒_ put_&reveal_⇒_ put_⇒_ put_if_⇒_ reveal_⇒_ reveal_if_⇒_
+infix  7 _⊸_
+
+-- Examples.
+
 module _ (A B : Participant) where
   _ = Contract
-   ∋⋮ (withdraw A ∙)
-    ⋮ (A ⇒ withdraw A)
-    ⊕ (put [] ⇒ (withdraw A ∙))
-    ∙
-    ⋮ (put [ "x" ] ⇒ (withdraw A ∙))
-    ∙
-    ⋮ A ⇒ withdraw B
-    ⊕ B ⇒ split ( 2 ⊸ (withdraw A ∙)
-                ⊕ 3 ⊸ (after 100 ⇒ withdraw B ∙)
-                ⊕ 0 ⊸ (put [ "y" ] ⇒ (A ⇒ withdraw B ∙) ∙)
-                ∙)
-    ∙
+   ∋⋮ [ withdraw A ]
+    ⋮ A ∶ withdraw A
+    ⊕ put [] ∙ withdraw A
+    ⋮ [ put "x" ∙ withdraw A ]
+    ⋮ A ∶ withdraw B
+    ⊕ B ∶ split ( 2 ⊸ withdraw A
+                ⊗ 3 ⊸ after 100 ∶ withdraw B
+                ⊗ 0 ⊸ put "y" ∙ (A ∶ withdraw B))
     ⋮∅
 
   _ = Ad
    ∋⋮ ⟨ B :! 2 at "x" ∣∣ A :! 3 at "y" ∣∣ B :? 100 at "z" ⟩
-      put [ "z" ] ⇒ (withdraw A ∙) ∙
+      [ put "z" ∙ withdraw A ]
     ⋮∅

@@ -7,6 +7,7 @@ open import Prelude.Lists.Dec
 open import Prelude.Decidable
 open import Prelude.Setoid
 open import Prelude.Ord
+open import Prelude.Lists.NoNil using ()
 
 open import BitML.BasicTypes hiding (a; x; y; t)
 open import BitML.Predicate hiding (`; ∣_∣)
@@ -20,52 +21,51 @@ open import BitML.Semantics ⋯ Participant , Honest ⋯
 a = "CHANGE_ME"; N = 9; t = 42
 x = "x"; y = "y"; x₁ = "x₁"; x₂ = "x₂"; x₃ = "x₃"; y₁ = "y₁"
 
-tc : Ad
-tc = ⟨ A :! 1 at x ∣∣ A :secret a ∣∣ B :! 0 at y ⟩
-       reveal [ a ] ⇒ [ withdraw A ]
-     ⊕ after t ⇒ withdraw B
-     ∙
+TC : Ad
+TC = ⟨ A :! 1 at x ∣∣ A :secret a ∣∣ B :! 0 at y ⟩
+       reveal a ∙ withdraw A
+     ⊕ after t ∶ withdraw B
 
-tc-steps :
+TC-steps :
   ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
-    —[ advertise⦅ tc ⦆
-     ∷ auth-commit⦅ A , tc , [ a , just N ] ⦆
-     ∷ auth-commit⦅ B , tc , [] ⦆
-     ∷ auth-init⦅ A , tc , x ⦆
-     ∷ auth-init⦅ B , tc , y ⦆
-     ∷ init⦅ tc .G , tc .C ⦆
+    —[ advertise⦅ TC ⦆
+     ∷ auth-commit⦅ A , TC , [ a , just N ] ⦆
+     ∷ auth-commit⦅ B , TC , [] ⦆
+     ∷ auth-init⦅ A , TC , x ⦆
+     ∷ auth-init⦅ B , TC , y ⦆
+     ∷ init⦅ TC .G , TC .C ⦆
      ∷ auth-rev⦅ A , a ⦆
      ∷ put⦅ [] , [ a ] , x₁ ⦆
      ∷ withdraw⦅ A , 1 , x₂ ⦆
      ∷ []
      ]↠
   ⟨ A has 1 ⟩at x₃ ∣ A ∶ a ♯ N
-tc-steps =
+TC-steps =
   begin
     ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
   —→⟨ C-Advertise {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} ⟩
-    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
+    ` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
   —→⟨ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} {secrets = [ a , just N ]} ⟩
-    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]
+    ` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ TC ]
   —→⟨ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                      ∣ A auth[ ♯▷ tc ]} {secrets = []} ⟩
-    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-         ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]
+                      ∣ A auth[ ♯▷ TC ]} {secrets = []} ⟩
+    ` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
+         ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ]
   —→⟨ C-AuthInit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                    ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]}
+                    ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ]}
                  {v = 1} ⟩
-    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]
-         ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ]
+    ` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ TC ]
+         ∣ B auth[ ♯▷ TC ] ∣ A auth[ x ▷ˢ TC ]
   —→⟨ C-AuthInit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                    ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ]}
+                    ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ] ∣ A auth[ x ▷ˢ TC ]}
                  {v = 0} ⟩
-    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]
-         ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ] ∣ B auth[ y ▷ˢ tc ]
+    ` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ TC ]
+         ∣ B auth[ ♯▷ TC ] ∣ A auth[ x ▷ˢ TC ] ∣ B auth[ y ▷ˢ TC ]
   —→⟨ C-Init {x = x₁} {Γ = ⟨ A ∶ a ♯ just 9 ⟩} ⟩
-    ⟨ tc .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just 9 ⟩
-  —→⟨ [C-AuthRev] {n = 9} {Γ = ⟨ tc .C , 1 ⟩at x₁} ⟩
-    ⟨ tc .C , 1 ⟩at x₁ ∣ A ∶ a ♯ 9
-  —→⟨ C-Control {c = tc .C}
+    ⟨ TC .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just 9 ⟩
+  —→⟨ [C-AuthRev] {n = 9} {Γ = ⟨ TC .C , 1 ⟩at x₁} ⟩
+    ⟨ TC .C , 1 ⟩at x₁ ∣ A ∶ a ♯ 9
+  —→⟨ C-Control {c = TC .C}
                 {Γ = A ∶ a ♯ 9}
                 {Γ′ = ⟨ [ withdraw A ] , 1 ⟩at x₂ ∣ (A ∶ a ♯ 9 ∣ ∅ᶜ)}
                 {i = 0F}
@@ -75,52 +75,52 @@ tc-steps =
     ⟨ A has 1 ⟩at x₃ ∣ A ∶ a ♯ N
   ∎
 
-tc-stepsₜ :
+TC-stepsₜ :
   (⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y) at 0
-    —[ advertise⦅ tc ⦆
-     ∷ auth-commit⦅ A , tc , [ a , just N ] ⦆
-     ∷ auth-commit⦅ B , tc , [] ⦆
-     ∷ auth-init⦅ A , tc , x ⦆
-     ∷ auth-init⦅ B , tc , y ⦆
-     ∷ init⦅ tc .G , tc .C ⦆
+    —[ advertise⦅ TC ⦆
+     ∷ auth-commit⦅ A , TC , [ a , just N ] ⦆
+     ∷ auth-commit⦅ B , TC , [] ⦆
+     ∷ auth-init⦅ A , TC , x ⦆
+     ∷ auth-init⦅ B , TC , y ⦆
+     ∷ init⦅ TC .G , TC .C ⦆
      ∷ auth-rev⦅ A , a ⦆
      ∷ put⦅ [] , [ a ] , x₁ ⦆
      ∷ withdraw⦅ A , 1 , x₂ ⦆
      ∷ []
      ]↠ₜ
   (⟨ A has 1 ⟩at x₃ ∣ A ∶ a ♯ N) at 0
-tc-stepsₜ =
+TC-stepsₜ =
   beginₜ
     (⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y) at 0
   —→ₜ⟨ Act {t = 0}
      $ C-Advertise {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} ⟩
-    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y) at 0
+    (` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y) at 0
   —→ₜ⟨ Act {t = 0}
      $ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} {secrets = [ a , just N ]} ⟩
-    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]) at 0
+    (` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ TC ]) at 0
   —→ₜ⟨ Act {t = 0}
      $ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                       ∣ A auth[ ♯▷ tc ]} {secrets = []} ⟩
-    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-          ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]) at 0
+                       ∣ A auth[ ♯▷ TC ]} {secrets = []} ⟩
+    (` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
+          ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ]) at 0
   —→ₜ⟨ Act {t = 0}
      $ C-AuthInit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                     ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]} {v = 1} ⟩
-    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]
-          ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ]) at 0
+                     ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ]} {v = 1} ⟩
+    (` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ TC ]
+          ∣ B auth[ ♯▷ TC ] ∣ A auth[ x ▷ˢ TC ]) at 0
   —→ₜ⟨ Act {t = 0}
      $ C-AuthInit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                       ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ]}
+                       ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ] ∣ A auth[ x ▷ˢ TC ]}
                   {v = 0} ⟩
-    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]
-          ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ] ∣ B auth[ y ▷ˢ tc ]) at 0
+    (` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ TC ]
+          ∣ B auth[ ♯▷ TC ] ∣ A auth[ x ▷ˢ TC ] ∣ B auth[ y ▷ˢ TC ]) at 0
   —→ₜ⟨ Act {t = 0}
      $ C-Init {x = x₁} {Γ = ⟨ A ∶ a ♯ just 9 ⟩} ⟩
-    (⟨ tc .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just 9 ⟩) at 0
+    (⟨ TC .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just 9 ⟩) at 0
   —→ₜ⟨ Act {t = 0}
-     $ [C-AuthRev] {n = 9} {Γ = ⟨ tc .C , 1 ⟩at x₁} ⟩
-    (⟨ tc .C , 1 ⟩at x₁ ∣ A ∶ a ♯ 9) at 0
-  —→ₜ⟨ Timeout {c = tc .C} {t = 0} {v = 1} {i = 0F}
+     $ [C-AuthRev] {n = 9} {Γ = ⟨ TC .C , 1 ⟩at x₁} ⟩
+    (⟨ TC .C , 1 ⟩at x₁ ∣ A ∶ a ♯ 9) at 0
+  —→ₜ⟨ Timeout {c = TC .C} {t = 0} {v = 1} {i = 0F}
      $ C-PutRev {Γ′ = ∅ᶜ} {z = x₂} {ds = []} {ss = [ A , a , 9 ]} ⟩
     (⟨ [ withdraw A ] , 1 ⟩at x₂ ∣ A ∶ a ♯ 9) at 0
   —→ₜ⟨ Timeout {c = [ withdraw A ]} {t = 0} {v = 1} {i = 0F}
@@ -128,64 +128,64 @@ tc-stepsₜ =
     (⟨ A has 1 ⟩at x₃ ∣ A ∶ a ♯ N) at 0
   ∎ₜ
 
-tc-steps′ :
+TC-steps′ :
   ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
-    —[ advertise⦅ tc ⦆
-     ∷ auth-commit⦅ A , tc , [ a , just N ] ⦆
-     ∷ auth-commit⦅ B , tc , [] ⦆
+    —[ advertise⦅ TC ⦆
+     ∷ auth-commit⦅ A , TC , [ a , just N ] ⦆
+     ∷ auth-commit⦅ B , TC , [] ⦆
      ∷ auth-donate⦅ A , x ▷ᵈ B ⦆
      ∷ donate⦅ x ▷ᵈ B ⦆
-     ∷ auth-init⦅ A , tc , x ⦆
-     ∷ auth-init⦅ B , tc , y ⦆
+     ∷ auth-init⦅ A , TC , x ⦆
+     ∷ auth-init⦅ B , TC , y ⦆
      {-
-     ∷ init⦅ tc .G , tc .C ⦆
+     ∷ init⦅ TC .G , TC .C ⦆
      ∷ auth-rev⦅ A , a ⦆
      ∷ put⦅ [] , [ a ] , x₁ ⦆
      ∷ withdraw⦅ A , 1 , x₂ ⦆
      -}
      ∷ []
      ]↠
-    ` tc ∣ ⟨ B has 1 ⟩at y₁ ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]
-         ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ] ∣ B auth[ y ▷ˢ tc ]
-tc-steps′ =
+    ` TC ∣ ⟨ B has 1 ⟩at y₁ ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ TC ]
+         ∣ B auth[ ♯▷ TC ] ∣ A auth[ x ▷ˢ TC ] ∣ B auth[ y ▷ˢ TC ]
+TC-steps′ =
   begin
     ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
   —→⟨ C-Advertise {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} ⟩
-    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
+    ` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y
   —→⟨ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} {secrets = [ a , just N ]} ⟩
-    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ]
+    ` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ TC ]
   —→⟨ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                      ∣ A auth[ ♯▷ tc ]} {secrets = []} ⟩
-    ` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-         ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]
-  —→⟨ [DEP-AuthDonate] {A}{1}{x}{` tc ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                                      ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]}{B} ⟩
-    ⟨ A has 1 ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ ` tc ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                    ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]
-  —→⟨ DEP-Donate {y₁}{x}{` tc ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                              ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]}{A}{1}{B} ⟩
-    ⟨ B has 1 ⟩at y₁ ∣ ` tc ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                     ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]
+                      ∣ A auth[ ♯▷ TC ]} {secrets = []} ⟩
+    ` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
+         ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ]
+  —→⟨ [DEP-AuthDonate] {A}{1}{x}{` TC ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
+                                      ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ]}{B} ⟩
+    ⟨ A has 1 ⟩at x ∣ A auth[ x ▷ᵈ B ] ∣ ` TC ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
+                    ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ]
+  —→⟨ DEP-Donate {y₁}{x}{` TC ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
+                              ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ]}{A}{1}{B} ⟩
+    ⟨ B has 1 ⟩at y₁ ∣ ` TC ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
+                     ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ]
   —→⟨ C-AuthInit {Γ = ⟨ B has 1 ⟩at y₁ ∣ ⟨ B has 0 ⟩at y
-                    ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]} {v = 1} ⟩
-    ` tc ∣ ⟨ B has 1 ⟩at y₁ ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-         ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ]
+                    ∣ ⟨ A ∶ a ♯ just 9 ⟩ ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ]} {v = 1} ⟩
+    ` TC ∣ ⟨ B has 1 ⟩at y₁ ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
+         ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ] ∣ A auth[ x ▷ˢ TC ]
   —→⟨ C-AuthInit {Γ = ⟨ B has 1 ⟩at y₁ ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-                    ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ]}
+                    ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ] ∣ A auth[ x ▷ˢ TC ]}
                  {v = 0} ⟩
-    ` tc ∣ ⟨ B has 1 ⟩at y₁ ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
-         ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ] ∣ B auth[ y ▷ˢ tc ]
+    ` TC ∣ ⟨ B has 1 ⟩at y₁ ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just 9 ⟩
+         ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ] ∣ A auth[ x ▷ˢ TC ] ∣ B auth[ y ▷ˢ TC ]
 {-
   —→⟨ C-Init {x = x₁} {Γ = ⟨ A ∶ a ♯ just 9 ⟩} ⟩
-    ⟨ tc .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just 9 ⟩
-  —→⟨ [C-AuthRev] {n = 9} {Γ = ⟨ tc .C , 1 ⟩at x₁} ⟩
-    ⟨ tc .C , 1 ⟩at x₁ ∣ A ∶ a ♯ 9
-  —→⟨ [C-Control] {c = tc .C}
+    ⟨ TC .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just 9 ⟩
+  —→⟨ [C-AuthRev] {n = 9} {Γ = ⟨ TC .C , 1 ⟩at x₁} ⟩
+    ⟨ TC .C , 1 ⟩at x₁ ∣ A ∶ a ♯ 9
+  —→⟨ [C-Control] {c = TC .C}
                   {Γ = A ∶ a ♯ 9}
                   {Γ′ = ⟨ [ withdraw A ] , 1 ⟩at x₂ ∣ (A ∶ a ♯ 9 ∣ ∅ᶜ)}
                   {i = 0F}
-        (toWitness {Q = ⟨ [ reveal [ a ] ⇒ [ withdraw A ] ] , 1 ⟩at x₁ ∣ A ∶ a ♯ 9
-                     ≈? ⟨ [ reveal [ a ] ⇒ [ withdraw A ] ] , 1 ⟩at x₁ ∣ (∅ᶜ ∣ A ∶ a ♯ 9 ∣ ∅ᶜ)} tt)
+        (toWitness {Q = ⟨ [ reveal a ∙ withdraw A ] , 1 ⟩at x₁ ∣ A ∶ a ♯ 9
+                     ≈? ⟨ [ reveal a ∙ withdraw A ] , 1 ⟩at x₁ ∣ (∅ᶜ ∣ A ∶ a ♯ 9 ∣ ∅ᶜ)} tt)
         ([C-PutRev] {ds = []} {ss = [ A , a , 9 ]} refl)
         refl
     ⟩
@@ -195,50 +195,50 @@ tc-steps′ =
 -}
   ∎
 
-tc-stepsₜ′ :
+TC-stepsₜ′ :
   (⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y) at t
-    —[ advertise⦅ tc ⦆
-     ∷ auth-commit⦅ A , tc , [ a , just N ] ⦆
-     ∷ auth-commit⦅ B , tc , [] ⦆
-     ∷ auth-init⦅ A , tc , x ⦆
-     ∷ auth-init⦅ B , tc , y ⦆
-     ∷ init⦅ tc .G , tc .C ⦆
+    —[ advertise⦅ TC ⦆
+     ∷ auth-commit⦅ A , TC , [ a , just N ] ⦆
+     ∷ auth-commit⦅ B , TC , [] ⦆
+     ∷ auth-init⦅ A , TC , x ⦆
+     ∷ auth-init⦅ B , TC , y ⦆
+     ∷ init⦅ TC .G , TC .C ⦆
      ∷ delay⦅ 1 ⦆
      ∷ withdraw⦅ B , 1 , x₁ ⦆
      ∷ []
      ]↠ₜ
   (⟨ B has 1 ⟩at x₂ ∣ ⟨ A ∶ a ♯ just N ⟩) at suc t
-tc-stepsₜ′ =
+TC-stepsₜ′ =
   beginₜ
     (⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y) at t
   —→ₜ⟨ Act {t = t}
      $ C-Advertise {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} ⟩
-    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y) at t
+    (` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y) at t
   —→ₜ⟨ Act {t = t}
      $ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y} {secrets = [ a , just N ]} ⟩
-    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩ ∣ A auth[ ♯▷ tc ]) at t
+    (` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩ ∣ A auth[ ♯▷ TC ]) at t
   —→ₜ⟨ Act {t = t}
      $ C-AuthCommit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩
-                       ∣ A auth[ ♯▷ tc ]} {secrets = []} ⟩
-    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩
-          ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]) at t
+                       ∣ A auth[ ♯▷ TC ]} {secrets = []} ⟩
+    (` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩
+          ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ]) at t
   —→ₜ⟨ Act {t = t}
      $ C-AuthInit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩
-                     ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ]} {v = 1} ⟩
-    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩ ∣ A auth[ ♯▷ tc ]
-          ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ]) at t
+                     ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ]} {v = 1} ⟩
+    (` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩ ∣ A auth[ ♯▷ TC ]
+          ∣ B auth[ ♯▷ TC ] ∣ A auth[ x ▷ˢ TC ]) at t
   —→ₜ⟨ Act {t = t}
      $ C-AuthInit {Γ = ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩
-                       ∣ A auth[ ♯▷ tc ] ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ]}
+                       ∣ A auth[ ♯▷ TC ] ∣ B auth[ ♯▷ TC ] ∣ A auth[ x ▷ˢ TC ]}
                   {v = 0} ⟩
-    (` tc ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩ ∣ A auth[ ♯▷ tc ]
-          ∣ B auth[ ♯▷ tc ] ∣ A auth[ x ▷ˢ tc ] ∣ B auth[ y ▷ˢ tc ]) at t
+    (` TC ∣ ⟨ A has 1 ⟩at x ∣ ⟨ B has 0 ⟩at y ∣ ⟨ A ∶ a ♯ just N ⟩ ∣ A auth[ ♯▷ TC ]
+          ∣ B auth[ ♯▷ TC ] ∣ A auth[ x ▷ˢ TC ] ∣ B auth[ y ▷ˢ TC ]) at t
   —→ₜ⟨ Act {t = t}
      $ C-Init {x = x₁} {Γ = ⟨ A ∶ a ♯ just N ⟩} ⟩
-    (⟨ tc .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just N ⟩) at t
-  —→ₜ⟨ Delay {Γ = ⟨ tc .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just N ⟩} {t = t} ⟩
-    (⟨ tc .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just N ⟩) at suc t
-  —→ₜ⟨ Timeout {c = tc .C} {t = suc t} {v = 1} {i = 1F}
+    (⟨ TC .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just N ⟩) at t
+  —→ₜ⟨ Delay {Γ = ⟨ TC .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just N ⟩} {t = t} ⟩
+    (⟨ TC .C , 1 ⟩at x₁ ∣ ⟨ A ∶ a ♯ just N ⟩) at suc t
+  —→ₜ⟨ Timeout {c = TC .C} {t = suc t} {v = 1} {i = 1F}
      $ C-Withdraw {x = x₂} {y = x₁} {Γ = ⟨ A ∶ a ♯ just N ⟩} ⟩
     (⟨ B has 1 ⟩at x₂ ∣ ⟨ A ∶ a ♯ just N ⟩) at suc t
   ∎ₜ
