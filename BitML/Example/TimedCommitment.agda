@@ -23,7 +23,7 @@ x = "x"; y = "y"; x₁ = "x₁"; x₂ = "x₂"; x₃ = "x₃"; y₁ = "y₁"
 
 TC : Ad
 TC = ⟨ A :! 1 at x ∣∣ A :secret a ∣∣ B :! 0 at y ⟩
-       reveal a ∙ withdraw A
+       reveal a ． withdraw A
      ⊕ after t ∶ withdraw B
 
 TC-steps :
@@ -184,8 +184,8 @@ TC-steps′ =
                   {Γ = A ∶ a ♯ 9}
                   {Γ′ = ⟨ [ withdraw A ] , 1 ⟩at x₂ ∣ (A ∶ a ♯ 9 ∣ ∅ᶜ)}
                   {i = 0F}
-        (toWitness {Q = ⟨ [ reveal a ∙ withdraw A ] , 1 ⟩at x₁ ∣ A ∶ a ♯ 9
-                     ≈? ⟨ [ reveal a ∙ withdraw A ] , 1 ⟩at x₁ ∣ (∅ᶜ ∣ A ∶ a ♯ 9 ∣ ∅ᶜ)} tt)
+        (toWitness {Q = ⟨ [ reveal a ． withdraw A ] , 1 ⟩at x₁ ∣ A ∶ a ♯ 9
+                     ≈? ⟨ [ reveal a ． withdraw A ] , 1 ⟩at x₁ ∣ (∅ᶜ ∣ A ∶ a ♯ 9 ∣ ∅ᶜ)} tt)
         ([C-PutRev] {ds = []} {ss = [ A , a , 9 ]} refl)
         refl
     ⟩

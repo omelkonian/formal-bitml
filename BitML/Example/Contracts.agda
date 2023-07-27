@@ -52,7 +52,7 @@ Escrow = PayOrRefund
        ⊕ B ∶ Resolve 1 9
 
 TC : Contract
-TC = reveal a ∙ withdraw A
+TC = reveal a ． withdraw A
    ⊕ after t ∶ withdraw B
 
 EscrowPut : Contract
@@ -102,12 +102,12 @@ OddsEvens =
   ⟨  A :! 3 at "x" ∣∣ B :! 3 at "y"
   ∣∣ A :secret a   ∣∣ B :secret b
   ⟩
-  [ split $ 2 ⊸ ( reveal b if (` 0ℤ `≤ ∣ b ∣ `≤ ` 1ℤ) ∙ withdraw B
+  [ split $ 2 ⊸ ( reveal b if (` 0ℤ `≤ ∣ b ∣ `≤ ` 1ℤ) ． withdraw B
                 ⊕ after t ∶ withdraw A)
-          ⊗ 2 ⊸ ( reveal a ∙ withdraw A
+          ⊗ 2 ⊸ ( reveal a ． withdraw A
                 ⊕ after t ∶ withdraw B)
-          ⊗ 2 ⊸ ( reveal ⟦ a , b ⟧ if ∣ a ∣ `= ∣ b ∣ ∙ withdraw A
-                ⊕ reveal ⟦ a , b ⟧ if ∣ a ∣ `≠ ∣ b ∣ ∙ withdraw B) ]
+          ⊗ 2 ⊸ ( reveal ⟦ a , b ⟧ if ∣ a ∣ `= ∣ b ∣ ． withdraw A
+                ⊕ reveal ⟦ a , b ⟧ if ∣ a ∣ `≠ ∣ b ∣ ． withdraw B) ]
 
 _ = Valid OddsEvens ∋ auto
 
@@ -142,8 +142,8 @@ MutualTC =
   ⟨  A :! v at "x" ∣∣ A :secret a
   ∣∣ B :! v at "y" ∣∣ B :secret b
   ⟩
-    reveal a ∙
-      ( reveal b ∙
+    reveal a ．
+      ( reveal b ．
           ( split ( v ⊸ withdraw A
                   ⊗ v ⊸ withdraw B)
           ⊕ after t′ ∶ withdraw A)
@@ -157,9 +157,9 @@ ZeroCollateralLottery =
   ⟨  A :! 1 at "x" ∣∣ A :secret a
   ∣∣ B :! 1 at "y" ∣∣ B :secret b
   ⟩
-    reveal b if ` 0ℤ `≤ ∣ b ∣ `≤ ` 1ℤ ∙
-      ( reveal ⟦ a , b ⟧ if ∣ a ∣ `= ∣ b ∣ ∙ withdraw A
-      ⊕ reveal ⟦ a , b ⟧ if ∣ a ∣ `≠ ∣ b ∣ ∙ withdraw B
+    reveal b if ` 0ℤ `≤ ∣ b ∣ `≤ ` 1ℤ ．
+      ( reveal ⟦ a , b ⟧ if ∣ a ∣ `= ∣ b ∣ ． withdraw A
+      ⊕ reveal ⟦ a , b ⟧ if ∣ a ∣ `≠ ∣ b ∣ ． withdraw B
       ⊕ after t′ ∶ withdraw B)
   ⊕ after t ∶ withdraw A
 
@@ -170,13 +170,13 @@ RockPaperScissors =
   ⟨  A :! 3 at "x" ∣∣ A :secret a
   ∣∣ B :! 3 at "y" ∣∣ B :secret b
   ⟩
-  [ split $ 2 ⊸ ( reveal b if (` 0ℤ `≤ ∣ b ∣ `≤ ` 2ℤ) ∙ withdraw B
+  [ split $ 2 ⊸ ( reveal b if (` 0ℤ `≤ ∣ b ∣ `≤ ` 2ℤ) ． withdraw B
                 ⊕ after t ∶ withdraw A)
-          ⊗ 2 ⊸ ( reveal a if (` 0ℤ `≤ ∣ a ∣ `≤ ` 2ℤ) ∙ withdraw A
+          ⊗ 2 ⊸ ( reveal a if (` 0ℤ `≤ ∣ a ∣ `≤ ` 2ℤ) ． withdraw A
                 ⊕ after t ∶ withdraw B)
-          ⊗ 2 ⊸ ( reveal ⟦ a , b ⟧ if w ∣ a ∣ ∣ b ∣   ∙ withdraw A
-                ⊕ reveal ⟦ a , b ⟧ if w ∣ b ∣ ∣ a ∣   ∙ withdraw B
-                ⊕ reveal ⟦ a , b ⟧ if ∣ a ∣ `= ∣ b ∣  ∙ split ( 1 ⊸ withdraw A
+          ⊗ 2 ⊸ ( reveal ⟦ a , b ⟧ if w ∣ a ∣ ∣ b ∣   ． withdraw A
+                ⊕ reveal ⟦ a , b ⟧ if w ∣ b ∣ ∣ a ∣   ． withdraw B
+                ⊕ reveal ⟦ a , b ⟧ if ∣ a ∣ `= ∣ b ∣  ． split ( 1 ⊸ withdraw A
                                                               ⊗ 1 ⊸ withdraw B)) ]
   where
     w : Arith → Arith → Predicate
