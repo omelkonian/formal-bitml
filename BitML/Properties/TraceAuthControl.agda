@@ -38,7 +38,6 @@ private
       d∗ = removeTopDecorations d_
 
       S₀ = ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d_ ] (nub $ authDecorations d_)
-      S  = S₀ ∣ Γ
       S′ = Γ′
 
       ad∉Γ : A auth[ y ▷ d ] ∉ᶜ Γ

@@ -17,7 +17,7 @@ open import Prelude.InferenceRules
 open import Prelude.Null
 
 open import BitML.BasicTypes
-open import BitML.Predicate hiding (`; ∣_∣)
+open import BitML.Predicate
 
 module BitML.Semantics.DecidableInference (⋯ : ⋯) (let open ⋯ ⋯) where
 
@@ -40,7 +40,7 @@ DEP-Join :
 DEP-Join {p = p} = [DEP-Join] (toWitness p)
 
 DEP-Divide :
-  ∀ {p : auto∶ All (_∉ x ∷ ids Γ) ⟦ y , y′ ⟧} →
+  ∀ {p : auto∶ All (_∉ x ∷ ids Γ) [ y ⨾ y′ ]} →
   ────────────────────────────────────────────────────────
   ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
     —[ divide⦅ x ▷ v , v′ ⦆ ]→

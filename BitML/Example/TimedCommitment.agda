@@ -10,7 +10,7 @@ open import Prelude.Ord
 open import Prelude.Lists.NoNil using ()
 
 open import BitML.BasicTypes hiding (a; x; y; t)
-open import BitML.Predicate hiding (`; ∣_∣)
+open import BitML.Predicate
 
 open import BitML.Example.Setup hiding (C)
 
@@ -22,7 +22,7 @@ a = "CHANGE_ME"; N = 9; t = 42
 x = "x"; y = "y"; x₁ = "x₁"; x₂ = "x₂"; x₃ = "x₃"; y₁ = "y₁"
 
 TC : Ad
-TC = ⟨ A :! 1 at x ∣∣ A :secret a ∣∣ B :! 0 at y ⟩
+TC = ⟨ A :! 1 at x ∣ A :secret a ∣ B :! 0 at y ⟩
        reveal a ． withdraw A
      ⊕ after t ∶ withdraw B
 

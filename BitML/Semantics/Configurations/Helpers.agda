@@ -249,7 +249,7 @@ instance
   ... | ♯▷ ad            = collect ad
   ... | x ▷ˢ ad          = inj₁ x ∷ collect ad
   ... | x ▷ c            = inj₁ x ∷ collect c
-  ... | x ↔ y ▷⟨ _ , _ ⟩ = map inj₁ ⟦ x , y ⟧
+  ... | x ↔ y ▷⟨ _ , _ ⟩ = map inj₁ [ x ⨾ y ]
   ... | x ▷⟨ _ , _ , _ ⟩ = [ inj₁ x ]
   ... | x ▷ᵈ _           = [ inj₁ x ]
   ... | xs , _ ▷ᵈˢ x     = map inj₁ (x ∷ xs)

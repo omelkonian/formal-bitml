@@ -4,7 +4,7 @@ open import Prelude.Decidable
 open import Prelude.Membership
 open L.Mem using (∈-++⁺ˡ; ∈-++⁺ʳ; ∈-++⁻; ∈-map⁺)
 open import Prelude.Bifunctor
-open import Prelude.Nary hiding (⟦_⟧)
+open import Prelude.Nary
 open import Prelude.Lists
 open import Prelude.Lists.Dec
 open import Prelude.Validity
@@ -278,7 +278,6 @@ private
       d∗ = removeTopDecorations d_
 
       S₀ = ⟨ c , v ⟩at x ∣ || map _auth[ x ▷ d_ ] (nub $ authDecorations d_)
-      S  = S₀ ∣ Γ
       S′ = Γ′
 
       c∉Γ : ⟨ c₀ , v₀ ⟩at x₀ ∉ᶜ Γ

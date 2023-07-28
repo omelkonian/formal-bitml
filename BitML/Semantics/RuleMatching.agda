@@ -3,14 +3,14 @@ open import Prelude.Maybes
 open import Prelude.Lists
 open import Prelude.Membership
 open import Prelude.DecEq
-open import Prelude.Nary hiding (⟦_⟧)
+open import Prelude.Nary
 open import Prelude.Ord
 open import Prelude.General
 open import Prelude.InferenceRules
 open import Prelude.Split renaming (split to mkSplit)
 
 open import BitML.BasicTypes
-open import BitML.Predicate hiding (`; ∣_∣)
+open import BitML.Predicate
 
 module BitML.Semantics.RuleMatching (⋯ : ⋯) (let open ⋯ ⋯) where
 
@@ -219,7 +219,7 @@ match-authDestroy ([DEP-AuthDestroy] {Γ = Γ₀} {ds = ds}{j} fresh-y) =
   ds , -, -, j , refl , refl , refl , refl , refl , fresh-y
 
 ⟨⟩∘∣-injective : ∀ {d d′} →
-  ⟨ [ d ] , v ⟩at x ∣ Γ ≡ ⟨ [ d′ ] , v′ ⟩at x′ ∣ Γ′
+  (Cfg ∋ ⟨ [ d ] , v ⟩at x ∣ Γ) ≡ (⟨ [ d′ ] , v′ ⟩at x′ ∣ Γ′)
   ─────────────────────────────────────────────────
   (d ≡ d′) × (v ≡ v′) × (x ≡ x′) × (Γ ≡ Γ′)
 ⟨⟩∘∣-injective refl = refl , refl , refl , refl

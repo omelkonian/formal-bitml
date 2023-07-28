@@ -16,7 +16,7 @@ open import Prelude.Split renaming (split to mkSplit)
 open import Prelude.Null
 
 open import BitML.BasicTypes
-open import BitML.Predicate hiding (`; ∣_∣)
+open import BitML.Predicate
 
 module BitML.Semantics.InferenceRules (⋯ : ⋯) (let open ⋯ ⋯) where
 
@@ -66,7 +66,7 @@ data _—[_]→_ : Cfg → Label → Cfg → Type where
 
   [DEP-Divide] :
 
-    All (_∉ x ∷ ids Γ) ⟦ y , y′ ⟧ -- y, y′ fresh
+    All (_∉ x ∷ ids Γ) [ y ⨾ y′ ] -- y, y′ fresh
     ────────────────────────────────────────────────────────
     ⟨ A has (v + v′) ⟩at x ∣ A auth[ x ▷⟨ A , v , v′ ⟩ ] ∣ Γ
       —[ divide⦅ x ▷ v , v′ ⦆ ]→

@@ -14,17 +14,17 @@ open import BitML.Predicate
 
 module BitML.Semantics.Predicate (⋯ : ⋯) (let open ⋯ ⋯) where
 
-open import BitML.Semantics.Configurations.Types ⋯ hiding (`_)
+open import BitML.Semantics.Configurations.Types ⋯
 
 ⟦_⟧ᵃʳ_ : Arith → Cfg → Maybe ℤ
-⟦ ∣ a ∣   ⟧ᵃʳ Γ = go Γ
+⟦ ∥ a ∥   ⟧ᵃʳ Γ = go Γ
   where
     go : Cfg → Maybe ℤ
     go = λ where
       (_ ∶ a′ ♯ N) → if a == a′ then ⦇ (+ N) ⦈ else nothing
       (l ∣ r)      → go l <|> go r
       _            → nothing
-⟦ ` x     ⟧ᵃʳ _ = ⦇ x ⦈
+⟦ ｀ x     ⟧ᵃʳ _ = ⦇ x ⦈
 ⟦ e `+ e′ ⟧ᵃʳ Γ = ⦇ ⟦ e ⟧ᵃʳ Γ + ⟦ e′ ⟧ᵃʳ Γ ⦈
 ⟦ e `- e′ ⟧ᵃʳ Γ = ⦇ ⟦ e ⟧ᵃʳ Γ - ⟦ e′ ⟧ᵃʳ Γ ⦈
 

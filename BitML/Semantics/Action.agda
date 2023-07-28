@@ -43,14 +43,13 @@ variable
   acts acts′ : Actions
 
 open import Prelude.General; open MultiTest
-open import Prelude.Nary
 module _ (ad : Ad) d ds (let c = d ∷ ds) (A B : Participant) where
   _ = Action
-   ∋⋮ ♯▷ ad                              -- commit secret
-    ⋮ "x" ▷ˢ ad                          -- spend
-    ⋮ "x" ▷ (c ‼ 0F)                     -- take branch
-    ⋮ "x" ↔ "y" ▷⟨ A , 10 ⟩              -- join
-    ⋮ "x" ▷⟨ A , 33 , 67 ⟩               -- divide
-    ⋮ "x" ▷ᵈ B                           -- donate
-    ⋮ ⟦ "x₀", "x₁" , "x₂" ⟧ , 1F ▷ᵈˢ "y" -- destroy
+   ∋⋮ ♯▷ ad                        -- commit secret
+    ⋮ "x" ▷ˢ ad                    -- spend
+    ⋮ "x" ▷ (c ‼ 0F)               -- take branch
+    ⋮ "x" ↔ "y" ▷⟨ A , 10 ⟩        -- join
+    ⋮ "x" ▷⟨ A , 33 , 67 ⟩         -- divide
+    ⋮ "x" ▷ᵈ B                     -- donate
+    ⋮ [ "x₀" ⨾ "x₁" ] , 1F ▷ᵈˢ "y" -- destroy
     ⋮∅

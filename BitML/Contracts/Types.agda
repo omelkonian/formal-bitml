@@ -68,10 +68,9 @@ data Precondition : Type where
   _:secret_ : Participant → Secret → Precondition
 
   -- composition
-  _∣∣_ : Precondition → Precondition → Precondition
+  _∣_ : Op₂ Precondition
 
-unquoteDecl DecEq-Precondition =
-  DERIVE DecEq [ quote Precondition , DecEq-Precondition ]
+unquoteDecl DecEq-PreC = DERIVE DecEq [ quote Precondition , DecEq-PreC ]
 
 variable g g′ g″ : Precondition
 
@@ -99,9 +98,10 @@ TDepositRefs = List TDepositRef
 -- Notation.
 open import Prelude.Lists.NoNil as NN
   using (List?; toL)
+
 Contract?   = List? Branch
 VContracts? = List? (Value × Contract)
-infixr 4 _⊕_ _⊗_
+
 _⊕_ = NN._⊕_ {X = Branch}
 _⊗_ = NN._⊕_ {X = Value × Contract}
 
@@ -146,13 +146,15 @@ module _ ⦃ _ : List? String X ⦄ ⦃ _ : List? Branch Y ⦄ where
 
   infix 8 put_．_ put_if_．_ reveal_．_ reveal_if_．_
 
-infix  2 ⟨_⟩_
-infix  5 _:?_at_ _:!_at_ _:secret_
-infixl 2 _∣∣_
+infix  7 _:?_at_ _:!_at_ _:secret_
+infixl 6 _∣_
+infix  0 ⟨_⟩_
 
 infixr 9 _∶_ after_∶_
 infix  8 put_&reveal_if_⇒_ put_&reveal_⇒_ put_⇒_ put_if_⇒_ reveal_⇒_ reveal_if_⇒_
-infix  7 _⊸_
+infixr 5 _⊕_
+infix  4 _⊸_
+infixr 3 _⊗_
 
 -- Examples.
 
@@ -165,10 +167,11 @@ module _ (A B : Participant) where
     ⋮ A ∶ withdraw B
     ⊕ B ∶ split ( 2 ⊸ withdraw A
                 ⊗ 3 ⊸ after 100 ∶ withdraw B
+                    ⊕ after 200 ∶ withdraw A
                 ⊗ 0 ⊸ put "y" ． (A ∶ withdraw B))
     ⋮∅
 
   _ = Ad
-   ∋⋮ ⟨ B :! 2 at "x" ∣∣ A :! 3 at "y" ∣∣ B :? 100 at "z" ⟩
+   ∋⋮ ⟨ B :! 2 at "x" ∣ A :! 3 at "y" ∣ B :? 100 at "z" ⟩
       [ put "z" ． withdraw A ]
     ⋮∅

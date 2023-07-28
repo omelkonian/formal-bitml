@@ -4,7 +4,7 @@ open import Prelude.Decidable
 open import Prelude.Membership
 open L.Mem using (∈-++⁺ˡ; ∈-++⁺ʳ; ∈-++⁻; ∈-map⁺)
 open import Prelude.Bifunctor
-open import Prelude.Nary hiding (⟦_⟧)
+open import Prelude.Nary
 open import Prelude.Lists
 open import Prelude.Lists.Dec
 open import Prelude.Validity

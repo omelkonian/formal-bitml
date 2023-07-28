@@ -20,7 +20,7 @@ open import Prelude.Validity
 open import Prelude.Decidable
 
 open import BitML.BasicTypes
-open import BitML.Predicate hiding (∣_∣)
+open import BitML.Predicate
 
 module BitML.Contracts.Validity (⋯ : ⋯) where
 

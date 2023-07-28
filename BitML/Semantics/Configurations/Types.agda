@@ -36,8 +36,7 @@ data Cfg : Type where
   _∶_♯_ : (A : Participant) → (s : Secret) → (n : ℕ) → Cfg
 
   -- parallel composition
-  _∣_ : Cfg → Cfg → Cfg
-  -- _∣_ : Op₂ Cfg -- breaks DERIVE-DecEq :(
+  _∣_ : Op₂ Cfg
 
 unquoteDecl DecEqᶜᶠ = DERIVE DecEq [ quote Cfg , DecEqᶜᶠ ]
 

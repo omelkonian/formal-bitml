@@ -188,14 +188,14 @@ namesʳ⊆deposits :
       (A , v , x) ∈ deposits g
 namesʳ⊆deposits {x} {A :? v at x} (here refl) = A , v , here refl
 namesʳ⊆deposits {x} {A :! v at x} (here refl) = A , v , here refl
-namesʳ⊆deposits {x} {l ∣∣ r} x∈
+namesʳ⊆deposits {x} {l ∣ r} x∈
   rewrite mapMaybe-++ isInj₂ (names l) (names r)
   with L.Mem.∈-++⁻ (namesʳ l) x∈
-namesʳ⊆deposits {x} {l ∣∣ r} x∈ | inj₁ x∈ˡ
+namesʳ⊆deposits {x} {l ∣ r} x∈ | inj₁ x∈ˡ
   with A , v , d∈ ← namesʳ⊆deposits {g = l} x∈ˡ
   with _ , td∈ , refl ← L.Mem.∈-map⁻ proj₂ d∈
      = A , v , L.Mem.∈-map⁺ proj₂ (L.Mem.∈-++⁺ˡ td∈)
-namesʳ⊆deposits {x} {l ∣∣ r} x∈ | inj₂ x∈ʳ
+namesʳ⊆deposits {x} {l ∣ r} x∈ | inj₂ x∈ʳ
   with A , v , d∈ ← namesʳ⊆deposits {g = r} x∈ʳ
   with _ , td∈ , refl ← L.Mem.∈-map⁻ proj₂ d∈
      = A , v , L.Mem.∈-map⁺ proj₂ (L.Mem.∈-++⁺ʳ _ td∈)
