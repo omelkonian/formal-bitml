@@ -7,7 +7,6 @@ open import Prelude.Lists.Dec
 open import Prelude.Decidable
 open import Prelude.Setoid
 open import Prelude.Ord
-open import Prelude.Lists.NoNil using ()
 
 open import BitML.BasicTypes hiding (a; x; y; t)
 open import BitML.Predicate

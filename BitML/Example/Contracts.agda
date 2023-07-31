@@ -12,7 +12,6 @@ open import Prelude.Decidable
 open import Prelude.DecEq
 open import Prelude.Lists
 open import Prelude.Lists.Dec
-open import Prelude.Lists.NoNil using ()
 
 open import BitML.BasicTypes
   hiding (a; t; t′; v)

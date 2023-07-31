@@ -96,14 +96,19 @@ TDepositRef  = DepositType × DepositRef
 TDepositRefs = List TDepositRef
 
 -- Notation.
-open import Prelude.Lists.NoNil as NN
-  using (List?; toL)
 
-Contract?   = List? Branch
-VContracts? = List? (Value × Contract)
+private variable X Y Z : Type
 
+import Prelude.Lists.NoNil as NN
+open NN using (List?; toL) public
+instance
+  ⊕-notation-𝕃 = NN.Pick𝕃
+  ⊕-notation-ℝ = NN.Pickℝ
 _⊕_ = NN._⊕_ {X = Branch}
-_⊗_ = NN._⊕_ {X = Value × Contract}
+_⊗_ = Op₂ VContracts ∋ _++_
+
+_⊸_ : Value → X → ⦃ List? Branch X ⦄ → VContracts
+v ⊸ c = [ v , toL c ]
 
 open import Prelude.General; open MultiTest
 module _ (b b′ : Branch) (c c′ : Contract) where
@@ -113,18 +118,6 @@ module _ (b b′ : Branch) (c c′ : Contract) where
     ⋮ c ⊕ b
     ⋮ c ⊕ c′
     ⋮∅
-module _ (b b′ : Value × Contract) (c c′ : VContracts) where
-  _ = VContracts
-   ∋⋮ b ⊗ b′
-    ⋮ b ⊗ c
-    ⋮ c ⊗ b
-    ⋮ c ⊗ c′
-    ⋮∅
-
-private variable X Y Z : Type
-
-_⊸_ : Value → X → ⦃ _ : Contract? X ⦄ → VContracts
-v ⊸ c = toL (v , toL c)
 
 module _ ⦃ _ : List? Id X ⦄ ⦃ _ : List? Secret Y ⦄ ⦃ _ : List? Branch Z ⦄ where
   put_&reveal_if_．_ : X → Y → Predicate → Z → Branch
