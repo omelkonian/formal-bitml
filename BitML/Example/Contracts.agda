@@ -17,7 +17,10 @@ open import BitML.BasicTypes
   hiding (a; t; t′; v)
 open import BitML.Predicate
 
-open import BitML.Example.Setup
+data Participant : Type where
+  A B C M : Participant
+unquoteDecl DecEqₚ = DERIVE DecEq [ quote Participant , DecEqₚ ]
+Honest = List⁺ Participant ∋ [ A ]
 
 open import BitML.Contracts ⋯ Participant , Honest ⋯
   hiding (A; B; C)

@@ -5,8 +5,7 @@ open import BitML.BasicTypes using (⋯)
 
 module BitML (⋯ : ⋯) where
 
-open import BitML.BasicTypes public hiding (⋯)
-open import BitML.Example.Setup
+open import BitML.BasicTypes public hiding (⋯; ⋯_,_⋯)
 open import BitML.Predicate public
 open import BitML.Contracts ⋯ public
 open import BitML.Example.Contracts

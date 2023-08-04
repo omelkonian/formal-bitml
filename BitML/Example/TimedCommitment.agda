@@ -11,7 +11,10 @@ open import Prelude.Ord
 open import BitML.BasicTypes hiding (a; x; y; t)
 open import BitML.Predicate
 
-open import BitML.Example.Setup hiding (C)
+data Participant : Type where
+  A B : Participant
+unquoteDecl DecEqₚ = DERIVE DecEq [ quote Participant , DecEqₚ ]
+Honest = List⁺ Participant ∋ [ A ]
 
 open import BitML.Contracts ⋯ Participant , Honest ⋯ hiding (A; B)
 open import BitML.Semantics ⋯ Participant , Honest ⋯
