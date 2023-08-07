@@ -21,9 +21,7 @@ open import BitML.Predicate
 
 module BitML.Semantics.DecidableInference (⋯ : ⋯) (let open ⋯ ⋯) where
 
-open import BitML.Contracts.Types ⋯ hiding (d)
-open import BitML.Contracts.Helpers ⋯
-open import BitML.Contracts.Validity ⋯
+open import BitML.Contracts ⋯ hiding (d)
 open import BitML.Semantics.Action ⋯
 open import BitML.Semantics.Configurations.Types ⋯
 open import BitML.Semantics.Configurations.Helpers ⋯

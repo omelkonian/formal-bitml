@@ -87,6 +87,9 @@ unquoteDecl DecEq-Ad = DERIVE DecEq [ quote Ad , DecEq-Ad ]
 
 variable ad ad′ ad″ : Ad
 
+------------------------------------------------------------------------
+-- Auxiliary types.
+
 data DepositType : Type where
   volatile persistent : DepositType
 
@@ -94,6 +97,8 @@ DepositRef   = Participant × Value × Id
 DepositRefs  = List DepositRef
 TDepositRef  = DepositType × DepositRef
 TDepositRefs = List TDepositRef
+
+PutComponent = Ids × Secrets × Predicate
 
 -- Notation.
 

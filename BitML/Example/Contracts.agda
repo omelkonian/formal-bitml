@@ -18,12 +18,12 @@ open import BitML.BasicTypes
 open import BitML.Predicate
 
 data Participant : Type where
-  A B C M : Participant
+  A B M : Participant
 unquoteDecl DecEqₚ = DERIVE DecEq [ quote Participant , DecEqₚ ]
 Honest = List⁺ Participant ∋ [ A ]
 
 open import BitML.Contracts ⋯ Participant , Honest ⋯
-  hiding (A; B; C)
+  hiding (A; B)
 
 ---------------------------------------------------------
 -- constants (to unblock computation on closed formulas)
@@ -127,10 +127,10 @@ vᵇ = 2; vᶜ = 3
 IntermediatedPayment : Ad
 IntermediatedPayment =
   ⟨ A :! vᵇ + vᶜ at "x"
-  ∣ C :! 0 at "y"
+  ∣ M :! 0 at "y"
   ⟩
     split ( vᵇ ⊸ withdraw A
-          ⊗ vᶜ ⊸ withdraw C)
+          ⊗ vᶜ ⊸ withdraw M)
   ⊕ after t ∶ withdraw A
 
 _ = Valid IntermediatedPayment ∋ auto

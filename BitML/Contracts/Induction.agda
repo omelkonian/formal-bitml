@@ -52,6 +52,9 @@ _≺ℂ_ : ∀ {A B : Type} ⦃ _ : Toℂ A ⦄ ⦃ _ : Toℂ B ⦄ → A → B 
 x ≺ℂ y = toℂ x ≺ toℂ y
 
 instance
+  Toℂ-ℂ : Toℂ ℂ
+  Toℂ-ℂ .toℂ = id
+
   Toℂᵈ : Toℂ Branch
   Toℂᵈ .toℂ = D
 
@@ -60,6 +63,9 @@ instance
 
   Toℂᵛᶜˢ : Toℂ VContracts
   Toℂᵛᶜˢ .toℂ = VCS
+
+  Toℂᵃ : Toℂ Ad
+  Toℂᵃ .toℂ = C ∘ Ad.C
 
   -- HP-ℂ : ∀ {X : Type} ⦃ _ : Branch has X ⦄ → ℂ has X
   -- HP-ℂ .collect (D d)     = collect d

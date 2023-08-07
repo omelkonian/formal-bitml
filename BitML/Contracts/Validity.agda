@@ -25,7 +25,7 @@ open import BitML.Predicate
 module BitML.Contracts.Validity (⋯ : ⋯) where
 
 open import BitML.Contracts.Types ⋯ hiding (B)
-open import BitML.Contracts.Helpers ⋯
+open import BitML.Contracts.Collections ⋯
 
 splitsOK : Precondition → Contract → Bool
 splitsOK G C₀ = goᶜ C₀ (persistentValue G)
@@ -93,17 +93,9 @@ instance
   ... | yes p₁ | yes p₂ | yes p₃ | yes p₄ | yes p₅ = yes λ where
     .names-uniq → p₁; .names-⊆ → p₂; .names-put → p₃; .parts-⊆ → p₄; .splits-OK → p₅
 
-
--- Properties.
-
 Valid⇒part⊆ : let ⟨ G ⟩ C = ad in
   Valid ad → participants C L.SubS.⊆ participants G
 Valid⇒part⊆ {⟨ G ⟩ C} vad
   = persistentParticipants⊆ {g = G}
   ∘ vad .parts-⊆ .unmk⊆
   ∘ ∈-++⁺ʳ (participants G)
-
-subterms′-part⊆ᵃ : Valid ad → d ∈ subtermsᵃ′ ad →
-  participants d L.SubS.⊆ participants (ad .G)
-subterms′-part⊆ᵃ {ad@(⟨ G ⟩ C)}{d} vad d∈ =
-  Valid⇒part⊆ vad ∘ subterms′-part⊆ᶜ {ds = C} d∈

@@ -27,8 +27,7 @@ open import BitML.BasicTypes
 
 module BitML.Semantics.Configurations.Helpers (⋯ : ⋯) (let open ⋯ ⋯) where
 
-open import BitML.Contracts.Types ⋯
-open import BitML.Contracts.Helpers ⋯
+open import BitML.Contracts ⋯
 open import BitML.Semantics.Action ⋯
 open import BitML.Semantics.Configurations.Types ⋯
 

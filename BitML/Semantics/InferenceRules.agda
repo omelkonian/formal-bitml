@@ -20,7 +20,7 @@ open import BitML.Predicate
 
 module BitML.Semantics.InferenceRules (⋯ : ⋯) (let open ⋯ ⋯) where
 
-open import BitML.Contracts ⋯ hiding (d)
+open import BitML.Contracts ⋯ hiding (d; C; G)
 open import BitML.Semantics.Action ⋯
 open import BitML.Semantics.Configurations.Types ⋯
 open import BitML.Semantics.Configurations.Helpers ⋯
@@ -123,7 +123,7 @@ data _—[_]→_ : Cfg → Label → Cfg → Type where
   ------------------------------------------------------------
   -- ii) Rules for contract advertisements and stipulation
 
-  [C-Advertise] : let ⟨ G ⟩ _ = ad; partG = nub-participants G in
+  [C-Advertise] : let open ∣AD ad in
 
     ∙ ValidAd ad               -- the advertisement is valid
     ∙ Any (_∈ Hon) partG       -- at least one honest participant
@@ -132,7 +132,7 @@ data _—[_]→_ : Cfg → Label → Cfg → Type where
       Γ —[ advertise⦅ ad ⦆ ]→ ` ad ∣ Γ
 
 
-  [C-AuthCommit] : let ⟨ G ⟩ _ = ad in
+  [C-AuthCommit] : let open ∣AD ad in
     ∀ {secrets : List (Secret × Maybe ℕ)} →
 
     let (as , ms) = unzip secrets
@@ -148,7 +148,7 @@ data _—[_]→_ : Cfg → Label → Cfg → Type where
       ` ad ∣ Γ ∣ Δ ∣ A auth[ ♯▷ ad ]
 
 
-  [C-AuthInit] : let ⟨ G ⟩ _ = ad; partG = nub-participants G in
+  [C-AuthInit] : let open ∣AD ad in
 
     ∙ partG ⊆ committedParticipants ad Γ -- all participants have committed their secrets
     ∙ (A , v , x) ∈ persistentDeposits G -- G = A :! v @ x | ...
@@ -158,7 +158,7 @@ data _—[_]→_ : Cfg → Label → Cfg → Type where
       ` ad ∣ Γ ∣ A auth[ x ▷ˢ ad ]
 
 
-  [C-Init] : let ⟨ G ⟩ C = ad; partG = nub-participants G in
+  [C-Init] : let open ∣AD ad in
 
     -- all participants have committed their secrets (guaranteed from [C-AuthInit])
 
