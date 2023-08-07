@@ -29,9 +29,10 @@ mkCollect : (∀ e → (∀ e′ → e′ ≺ D e → List X) → List X) → �
 mkCollect {X = X} mk = ≺-rec _ go
   where
     go : ∀ c → (∀ c′ → c′ ≺ c → List X) → List X
-    go (D c)     f = mk c f
-    go (C cs)    f = concat $ mapWith∈ cs (f (D _) ∘ ≺-∈)
-    go (VCS vcs) f = concat $ mapWith∈ (map proj₂ vcs) (f (C _) ∘ ≺-∈ᵛ)
+    go = λ where
+      (D c)   f → mk c f
+      (C cs)  f → concat $ mapWith∈ cs (f (D _) ∘ ≺-∈)
+      (V vcs) f → concat $ mapWith∈ (map proj₂ vcs) (f (C _) ∘ ≺-∈ᵛ)
 
 mkCollect′ : ⦃ Toℂ X ⦄ → (∀ e → (∀ e′ → e′ ≺ D e → List Y) → List Y) → X → List Y
 mkCollect′ mk = mkCollect mk ∘ toℂ
@@ -42,9 +43,9 @@ instance
 
   Hℂ : ⦃ _ : Branch has X ⦄ ⦃ _ : Contract has X ⦄ ⦃ _ : VContracts has X ⦄ → ℂ has X
   Hℂ .collect 𝕔 with 𝕔
-  ... | D   d   = collect d
-  ... | C   c   = collect c
-  ... | VCS vcs = collect vcs
+  ... | D d   = collect d
+  ... | C c   = collect c
+  ... | V vcs = collect vcs
 
 -- participants
 
@@ -53,11 +54,11 @@ participantsℂ = mkCollect go
   where
     go : ∀ e → (∀ e′ → e′ ≺ D e → List Participant) → List Participant
     go d f with d
-    ... | put _ &reveal _ if _ ⇒ c = f (C c) ≺-put -- it
+    ... | put _ &reveal _ if _ ⇒ c = f (C c) ≺-put
     ... | withdraw p               = [ p ]
-    ... | split vcs                = f (VCS vcs) ≺-split -- it
-    ... | p ∶ d′                   = p ∷ f (D d′) ≺-auth -- it
-    ... | after _ ∶ d′             = f (D d′) ≺-after -- it
+    ... | split vcs                = f (V vcs) ≺-split
+    ... | p ∶ d′                   = p ∷ f (D d′) ≺-auth
+    ... | after _ ∶ d′             = f (D d′) ≺-after
 
 instance
   HPᵈ : Branch has Participant
@@ -67,7 +68,7 @@ instance
   HPᶜ .collect = participantsℂ ∘ C
 
   HPᵛ : VContracts has Participant
-  HPᵛ .collect = participantsℂ ∘ VCS
+  HPᵛ .collect = participantsℂ ∘ V
 
   HPᵖ : Precondition has Participant
   HPᵖ .collect pr with pr
@@ -91,11 +92,11 @@ namesℂ = mkCollect go
   where
     go : ∀ e → (∀ e′ → e′ ≺ D e → List Name) → List Name
     go d f with d
-    ... | put xs &reveal as if _ ⇒ c = map inj₂ xs ++ map inj₁ as ++ f (C c) ≺-put -- it
+    ... | put xs &reveal as if _ ⇒ c = map inj₂ xs ++ map inj₁ as ++ f (C c) ≺-put
     ... | withdraw _                 = []
-    ... | split vcs                  = f (VCS vcs) ≺-split -- it
-    ... | _ ∶ d′                     = f (D d′) ≺-auth -- it
-    ... | after _ ∶ d′               = f (D d′) ≺-after -- it
+    ... | split vcs                  = f (V vcs) ≺-split
+    ... | _ ∶ d′                     = f (D d′) ≺-auth
+    ... | after _ ∶ d′               = f (D d′) ≺-after
 
 instance
   HNᵈ : Branch has Name
@@ -105,7 +106,7 @@ instance
   HNᶜ .collect = namesℂ ∘ C
 
   HNᵛ : VContracts has Name
-  HNᵛ .collect = namesℂ ∘ VCS
+  HNᵛ .collect = namesℂ ∘ V
 
   HNᵖ : Precondition has Name
   HNᵖ .collect pr with pr
@@ -172,11 +173,11 @@ putComponentsℂ = mkCollect go
   where
     go : ∀ d → (∀ d′ → d′ ≺ D d → List PutComponent) → List PutComponent
     go d f with d
-    ... | put xs &reveal as if p ⇒ c = (xs , as , p) ∷ f (C c) ≺-put -- it
+    ... | put xs &reveal as if p ⇒ c = (xs , as , p) ∷ f (C c) ≺-put
     ... | withdraw _                 = []
-    ... | split vcs                  = f (VCS vcs) ≺-split -- it
-    ... | _ ∶ d′                     = f (D d′) ≺-auth -- it
-    ... | after _ ∶ d′               = f (D d′) ≺-after -- it
+    ... | split vcs                  = f (V vcs) ≺-split
+    ... | _ ∶ d′                     = f (D d′) ≺-auth
+    ... | after _ ∶ d′               = f (D d′) ≺-after
 
 instance
   HPCᵈ : Branch has PutComponent
@@ -186,7 +187,7 @@ instance
   HPCᶜ .collect = putComponentsℂ ∘ C
 
   HPCᵛ : VContracts has PutComponent
-  HPCᵛ .collect = putComponentsℂ ∘ VCS
+  HPCᵛ .collect = putComponentsℂ ∘ V
 
 putComponents : ⦃ _ :  X has PutComponent ⦄ → X → List PutComponent
 putComponents = collect

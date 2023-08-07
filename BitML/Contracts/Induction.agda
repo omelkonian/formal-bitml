@@ -13,33 +13,33 @@ module BitML.Contracts.Induction ⋯ where
 open import BitML.Contracts.Types ⋯ hiding (C)
 
 data ℂ : Type where
-  D   : Branch     → ℂ
-  C   : Contract   → ℂ
-  VCS : VContracts → ℂ
+  D : Branch     → ℂ
+  C : Contract   → ℂ
+  V : VContracts → ℂ
 
 data _≺_ : Rel₀ ℂ where
 
   ≺-∈  : d ∈ ds → D d ≺ C ds
-  ≺-∈ᵛ : ds ∈ map proj₂ vcs → C ds ≺ VCS vcs
+  ≺-∈ᵛ : ds ∈ map proj₂ vcs → C ds ≺ V vcs
   instance
-    ≺-put   : C ds    ≺ D (put xs &reveal as if p ⇒ ds)
-    ≺-auth  : D d     ≺ D (A ∶ d)
-    ≺-after : D d     ≺ D (after t ∶ d)
-    ≺-split : VCS vcs ≺ D (split vcs)
+    ≺-put   : C ds  ≺ D (put xs &reveal as if p ⇒ ds)
+    ≺-auth  : D d   ≺ D (A ∶ d)
+    ≺-after : D d   ≺ D (after t ∶ d)
+    ≺-split : V vcs ≺ D (split vcs)
 
 ≺-wf : WellFounded _≺_
 ≺-wf = acc ∘ _≻_
   where
     _≻_ : ∀ c c′ → c′ ≺ c → Acc _≺_ c′
-    (.(C (_ ∷ _))   ≻ .(D _)) (≺-∈                (here refl)) = acc (_ ≻_)
-    (.(C (_ ∷ _))   ≻ .(D _)) (≺-∈                (there p))   = (_ ≻ _) (≺-∈ p)
-    (.(VCS (_ ∷ _)) ≻ .(C _)) (≺-∈ᵛ {vcs = _ ∷ _} (here refl)) = acc (_ ≻_)
-    (.(VCS (_ ∷ _)) ≻ .(C _)) (≺-∈ᵛ {vcs = _ ∷ _} (there p))   = (_ ≻ _) (≺-∈ᵛ p)
+    (.(C (_ ∷ _)) ≻ .(D _)) (≺-∈                (here refl)) = acc (_ ≻_)
+    (.(C (_ ∷ _)) ≻ .(D _)) (≺-∈                (there p))   = (_ ≻ _) (≺-∈ p)
+    (.(V (_ ∷ _)) ≻ .(C _)) (≺-∈ᵛ {vcs = _ ∷ _} (here refl)) = acc (_ ≻_)
+    (.(V (_ ∷ _)) ≻ .(C _)) (≺-∈ᵛ {vcs = _ ∷ _} (there p))   = (_ ≻ _) (≺-∈ᵛ p)
 
-    (.(D (put _ &reveal _ if _ ⇒ _)) ≻ .(C _))   ≺-put   = acc (_ ≻_)
-    (.(D (_ ∶ _))                    ≻ .(D _))   ≺-auth  = acc (_ ≻_)
-    (.(D (after _ ∶ _))              ≻ .(D _))   ≺-after = acc (_ ≻_)
-    (.(D (split _))                  ≻ .(VCS _)) ≺-split = acc (_ ≻_)
+    (.(D (put _ &reveal _ if _ ⇒ _)) ≻ .(C _)) ≺-put   = acc (_ ≻_)
+    (.(D (_ ∶ _))                    ≻ .(D _)) ≺-auth  = acc (_ ≻_)
+    (.(D (after _ ∶ _))              ≻ .(D _)) ≺-after = acc (_ ≻_)
+    (.(D (split _))                  ≻ .(V _)) ≺-split = acc (_ ≻_)
 
 ≺-rec : Recursor (WF.WfRec _≺_)
 ≺-rec = WF.All.wfRec ≺-wf 0ℓ
@@ -62,12 +62,12 @@ instance
   Toℂᶜ .toℂ = C
 
   Toℂᵛᶜˢ : Toℂ VContracts
-  Toℂᵛᶜˢ .toℂ = VCS
+  Toℂᵛᶜˢ .toℂ = V
 
   Toℂᵃ : Toℂ Ad
   Toℂᵃ .toℂ = C ∘ Ad.C
 
   -- HP-ℂ : ∀ {X : Type} ⦃ _ : Branch has X ⦄ → ℂ has X
-  -- HP-ℂ .collect (D d)     = collect d
-  -- HP-ℂ .collect (C ds)    = collect ds
-  -- HP-ℂ .collect (VCS vcs) = collect vcs
+  -- HP-ℂ .collect (D d)   = collect d
+  -- HP-ℂ .collect (C ds)  = collect ds
+  -- HP-ℂ .collect (V vcs) = collect vcs

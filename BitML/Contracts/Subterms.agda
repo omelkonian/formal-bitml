@@ -25,13 +25,13 @@ subterms = go ∘ toℂ
       (D d) → case d of λ where
         (_       ∶ d)              → go (D d)
         (after _ ∶ d)              → go (D d)
-        (split vcs)                → go (VCS vcs)
+        (split vcs)                → go (V vcs)
         (put _ &reveal _ if _ ⇒ c) → go (C c)
         (withdraw _)               → []
-      (C [])                → []
-      (C (d ∷ c))           → d ∷ go (D d) ++ go (C c)
-      (VCS [])              → []
-      (VCS ((_ , c) ∷ vcs)) → go (C c) ++ go (VCS vcs)
+      (C [])      → []
+      (C (d ∷ c)) → d ∷ go (D d) ++ go (C c)
+      (V [])              → []
+      (V ((_ , c) ∷ vcs)) → go (C c) ++ go (V vcs)
 
 subterms⁺ = mkCollect′ go
   where
@@ -39,7 +39,7 @@ subterms⁺ = mkCollect′ go
     go d f with d
     ... | _       ∶ d              = f (D d) ≺-auth
     ... | after _ ∶ d              = f (D d) ≺-after
-    ... | split vcs                = d ∷ f (VCS vcs) ≺-split
+    ... | split vcs                = d ∷ f (V vcs) ≺-split
     ... | put _ &reveal _ if _ ⇒ c = d ∷ f (C c) ≺-put
     ... | withdraw _               = d ∷ []
 
