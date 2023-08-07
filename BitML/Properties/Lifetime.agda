@@ -79,22 +79,22 @@ _∙↝∗_ : Ad → Contract → Type
 step∙˘ : ad ∙↝∗ c → c ↝ c′ → ad ∙↝∗ c′
 step∙˘ = step˘
 
-h-sub↝ : c ↝ c′ → subterms′ c′ ⊆ subterms′ c
+h-sub↝ : c ↝ c′ → subterms c′ ⊆ subterms c
 h-sub↝ = λ where
   (put↝ {c}{xs}{as}{p}{c′}{i} d≡) → let open ∣SELECT c i in
-    begin⊆ subterms′ c′ ≡˘⟨ cong subterms′ d≡ ⟩
-           subterms′ d∗ ⊆⟨ h-sub‼ {c} ⟩
-           subterms′ c  ⊆∎
+    begin⊆ subterms c′ ≡˘⟨ cong subterms d≡ ⟩
+           subterms d∗ ⊆⟨ h-sub‼ {c} ⟩
+           subterms c  ⊆∎
   (split↝ {c}{vcs}{c′}{i} d≡ c∈)  → let open ∣SELECT c i in
-    begin⊆ subterms′ c′          ⊆⟨ subterms⊆ᵛ′ {c′}{vcs} c∈ ⟩
-           subterms′ (split vcs) ≡˘⟨ cong subterms′ d≡ ⟩
-           subterms′ d∗          ⊆⟨  h-sub‼ {c} ⟩
-           subterms′ c           ⊆∎
+    begin⊆ subterms c′          ⊆⟨ subterms⊆ᵛ′ {c′}{vcs} c∈ ⟩
+           subterms (split vcs) ≡˘⟨ cong subterms d≡ ⟩
+           subterms d∗          ⊆⟨  h-sub‼ {c} ⟩
+           subterms c           ⊆∎
  where open ⊆-Reasoning Branch renaming (begin_ to begin⊆_; _∎ to _⊆∎)
 
-h-sub↝∗ : c ↝∗ c′ → subterms′ c′ ⊆ subterms′ c
+h-sub↝∗ : c ↝∗ c′ → subterms c′ ⊆ subterms c
 h-sub↝∗ base = id
 h-sub↝∗ (step c↝ c↝∗) = h-sub↝ c↝ ∘ h-sub↝∗ c↝∗
 
-h-sub∙↝∗ : ad ∙↝∗ c → c ⊆ subterms′ ad
+h-sub∙↝∗ : ad ∙↝∗ c → c ⊆ subterms ad
 h-sub∙↝∗ ad↝ = h-sub↝∗ ad↝ ∘ subterms⊆ᶜ

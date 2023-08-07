@@ -23,7 +23,7 @@ open import BitML.Contracts.Induction ⋯
 
 -- T0D0 use Type'.nub on all results? or only on use-sites
 
-private variable X : Type
+private variable X Y : Type
 
 mkCollect : (∀ e → (∀ e′ → e′ ≺ D e → List X) → List X) → ℂ → List X
 mkCollect {X = X} mk = ≺-rec _ go
@@ -32,6 +32,9 @@ mkCollect {X = X} mk = ≺-rec _ go
     go (D c)     f = mk c f
     go (C cs)    f = concat $ mapWith∈ cs (f (D _) ∘ ≺-∈)
     go (VCS vcs) f = concat $ mapWith∈ (map proj₂ vcs) (f (C _) ∘ ≺-∈ᵛ)
+
+mkCollect′ : ⦃ Toℂ X ⦄ → (∀ e → (∀ e′ → e′ ≺ D e → List Y) → List Y) → X → List Y
+mkCollect′ mk = mkCollect mk ∘ toℂ
 
 instance
   -- Hℂ : ⦃ _ : Branch has X ⦄ → ℂ has X
