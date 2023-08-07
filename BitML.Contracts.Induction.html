@@ -53,17 +53,23 @@
 <a id="1586" href="BitML.Contracts.Induction.html#1586" class="Bound">x</a> <a id="1588" href="BitML.Contracts.Induction.html#1521" class="Function Operator">≺ℂ</a> <a id="1591" href="BitML.Contracts.Induction.html#1591" class="Bound">y</a> <a id="1593" class="Symbol">=</a> <a id="1595" href="BitML.Contracts.Induction.html#1484" class="Field">toℂ</a> <a id="1599" href="BitML.Contracts.Induction.html#1586" class="Bound">x</a> <a id="1601" href="BitML.Contracts.Induction.html#421" class="Datatype Operator">≺</a> <a id="1603" href="BitML.Contracts.Induction.html#1484" class="Field">toℂ</a> <a id="1607" href="BitML.Contracts.Induction.html#1591" class="Bound">y</a>
 
 <a id="1610" class="Keyword">instance</a>
-  <a id="Toℂᵈ"></a><a id="1621" href="BitML.Contracts.Induction.html#1621" class="Function">Toℂᵈ</a> <a id="1626" class="Symbol">:</a> <a id="1628" href="BitML.Contracts.Induction.html#1448" class="Record">Toℂ</a> <a id="1632" href="BitML.Contracts.Types.html#488" class="Datatype">Branch</a>
-  <a id="1641" href="BitML.Contracts.Induction.html#1621" class="Function">Toℂᵈ</a> <a id="1646" class="Symbol">.</a><a id="1647" href="BitML.Contracts.Induction.html#1484" class="Field">toℂ</a> <a id="1651" class="Symbol">=</a> <a id="1653" href="BitML.Contracts.Induction.html#348" class="InductiveConstructor">D</a>
+  <a id="Toℂ-ℂ"></a><a id="1621" href="BitML.Contracts.Induction.html#1621" class="Function">Toℂ-ℂ</a> <a id="1627" class="Symbol">:</a> <a id="1629" href="BitML.Contracts.Induction.html#1448" class="Record">Toℂ</a> <a id="1633" href="BitML.Contracts.Induction.html#331" class="Datatype">ℂ</a>
+  <a id="1637" href="BitML.Contracts.Induction.html#1621" class="Function">Toℂ-ℂ</a> <a id="1643" class="Symbol">.</a><a id="1644" href="BitML.Contracts.Induction.html#1484" class="Field">toℂ</a> <a id="1648" class="Symbol">=</a> <a id="1650" href="Function.Base.html#624" class="Function">id</a>
 
-  <a id="Toℂᶜ"></a><a id="1658" href="BitML.Contracts.Induction.html#1658" class="Function">Toℂᶜ</a> <a id="1663" class="Symbol">:</a> <a id="1665" href="BitML.Contracts.Induction.html#1448" class="Record">Toℂ</a> <a id="1669" href="BitML.Contracts.Types.html#502" class="Function">Contract</a>
-  <a id="1680" href="BitML.Contracts.Induction.html#1658" class="Function">Toℂᶜ</a> <a id="1685" class="Symbol">.</a><a id="1686" href="BitML.Contracts.Induction.html#1484" class="Field">toℂ</a> <a id="1690" class="Symbol">=</a> <a id="1692" href="BitML.Contracts.Induction.html#371" class="InductiveConstructor">C</a>
+  <a id="Toℂᵈ"></a><a id="1656" href="BitML.Contracts.Induction.html#1656" class="Function">Toℂᵈ</a> <a id="1661" class="Symbol">:</a> <a id="1663" href="BitML.Contracts.Induction.html#1448" class="Record">Toℂ</a> <a id="1667" href="BitML.Contracts.Types.html#488" class="Datatype">Branch</a>
+  <a id="1676" href="BitML.Contracts.Induction.html#1656" class="Function">Toℂᵈ</a> <a id="1681" class="Symbol">.</a><a id="1682" href="BitML.Contracts.Induction.html#1484" class="Field">toℂ</a> <a id="1686" class="Symbol">=</a> <a id="1688" href="BitML.Contracts.Induction.html#348" class="InductiveConstructor">D</a>
 
-  <a id="Toℂᵛᶜˢ"></a><a id="1697" href="BitML.Contracts.Induction.html#1697" class="Function">Toℂᵛᶜˢ</a> <a id="1704" class="Symbol">:</a> <a id="1706" href="BitML.Contracts.Induction.html#1448" class="Record">Toℂ</a> <a id="1710" href="BitML.Contracts.Types.html#556" class="Function">VContracts</a>
-  <a id="1723" href="BitML.Contracts.Induction.html#1697" class="Function">Toℂᵛᶜˢ</a> <a id="1730" class="Symbol">.</a><a id="1731" href="BitML.Contracts.Induction.html#1484" class="Field">toℂ</a> <a id="1735" class="Symbol">=</a> <a id="1737" href="BitML.Contracts.Induction.html#394" class="InductiveConstructor">VCS</a>
+  <a id="Toℂᶜ"></a><a id="1693" href="BitML.Contracts.Induction.html#1693" class="Function">Toℂᶜ</a> <a id="1698" class="Symbol">:</a> <a id="1700" href="BitML.Contracts.Induction.html#1448" class="Record">Toℂ</a> <a id="1704" href="BitML.Contracts.Types.html#502" class="Function">Contract</a>
+  <a id="1715" href="BitML.Contracts.Induction.html#1693" class="Function">Toℂᶜ</a> <a id="1720" class="Symbol">.</a><a id="1721" href="BitML.Contracts.Induction.html#1484" class="Field">toℂ</a> <a id="1725" class="Symbol">=</a> <a id="1727" href="BitML.Contracts.Induction.html#371" class="InductiveConstructor">C</a>
 
-  <a id="1744" class="Comment">-- HP-ℂ : ∀ {X : Type} ⦃ _ : Branch has X ⦄ → ℂ has X</a>
-  <a id="1800" class="Comment">-- HP-ℂ .collect (D d)     = collect d</a>
-  <a id="1841" class="Comment">-- HP-ℂ .collect (C ds)    = collect ds</a>
-  <a id="1883" class="Comment">-- HP-ℂ .collect (VCS vcs) = collect vcs</a>
+  <a id="Toℂᵛᶜˢ"></a><a id="1732" href="BitML.Contracts.Induction.html#1732" class="Function">Toℂᵛᶜˢ</a> <a id="1739" class="Symbol">:</a> <a id="1741" href="BitML.Contracts.Induction.html#1448" class="Record">Toℂ</a> <a id="1745" href="BitML.Contracts.Types.html#556" class="Function">VContracts</a>
+  <a id="1758" href="BitML.Contracts.Induction.html#1732" class="Function">Toℂᵛᶜˢ</a> <a id="1765" class="Symbol">.</a><a id="1766" href="BitML.Contracts.Induction.html#1484" class="Field">toℂ</a> <a id="1770" class="Symbol">=</a> <a id="1772" href="BitML.Contracts.Induction.html#394" class="InductiveConstructor">VCS</a>
+
+  <a id="Toℂᵃ"></a><a id="1779" href="BitML.Contracts.Induction.html#1779" class="Function">Toℂᵃ</a> <a id="1784" class="Symbol">:</a> <a id="1786" href="BitML.Contracts.Induction.html#1448" class="Record">Toℂ</a> <a id="1790" href="BitML.Contracts.Types.html#2283" class="Record">Ad</a>
+  <a id="1795" href="BitML.Contracts.Induction.html#1779" class="Function">Toℂᵃ</a> <a id="1800" class="Symbol">.</a><a id="1801" href="BitML.Contracts.Induction.html#1484" class="Field">toℂ</a> <a id="1805" class="Symbol">=</a> <a id="1807" href="BitML.Contracts.Induction.html#371" class="InductiveConstructor">C</a> <a id="1809" href="Function.Base.html#1040" class="Function Operator">∘</a> <a id="1811" href="BitML.Contracts.Types.html#2351" class="Field">Ad.C</a>
+
+  <a id="1819" class="Comment">-- HP-ℂ : ∀ {X : Type} ⦃ _ : Branch has X ⦄ → ℂ has X</a>
+  <a id="1875" class="Comment">-- HP-ℂ .collect (D d)     = collect d</a>
+  <a id="1916" class="Comment">-- HP-ℂ .collect (C ds)    = collect ds</a>
+  <a id="1958" class="Comment">-- HP-ℂ .collect (VCS vcs) = collect vcs</a>
 </pre></body></html>
