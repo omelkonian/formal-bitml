@@ -278,10 +278,10 @@ names⊆secretsOf {a}{g = l ∣ r} a∈
 -- Deposits
 
 isVolatile isPersistent : TDepositRef → Maybe DepositRef
-isVolatile = case_of λ where
+isVolatile = λ where
   (volatile   , d) → just d
   (persistent , _) → nothing
-isPersistent = case_of λ where
+isPersistent = λ where
   (volatile   , _) → nothing
   (persistent , d) → just d
 
@@ -296,40 +296,40 @@ volatileParticipants persistentParticipants : Precondition → List Participant
 volatileParticipants   = map proj₁ ∘ volatileDeposits
 persistentParticipants = map proj₁ ∘ persistentDeposits
 
-volatileNamesʳ persistentNamesʳ : Precondition → Ids
-volatileNamesʳ   = map (proj₂ ∘ proj₂) ∘ volatileDeposits
-persistentNamesʳ = map (proj₂ ∘ proj₂) ∘ persistentDeposits
+volatileIds persistentIds : Precondition → Ids
+volatileIds   = map (proj₂ ∘ proj₂) ∘ volatileDeposits
+persistentIds = map (proj₂ ∘ proj₂) ∘ persistentDeposits
 
-volatileNames⊆ : volatileNamesʳ g ⊆ namesʳ g
-volatileNames⊆ {g = A :? v at x} n∈ = n∈
-volatileNames⊆ {g = l ∣ r}  {n} n∈
+volatileIds⊆ : volatileIds g ⊆ ids g
+volatileIds⊆ {g = A :? v at x} n∈ = n∈
+volatileIds⊆ {g = l ∣ r}  {n} n∈
   with (p , v , .n) , d∈ , refl ← ∈-map⁻ (proj₂ ∘ proj₂) n∈
   with _ , d∈ , d≡ ← ∈-mapMaybe⁻ isVolatile {xs = tdeposits (l ∣ r)} d∈
   with ∈-++⁻ (tdeposits l) d∈
 ... | inj₁ d∈ˡ
-  with (_ , m∈ , m≡) ← ∈-mapMaybe⁻ isInj₂ {xs = names l} $ volatileNames⊆ {g = l}
+  with (_ , m∈ , m≡) ← ∈-mapMaybe⁻ isInj₂ {xs = names l} $ volatileIds⊆ {g = l}
                      $ ∈-map⁺ (proj₂ ∘ proj₂)
                      $ ∈-mapMaybe⁺ isVolatile d∈ˡ d≡
   = ∈-mapMaybe⁺ isInj₂ {xs = names (l ∣ r)} (∈-++⁺ˡ m∈) m≡
 ... | inj₂ d∈ʳ
-  with (_ , m∈ , m≡) ← ∈-mapMaybe⁻ isInj₂ {xs = names r} $ volatileNames⊆ {g = r}
+  with (_ , m∈ , m≡) ← ∈-mapMaybe⁻ isInj₂ {xs = names r} $ volatileIds⊆ {g = r}
                      $ ∈-map⁺ (proj₂ ∘ proj₂)
                      $ ∈-mapMaybe⁺ isVolatile d∈ʳ d≡
   = ∈-mapMaybe⁺ isInj₂ {xs = names (l ∣ r)} (∈-++⁺ʳ (names l) m∈) m≡
 
-persistentNames⊆ : persistentNamesʳ g ⊆ namesʳ g
-persistentNames⊆ {g = A :! v at x} n∈ = n∈
-persistentNames⊆ {g = l ∣ r}  {n} n∈
+persistentIds⊆ : persistentIds g ⊆ ids g
+persistentIds⊆ {g = A :! v at x} n∈ = n∈
+persistentIds⊆ {g = l ∣ r}  {n} n∈
   with (p , v , .n) , d∈ , refl ← ∈-map⁻ (proj₂ ∘ proj₂) n∈
   with _ , d∈ , d≡ ← ∈-mapMaybe⁻ isPersistent {xs = tdeposits (l ∣ r)} d∈
   with ∈-++⁻ (tdeposits l) d∈
 ... | inj₁ d∈ˡ
-  with (_ , m∈ , m≡) ← ∈-mapMaybe⁻ isInj₂ {xs = names l} $ persistentNames⊆ {g = l}
+  with (_ , m∈ , m≡) ← ∈-mapMaybe⁻ isInj₂ {xs = names l} $ persistentIds⊆ {g = l}
                      $ ∈-map⁺ (proj₂ ∘ proj₂)
                      $ ∈-mapMaybe⁺ isPersistent d∈ˡ d≡
   = ∈-mapMaybe⁺ isInj₂ {xs = names (l ∣ r)} (∈-++⁺ˡ m∈) m≡
 ... | inj₂ d∈ʳ
-  with (_ , m∈ , m≡) ← ∈-mapMaybe⁻ isInj₂ {xs = names r} $ persistentNames⊆ {g = r}
+  with (_ , m∈ , m≡) ← ∈-mapMaybe⁻ isInj₂ {xs = names r} $ persistentIds⊆ {g = r}
                      $ ∈-map⁺ (proj₂ ∘ proj₂)
                      $ ∈-mapMaybe⁺ isPersistent d∈ʳ d≡
   = ∈-mapMaybe⁺ isInj₂ {xs = names (l ∣ r)} (∈-++⁺ʳ (names l) m∈) m≡
@@ -352,7 +352,7 @@ persistentParticipants⊆ {g = l ∣ r} {p} p∈
 ... | inj₁ d∈ˡ = ∈-++⁺ˡ (persistentParticipants⊆ {g = l} $ ∈-map⁺ proj₁ $ ∈-mapMaybe⁺ isPersistent d∈ˡ d≡)
 ... | inj₂ d∈ʳ = ∈-++⁺ʳ (participants l) (persistentParticipants⊆ {g = r} $ ∈-map⁺ proj₁ $ ∈-mapMaybe⁺ isPersistent d∈ʳ d≡)
 
-getDeposit : namesʳ g ↦ (Σ[ d ∈ DepositRef ] (proj₁ d ∈ participants g))
+getDeposit : ids g ↦ (Σ[ d ∈ DepositRef ] (proj₁ d ∈ participants g))
 getDeposit {g = A :? v at x} (here refl) = (A , v , x) , here refl
 getDeposit {g = A :! v at x} (here refl) = (A , v , x) , here refl
 getDeposit {g = _ :secret _} ()
@@ -368,7 +368,7 @@ checkDeposit ty x
   ∘ (case ty of λ{ persistent → persistentDeposits; volatile → volatileDeposits })
 
 getName : (A , v , x) ∈ persistentDeposits g
-        → x ∈ namesʳ g
+        → x ∈ ids g
 getName {g = _ :! _ at _} (here refl) = here refl
 getName {g = _ :! _ at _} (there ())
 getName {g = l ∣ r}       d∈
