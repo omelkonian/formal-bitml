@@ -353,8 +353,8 @@ private
     where
       toSpend = persistentDeposits (ad .G)
       A∈′ : A ∈ persistentParticipants (ad .G)
-      A∈′ = vad .parts-⊆ .unmk⊆
-        (∈-++⁺ˡ {xs = participants (ad . G)}{participants (ad .C)} $ ∈-nub⁻ A∈)
+      A∈′ = (vad ∙parts-⊆)
+              (∈-++⁺ˡ {xs = participants (ad . G)}{participants (ad .C)} $ ∈-nub⁻ A∈)
 
       ∃A∈ : ∃ λ (vᵢ : Value) → ∃ λ (xᵢ : Id) → (A , vᵢ , xᵢ) ∈ toSpend
       ∃A∈ with (.A , v , x) , Avx∈ , refl ← L.Mem.∈-map⁻ proj₁ A∈′

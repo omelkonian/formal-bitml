@@ -3,16 +3,13 @@
 -----------------------------------------------
 open import Prelude.Init; open SetAsType
 open L.Mem
-open import Prelude.Lists
+open import Prelude.Lists.Core
 open import Prelude.Lists.Dec
-open import Prelude.DecEq
-open import Prelude.Sets
+open import Prelude.Lists.Indexed
 open import Prelude.Nary
 open import Prelude.Setoid
 open import Prelude.Ord
-open import Prelude.General
 open import Prelude.InferenceRules
-open import Prelude.Split renaming (split to mkSplit)
 open import Prelude.Null
 
 open import BitML.BasicTypes

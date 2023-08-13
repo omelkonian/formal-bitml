@@ -4,20 +4,17 @@
 open import Function using (id)
 
 open import Prelude.Init hiding (_⊆_); open SetAsType
-open L.Mem
-open import Prelude.General
-open import Prelude.Lists renaming (_⊆′_ to _⊆_)
+open import Prelude.Lists.Subsets renaming (_⊆′_ to _⊆_)
 open import Prelude.Lists.Dec hiding (_⊆?_) renaming (_⊆′?_ to _⊆?_)
+open import Prelude.Lists.Sums
 open import Prelude.DecEq
-open import Prelude.Sets
-open import Prelude.Measurable
-open import Prelude.Lists.Collections
 open import Prelude.Functor
+open import Prelude.Bifunctor
 open import Prelude.Foldable
 open import Prelude.Traversable
 open import Prelude.Monad
-open import Prelude.Validity
 open import Prelude.Decidable
+open import Prelude.Validity
 
 open import BitML.BasicTypes
 open import BitML.Predicate
@@ -72,6 +69,10 @@ module _ (ad : Ad) (let ⟨ G ⟩ C = ad) where
       splits-OK :
         T $ splitsOK G C
 
+    _∙names-⊆   = names-⊆ .unmk⊆
+    _∙names-put = L.All.map (map₂ unmk⊆) names-put
+    _∙parts-⊆   = parts-⊆ .unmk⊆
+
 open ValidAd public
 
 instance
@@ -97,5 +98,5 @@ Valid⇒part⊆ : let ⟨ G ⟩ C = ad in
   Valid ad → participants C L.SubS.⊆ participants G
 Valid⇒part⊆ {⟨ G ⟩ C} vad
   = persistentParticipants⊆ {g = G}
-  ∘ vad .parts-⊆ .unmk⊆
-  ∘ ∈-++⁺ʳ (participants G)
+  ∘ vad ∙parts-⊆
+  ∘ L.Mem.∈-++⁺ʳ (participants G)
