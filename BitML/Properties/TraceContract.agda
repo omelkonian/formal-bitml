@@ -24,51 +24,62 @@ open import BitML.Semantics ⋯
 open import BitML.Properties.Helpers ⋯
 open import BitML.Properties.TraceInit ⋯
 
--- ℍ[Contract]⦅ Γ —[ α ]↝ Γ′ ⦆⦅ c ⦆: Contract `c` is created by a transition `Γ —[ α ]→ Γ′`
+-- ℍ[Contract]⦅ Γ —[ α ]↝ Γ′ ⦆⦅ c ⦆ means that
+-- contract `c` is created by a transition `Γ —[ α ]→ Γ′`.
 data ℍ[Contract]⦅_—[_]↝_⦆⦅_⦆ : Cfg → Label → Cfg → Contract → Type where
 
   base :
-
-      ` (⟨ g ⟩ c) ∈ᶜ Γ
-    → Γ —[ init⦅ g , c ⦆ ]→ Γ′
-      ───────────────────────────────────────────────────
+    ∙ ` (⟨ g ⟩ c) ∈ᶜ Γ
+    ∙ Γ —[ init⦅ g , c ⦆ ]→ Γ′
+      ────────────────────────────────────────────
       ℍ[Contract]⦅ Γ —[ init⦅ g , c ⦆ ]↝ Γ′ ⦆⦅ c ⦆
 
   step-put :
-
-    ──────────────────────────────────────────────────────────────────────────────────────────────────────
-    ℍ[Contract]⦅ ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ Γ —[ put⦅ xs , as , y ⦆ ]↝ Γ′ ⦆⦅ c ⦆
+    ────────────────────────────────────────────────
+    ℍ[Contract]⦅
+      ⟨ [ put xs &reveal as if p ⇒ c ] , v ⟩at y ∣ Γ
+      —[ put⦅ xs , as , y ⦆ ]↝
+      Γ′
+    ⦆⦅ c ⦆
 
   step-split :
-
     c ∈ map proj₂ vcs
-    ─────────────────────────────────────────────────────────────────────────
+    ─────────────────────────────────────────────────────────────────────
     ℍ[Contract]⦅ ⟨ [ split vcs ] , v ⟩at y ∣ Γ —[ split⦅ y ⦆ ]↝ Γ′ ⦆⦅ c ⦆
 
   step-control : ∀ {i : Index c′} → let open ∣SELECT c′ i in
-
-      Γ ≈ L
-    → cv α ≡ just x
-    → ℍ[Contract]⦅ ⟨ [ d∗ ] , v ⟩at x ∣ L —[ α ]↝ Γ′ ⦆⦅ c ⦆
-      ───────────────────────────────────────────────────────────────────────────────────────
-      ℍ[Contract]⦅ ⟨ c′ , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub $ authDecorations d) ∣ Γ
-                   —[ α ]↝ Γ′ ⦆⦅ c ⦆
+    ∙ (Γ ≈ L)
+    ∙ (cv α ≡ just x)
+    ∙ ℍ[Contract]⦅ ⟨ [ d∗ ] , v ⟩at x ∣ L —[ α ]↝ Γ′ ⦆⦅ c ⦆
+      ──────────────────────────────────────────────────────────────────────
+      ℍ[Contract]⦅
+        ⟨ c′ , v ⟩at x ∣ || map _auth[ x ▷ d ] (nub $ authDecorations d) ∣ Γ
+        —[ α ]↝
+        Γ′
+      ⦆⦅ c ⦆
 
   step-timeout : ∀ {i : Index c′} → let open ∣SELECT c′ i in
-      cv α ≡ just x
-    → ℍ[Contract]⦅ ⟨ [ d∗ ] , v ⟩at x ∣ Γ —[ α ]↝ Γ′ ⦆⦅ c ⦆
-      ────────────────────────────────────────────────────────
+    ∙ cv α ≡ just x
+    ∙ ℍ[Contract]⦅ ⟨ [ d∗ ] , v ⟩at x ∣ Γ —[ α ]↝ Γ′ ⦆⦅ c ⦆
+      ─────────────────────────────────────────────────────
       ℍ[Contract]⦅ ⟨ c′ , v ⟩at x ∣ Γ —[ α ]↝ Γ′ ⦆⦅ c ⦆
 
+∃ℍ[Contract]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Contract → Type
+∃ℍ[Contract]⦅ Γ ↝ Γ′ ⦆⦅ c ⦆ = ∃ ℍ[Contract]⦅ Γ —[_]↝ Γ′ ⦆⦅ c ⦆
+
+map⦅proj₁⦆∘zip : ∀ {A B : Type} {xs : List A} {ys : List B} →
+  map proj₁ (zip xs ys) ⊆ xs
+map⦅proj₁⦆∘zip {xs = _ ∷ _ }{_ ∷ _} = λ where
+  (here refl) → here refl
+  (there x∈)  → there (map⦅proj₁⦆∘zip x∈)
+
+map⦅proj₂⦆∘zip : ∀ {A B : Type} {xs : List A} {ys : List B} →
+  map proj₂ (zip xs ys) ⊆ ys
+map⦅proj₂⦆∘zip {xs = _ ∷ _ }{_ ∷ _} = λ where
+  (here refl) → here refl
+  (there x∈)  → there (map⦅proj₂⦆∘zip x∈)
+
 open import BitML.Contracts ⋯ using (d)
-
-d∗≢auth : removeTopDecorations d ≢ A ∶ d′
-d∗≢auth {_ ∶ d}       eq = d∗≢auth {d} eq
-d∗≢auth {after _ ∶ d} eq = d∗≢auth {d} eq
-
-d∗≢time : removeTopDecorations d ≢ after t ∶ d′
-d∗≢time {_ ∶ d}       eq = d∗≢time {d} eq
-d∗≢time {after _ ∶ d} eq = d∗≢time {d} eq
 
 private
   ¬AuthControl :
@@ -396,21 +407,6 @@ private
         (here refl) → HELP c∉Γ cv≡ Γ→ c∈
         (there c∈Γ) → c∉Γ c∈Γ
 
-map⦅proj₁⦆∘zip : ∀ {A B : Type} {xs : List A} {ys : List B} →
-  map proj₁ (zip xs ys) ⊆ xs
-map⦅proj₁⦆∘zip {xs = _ ∷ _ }{_ ∷ _} = λ where
-  (here refl) → here refl
-  (there x∈)  → there (map⦅proj₁⦆∘zip x∈)
-
-map⦅proj₂⦆∘zip : ∀ {A B : Type} {xs : List A} {ys : List B} →
-  map proj₂ (zip xs ys) ⊆ ys
-map⦅proj₂⦆∘zip {xs = _ ∷ _ }{_ ∷ _} = λ where
-  (here refl) → here refl
-  (there x∈)  → there (map⦅proj₂⦆∘zip x∈)
-
-∃ℍ[Contract]⦅_↝_⦆⦅_⦆ : Cfg → Cfg → Contract → Type
-∃ℍ[Contract]⦅ Γ ↝ Γ′ ⦆⦅ c ⦆ = ∃ ℍ[Contract]⦅ Γ —[_]↝ Γ′ ⦆⦅ c ⦆
-
 traceContractₜ :
     ⟨ c , v ⟩at y ∉ᶜ Γ₀
   → ⟨ c , v ⟩at y ∈ᶜ Γ
@@ -451,43 +447,40 @@ Ancestor⦅ ad ↝ c ⦆ Γ Γ′ =
     | removeTopDecorations-idemp (c′ ‼ i)
     = ℍ⇒Lifetime H′
 
-module _ {Γ₀ t₀} (init : Initial Γ₀) (t₀≡0 : t₀ ≡ 0) where
+open import Prelude.Measurable
 
-  open import Prelude.Measurable
-
-  traceContract∗ :
-      ⟨ c , v ⟩at y ∈ᶜ Γ
-    → (tr : Γ₀ at t₀ —[ αs ]↠ₜ Γ at t)
-      --———————————————————————————————
-    → ∃ λ ad → ∃[ tr ∋ Ancestor⦅ ad ↝ c ⦆ ]
-  traceContract∗ c∈₀ tr₀ = go _ (Nat.Ind.<-wellFounded ∣ tr₀ ∣) c∈₀ tr₀ refl
-    where
-      open ⊆-Reasoning Contract renaming (begin_ to begin⊆_; _∎ to _⊆∎)
-
-      go : ∀ n → Acc Nat._<_ n
-        → ⟨ c , v ⟩at y ∈ᶜ Γ
-        → (tr : Γ₀ at t₀ —[ αs ]↠ₜ Γ at t)
-        → n ≡ ∣ tr ∣
-        → ∃ λ ad → ∃[ tr ∋ Ancestor⦅ ad ↝ c ⦆ ]
-      go {c₀}{v₀}{y₀}{Γ′}{αs}{t′} _ (acc rec) c∈ Γ↠ refl
-        with x , x′ , y , y′ , xy∈ , xy≈@(x≈ , y≈) , α , H ← traceContractₜ (Initial⇒∉ init) c∈ Γ↠
-        with tᵢ , _ , xy∈ᵗ ← ×∈⇒×∈ᵗ Γ↠ xy∈
-        with Γ≺   ← ≺-splitTraceˡ Γ↠ xy∈ᵗ
-        with ∃↑   ← (λ ad {x}{x′} → ∃-splitTraceˡ {P = λ c → Ancestor⦅ ad ↝ c ⦆ } Γ↠ xy∈ᵗ {x}{x′})
-        with Γ↠ᵢ  ← splitTraceˡ {Γ₀ at t₀}{αs}{Γ′ at t′}{x at tᵢ} Γ↠ xy∈ᵗ
-        with ∈ᶜ↑_ ← (λ {z} → ∈ᶜ-resp-≈ {x′}{x}{z} (↭-sym x≈))
-        with H
-      ... | base {g}{c} _ Γ→
-          = (⟨ g ⟩ c) , x , x′ , y , y′ , xy∈ , xy≈ , init⇒ Γ→ , base
-      ... | step-put
-          = let ad , H = go _ (rec _ Γ≺) (∈ᶜ↑ here refl) Γ↠ᵢ refl
-            in  ad , ∃↑ ad (λ where (H , ⊆ad) → H , step˘ ⊆ad (put↝ {i = 0F} refl)) H
-      ... | step-split {vcs = vcs} c∈
-          = let ad , H = go _ (rec _ Γ≺) (∈ᶜ↑ here refl) Γ↠ᵢ refl
-            in  ad , ∃↑ ad (λ where (H , ⊆ad) → H , step˘ ⊆ad (split↝ {i = 0F} refl c∈)) H
-      ... | step-control {c′} _ _ ℍ
-          = let ad , H = go _ (rec _ Γ≺) (∈ᶜ↑ here refl) Γ↠ᵢ refl
-            in  ad , ∃↑ ad (λ where (H , ⊆ad) → H , step˘ ⊆ad (ℍ⇒Lifetime ℍ)) H
-      ... | step-timeout {c′} _ ℍ
-          = let ad , H = go _ (rec _ Γ≺) (∈ᶜ↑ here refl) Γ↠ᵢ refl
-            in  ad , ∃↑ ad (λ where (H , ⊆ad) → H , step˘ ⊆ad (ℍ⇒Lifetime ℍ)) H
+traceContract∗ : ∀ {Γ₀}{t₀} →
+    Initial Γ₀
+  → ⟨ c , v ⟩at y ∈ᶜ Γ
+  → (tr : Γ₀ at t₀ —[ αs ]↠ₜ Γ at t)
+  → ∃ λ ad → ∃[ tr ∋ Ancestor⦅ ad ↝ c ⦆ ]
+traceContract∗ {Γ₀ = Γ₀}{t₀} init c∈₀ tr₀ =
+  go _ (≺-wf ∣ tr₀ ∣) c∈₀ tr₀ refl
+  where
+    go : ∀ n → Acc _≺_ n
+      → ⟨ c , v ⟩at y ∈ᶜ Γ
+      → (tr : Γ₀ at t₀ —[ αs ]↠ₜ Γ at t)
+      → n ≡ ∣ tr ∣
+      → ∃ λ ad → ∃[ tr ∋ Ancestor⦅ ad ↝ c ⦆ ]
+    go {c₀}{v₀}{y₀}{Γ′}{αs}{t′} _ (acc rec) c∈ Γ↠ refl
+      with x , x′ , y , y′ , xy∈ , xy≈ , α , H ← traceContractₜ (Initial⇒∉ init) c∈ Γ↠
+      with tᵢ , _ , xy∈ᵗ ← ×∈⇒×∈ᵗ Γ↠ xy∈
+      with Γ≺   ← ≺-splitTraceˡ Γ↠ xy∈ᵗ
+      with ∃↑   ← (λ ad {x}{x′} → ∃-splitTraceˡ {P = Ancestor⦅ ad ↝_⦆} Γ↠ xy∈ᵗ {x}{x′})
+      with Γ↠ᵢ  ← splitTraceˡ {Γ₀ at t₀}{αs}{Γ′ at t′}{x at tᵢ} Γ↠ xy∈ᵗ
+      with ∈ᶜ↑_ ← (λ {z} → ∈ᶜ-resp-≈ {x′}{x}{z} (↭-sym $ xy≈ .proj₁))
+      with H
+    ... | base {g}{c} _ Γ→
+        = (⟨ g ⟩ c) , x , x′ , y , y′ , xy∈ , xy≈ , init⇒ Γ→ , base
+    ... | step-put
+        = let ad , H = go _ (rec _ Γ≺) (∈ᶜ↑ here refl) Γ↠ᵢ refl
+          in  ad , ∃↑ ad (λ (H , ⊆ad) → H , step˘ ⊆ad (put↝ {i = 0F} refl)) H
+    ... | step-split {vcs = vcs} c∈
+        = let ad , H = go _ (rec _ Γ≺) (∈ᶜ↑ here refl) Γ↠ᵢ refl
+          in  ad , ∃↑ ad (λ (H , ⊆ad) → H , step˘ ⊆ad (split↝ {i = 0F} refl c∈)) H
+    ... | step-control {c′} _ _ ℍ
+        = let ad , H = go _ (rec _ Γ≺) (∈ᶜ↑ here refl) Γ↠ᵢ refl
+          in  ad , ∃↑ ad (λ (H , ⊆ad) → H , step˘ ⊆ad (ℍ⇒Lifetime ℍ)) H
+    ... | step-timeout {c′} _ ℍ
+        = let ad , H = go _ (rec _ Γ≺) (∈ᶜ↑ here refl) Γ↠ᵢ refl
+          in  ad , ∃↑ ad (λ (H , ⊆ad) → H , step˘ ⊆ad (ℍ⇒Lifetime ℍ)) H
