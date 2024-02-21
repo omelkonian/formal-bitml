@@ -1,5 +1,5 @@
-TOTAL: 2m12s
-BitML/BasicTypes: 0m12s
+TOTAL: 2m7s
+BitML/BasicTypes: 0m11s
 BitML/Predicate: 0m1s
 BitML/Contracts/Types: 0m2s
 BitML/Contracts/Induction: 0m2s
@@ -10,10 +10,10 @@ BitML/Contracts/Subterms: 0m2s
 BitML/Contracts: 0m0s
 BitML/Example/Contracts: 0m2s
 BitML/Semantics/Action: 0m2s
-BitML/Semantics/Configurations/Types: 0m5s
+BitML/Semantics/Configurations/Types: 0m4s
 BitML/Semantics/Configurations/Helpers: 0m8s
 BitML/Semantics/Label: 0m12s
-BitML/Semantics/Predicate: 0m1s
+BitML/Semantics/Predicate: 0m0s
 BitML/Semantics/InferenceRules: 0m1s
 BitML/Semantics/RuleMatching: 0m6s
 BitML/Semantics/DecidableInference: 0m4s
@@ -22,8 +22,8 @@ BitML/Example/TimedCommitment: 0m5s
 BitML/Properties/Helpers: 0m6s
 BitML/Properties/TraceAd: 0m6s
 BitML/Properties/TraceAuthCommit: 0m6s
-BitML/Properties/TraceAuthInit: 0m7s
-BitML/Properties/TraceInit: 0m8s
+BitML/Properties/TraceAuthInit: 0m6s
+BitML/Properties/TraceInit: 0m7s
 BitML/Properties/TraceAuthControl: 0m6s
 BitML/Properties/Lifetime: 0m1s
 BitML/Properties/TraceContract: 0m12s
