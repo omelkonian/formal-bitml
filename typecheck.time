@@ -1,8 +1,8 @@
-TOTAL: 2m9s
+TOTAL: 2m8s
 BitML/BasicTypes: 0m11s
 BitML/Predicate: 0m1s
-BitML/Contracts/Types: 0m3s
-BitML/Contracts/Induction: 0m1s
+BitML/Contracts/Types: 0m2s
+BitML/Contracts/Induction: 0m2s
 BitML/Contracts/Collections: 0m7s
 BitML/Contracts/Validity: 0m1s
 BitML/Contracts/ModuleMacros: 0m0s
