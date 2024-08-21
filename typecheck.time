@@ -7,11 +7,11 @@ BitML/Contracts/Collections: 0m6s
 BitML/Contracts/Validity: 0m1s
 BitML/Contracts/ModuleMacros: 0m0s
 BitML/Contracts/Subterms: 0m2s
-BitML/Contracts: 0m1s
-BitML/Example/Contracts: 0m1s
-BitML/Semantics/Action: 0m3s
+BitML/Contracts: 0m0s
+BitML/Example/Contracts: 0m2s
+BitML/Semantics/Action: 0m2s
 BitML/Semantics/Configurations/Types: 0m4s
-BitML/Semantics/Configurations/Helpers: 0m8s
+BitML/Semantics/Configurations/Helpers: 0m9s
 BitML/Semantics/Label: 0m11s
 BitML/Semantics/Predicate: 0m1s
 BitML/Semantics/InferenceRules: 0m1s
@@ -26,6 +26,6 @@ BitML/Properties/TraceAuthInit: 0m6s
 BitML/Properties/TraceInit: 0m8s
 BitML/Properties/TraceAuthControl: 0m6s
 BitML/Properties/Lifetime: 0m1s
-BitML/Properties/TraceContract: 0m12s
-BitML/Properties: 0m0s
-BitML: 0m1s
+BitML/Properties/TraceContract: 0m11s
+BitML/Properties: 0m1s
+BitML: 0m0s
