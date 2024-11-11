@@ -1,4 +1,4 @@
-TOTAL: 2m8s
+TOTAL: 2m10s
 BitML/BasicTypes: 0m11s
 BitML/Predicate: 0m1s
 BitML/Contracts/Types: 0m2s
@@ -21,7 +21,7 @@ BitML/Semantics: 0m0s
 BitML/Example/TimedCommitment: 0m5s
 BitML/Properties/Helpers: 0m6s
 BitML/Properties/TraceAd: 0m6s
-BitML/Properties/TraceAuthCommit: 0m6s
+BitML/Properties/TraceAuthCommit: 0m7s
 BitML/Properties/TraceAuthInit: 0m6s
 BitML/Properties/TraceInit: 0m8s
 BitML/Properties/TraceAuthControl: 0m6s
